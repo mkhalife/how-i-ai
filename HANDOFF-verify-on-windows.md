@@ -47,8 +47,8 @@ inside it with the same `local_<uuid>.json` plus `local_<uuid>\` layout as macOS
 `chatgptDesktop()` tries `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT`,
 `%APPDATA%\OpenAI\ChatGPT` and `%LOCALAPPDATA%\OpenAI\ChatGPT`, and reports a signal only:
 installed, cached conversation count, last activity. Confirm the folder is found and the
-signal is sensible. Do not carve the IndexedDB log for message text; if it looks easy, say so
-in the report instead of building it.
+signal is sensible. Do not carve the IndexedDB log for message text; if it looks easy,
+say so in the report instead of building it.
 
 ## 3. The bundled `codex.exe` and node
 
@@ -80,11 +80,12 @@ first.
 ## 5. Both entry points, end to end
 
 Follow `SKILL.md` from step 0 as the user of this machine would, twice: the Claude entry
-point from Claude Code, and the ChatGPT entry point (`PROMPT-chatgpt-app.md`) from inside the
-ChatGPT desktop app. Stop at `share preview`; never `share send`. Check:
+point from Claude Code, and the ChatGPT entry point (`PROMPT-chatgpt-app.md`) from inside
+the ChatGPT desktop app. Stop at `share preview`; never `share send`. Check:
 
 - The preview holds no prompt text, titles, paths or repository names. Grep
-  `share-rows.json` in both working folders for the home directory path and the machine name.
+  `share-rows.json` in both working folders for the home directory path and the machine
+  name.
 - The two folders hold two different `participant_id` values and no overlapping sessions.
 - The profile page renders without console errors.
 - Every paraphrase reads as generic; fix `references/classification-guidelines.md` if you
@@ -92,9 +93,9 @@ ChatGPT desktop app. Stop at `share preview`; never `share send`. Check:
 
 ## 6. Deliver
 
-`bash tests/run.sh` ends `ALL OK` with the updated fixtures. Commit with clear messages, push
-the branch, and open a pull request to `main` titled "Verify parsers on a real Windows
-machine", with one section per numbered step: what you found, what you changed, what is still
-unknown. Include the key structures you observed (`inspect.mjs`, keys only) so the next person
-can see the real formats without a machine. No session content, no paraphrases, no screenshots
-of real data.
+`bash tests/run.sh` ends `ALL OK` with the updated fixtures. Commit with clear messages,
+push the branch, and open a pull request to `main` titled "Verify parsers on a real
+Windows machine", with one section per numbered step: what you found, what you changed,
+what is still unknown. Include the key structures you observed (`inspect.mjs`, keys only)
+so the next person can see the real formats without a machine. No session content, no
+paraphrases, no screenshots of real data.
