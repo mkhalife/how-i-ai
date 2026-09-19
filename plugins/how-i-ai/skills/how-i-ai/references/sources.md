@@ -106,7 +106,20 @@ transcripts (`agent-*.jsonl`, `isSidechain`), and user-role records that are not
 person: `<task-notification>` (`origin.kind: task-notification`), `<ci-monitor-event>`,
 `<cross-session-message>`, `<bash-input>`/`<bash-stdout>`. A forked session's file
 replays its parent's records first, so the session id is the last `sessionId` in the
-file, not the first.
+file, not the first, and only the fork's own records are counted.
+
+More things real transcripts do (verified on macOS, September 2026):
+
+- **Resume copies.** Resuming can write a second transcript with a new `sessionId` on
+  every record and the same message `uuid`s. Two files whose first human record has the
+  same `uuid` are one conversation; the copy that ran longest is kept.
+- **Headless pings.** Scripts and apps check that `claude -p` answers by sending one
+  short word (`entrypoint: sdk-cli`, one prompt under 12 characters, no tools). Dropped.
+- **Duration** is active time: gaps between consecutive records, ignoring any gap over
+  15 minutes. Desktop sessions stay open for days, so first-to-last is not time spent.
+- **Connector names.** claude.ai connectors appear as `mcp__<uuid>__tool`. The desktop
+  state files' `remoteMcpServersConfig[] { uuid, name }` maps them to names; without the
+  desktop app the uuid is kept.
 
 ## When a format changes
 

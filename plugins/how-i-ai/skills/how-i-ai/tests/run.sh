@@ -9,7 +9,7 @@ for plat in darwin win32; do
   echo "== $plat: collect"; node scripts/collect.mjs --no-codex-cloud --days 30 | sed 's/^/   /'
   node -e "
     const d=require('$H/how-i-ai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
-    const want={'claude-code':8,'claude-desktop':1,'claude-cowork':2,'codex':3,'chatgpt-export':3,'claude-export':2};
+    const want={'claude-code':9,'claude-desktop':1,'claude-cowork':2,'codex':3,'chatgpt-export':3,'claude-export':2};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
     const c=d.sessions.find(s=>s.id.includes('cloud1')); if(!c||c.surface!=='cloud') {console.error('FAIL cloud');process.exit(1)}
@@ -18,9 +18,11 @@ for plat in darwin win32; do
     if(!a1.skills.includes('code-review')||!a1.skills.includes('simplify')||!a1.agents.includes('evidence-researcher')) {console.error('FAIL skills/agents',a1.skills,a1.agents);process.exit(1)}
     const a7=d.sessions.find(s=>s.id.endsWith('aaaa-7')); if(!a7||a7.trigger!=='scheduled'||a7.mode!=='routine'||a7.surface!=='desktop'||/scheduled-task|SKILL\.md/.test(a7.first_message)||!a7.agents.includes('general-purpose')) {console.error('FAIL desktop scheduled task',a7);process.exit(1)}
     const a3=d.sessions.find(s=>s.id.endsWith('aaaa-3')); if(a3.trigger!=='human') {console.error('FAIL code-tab state file without scheduledTaskId',a3);process.exit(1)}
-    if(!d.sessions.some(s=>s.id.endsWith('aaaa-8'))||!d.sessions.some(s=>s.id.endsWith('aaaa-9'))) {console.error('FAIL forked session collapsed into its parent');process.exit(1)}
+    const a9=d.sessions.find(s=>s.id.endsWith('aaaa-9')); if(!d.sessions.some(s=>s.id.endsWith('aaaa-8'))||!a9||!a9.first_message.startsWith('Go with the second')||a9.messages_user!==1||a9.tools.includes('Read')) {console.error('FAIL forked session must be its own session, from its own records',a9);process.exit(1)}
+    const a12=d.sessions.find(s=>s.id.endsWith('aaaa-12')); if(d.sessions.some(s=>s.id.endsWith('aaaa-11'))||!a12||a12.messages_user!==2||'firstUuid' in JSON.parse(JSON.stringify(a12))) {console.error('FAIL resume copy should replace the original',a12);process.exit(1)}
+    if(d.sessions.some(s=>s.id.endsWith('aaaa-10'))) {console.error('FAIL headless ping counted as a session');process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
-    const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(!d2||d2.source!=='claude-cowork'||d2.surface!=='cowork'||d2.title!=='Interview synthesis'||d2.messages_user!==1||!d2.tools.includes('Write')||!d2.connectors.includes('gdrive')||!d2.skills.includes('research-synthesis')||d2.duration_minutes!==20) {console.error('FAIL cowork parse',d2);process.exit(1)}
+    const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(!d2||d2.source!=='claude-cowork'||d2.surface!=='cowork'||d2.title!=='Interview synthesis'||d2.messages_user!==1||!d2.tools.includes('Write')||!d2.skills.includes('research-synthesis')||!d2.connectors.includes('Google Drive')||d2.duration_minutes>10) {console.error('FAIL cowork parse',d2);process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('cli-d2'))) {console.error('FAIL cowork transcript counted twice');process.exit(1)}
     const d3=d.sessions.find(s=>s.id==='s_claude-desktop_d3'); if(!d3||d3.source!=='claude-cowork'||d3.messages_user!==1||!d3.first_message.startsWith('Help me plan')||!d3.tools.includes('WebSearch')||d3.tools.includes('SubagentOnlyTool')||d3.model!=='claude-sonnet-4-6') {console.error('FAIL cowork audit-only parse',d3);process.exit(1)}
     if(JSON.stringify(d).includes('never read this')||JSON.stringify(d).includes('test.person@example.com')) {console.error('FAIL read private state-file fields');process.exit(1)}
@@ -33,6 +35,8 @@ for plat in darwin win32; do
   node scripts/classify.mjs prep --size 6 | sed 's/^/   /'
   node tests/fake-classify.mjs "$H/how-i-ai/classify" >/dev/null
   node scripts/classify.mjs merge | sed 's/^/   /'
+  node scripts/collect.mjs --no-codex-cloud --days 30 >/dev/null
+  node -e "const d=require('$H/how-i-ai/sessions.json'); const n=d.sessions.filter(s=>s.classification).length; if(n!==d.sessions.length){console.error('FAIL re-running collect dropped classifications',n,'/',d.sessions.length);process.exit(1)}; console.log('   re-collect kept',n,'classifications')"
   echo '{"headline":"Test headline","summary":"Test summary.","patterns":["p1","p2"],"one_liner":"one liner","signature_move":"move","surprise_why":"because"}' > "$H/how-i-ai/narrative.json"
   node scripts/stats.mjs | sed 's/^/   /'
   for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/profile.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done

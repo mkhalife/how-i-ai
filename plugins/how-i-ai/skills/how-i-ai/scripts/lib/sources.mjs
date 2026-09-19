@@ -33,6 +33,25 @@ function skillsAndAgents(users, assistants) {
   return { skills: uniq(skills), agents: uniq(agents) };
 }
 
+// Desktop sessions stay open for days, so first-to-last timestamp is not time spent. Sum the gaps between
+// consecutive records and drop any gap longer than 15 minutes (the person walked away).
+function activeMinutes(times) {
+  let ms = 0;
+  for (let i = 1; i < times.length; i++) { const gap = new Date(times[i]) - new Date(times[i - 1]); if (gap > 0 && gap <= 15 * 60e3) ms += gap; }
+  return Math.round(ms / 6000) / 10;
+}
+
+// claude.ai connectors show up in tool names as mcp__<uuid>__tool. The desktop app's state files list uuid → name.
+let connectorNameCache = null;
+function connectorNames() {
+  if (connectorNameCache) return connectorNameCache;
+  connectorNameCache = new Map();
+  for (const root of claudeDesktopRoots()) for (const sub of ['claude-code-sessions', 'local-agent-mode-sessions'])
+    for (const file of walk(join(root, sub), { maxDepth: 3, filter: (p, n) => /^local_.*\.json$/i.test(n) }))
+      for (const c of readJson(file, {})?.remoteMcpServersConfig || []) if (c && c.uuid && c.name) connectorNameCache.set(String(c.uuid), String(c.name));
+  return connectorNameCache;
+}
+
 function surfaceFromEntrypoint(ep) {
   const e = String(ep || '').toLowerCase();
   if (e.includes('remote')) return 'cloud';
@@ -50,13 +69,14 @@ function textOf(content) {
 }
 
 function connectorsFromTools(tools) {
-  return uniq(tools.filter((t) => /^mcp__/.test(t)).map((t) => t.split('__')[1]));
+  const names = connectorNames();
+  return uniq(tools.filter((t) => /^mcp__/.test(t)).map((t) => t.split('__')[1]).map((c) => names.get(c) || c));
 }
 
 function baseSession(o) {
   return {
     id: o.id, source: o.source, surface: o.surface || 'cli', started_at: o.started_at, ended_at: o.ended_at || o.started_at,
-    duration_minutes: minutesBetween(o.started_at, o.ended_at || o.started_at),
+    duration_minutes: o.active_minutes != null ? o.active_minutes : minutesBetween(o.started_at, o.ended_at || o.started_at),
     title: trim(o.title, 200) || null,
     first_message: trim(o.first_message, FIRST_MESSAGE_CHARS) || '',
     first_message_chars: (o.first_message || '').length,
@@ -76,9 +96,17 @@ export function claudeCode({ configDir } = {}) {
   const out = { source: 'claude-code', found: existsSync(projects), path: projects, sessions: [], notes: [] };
   if (!out.found) return out;
   const scheduled = desktopScheduledCodeSessions();
+  const byFirstUuid = new Map();
   for (const file of walk(projects, { filter: (p, n) => n.endsWith('.jsonl') && !n.startsWith('agent-') })) {
     const s = parseClaudeCodeTranscript(file, scheduled.has(basename(file, '.jsonl')) ? { scheduled: true } : {});
-    if (s) out.sessions.push(s);
+    if (!s) continue;
+    // Resuming can write a second transcript: new sessionId on every record, same message uuids. Same conversation,
+    // so keep the copy that ran longest.
+    const twin = s.firstUuid ? byFirstUuid.get(s.firstUuid) : null;
+    if (twin && new Date(twin.ended_at) >= new Date(s.ended_at)) continue;
+    if (twin) out.sessions.splice(out.sessions.indexOf(twin), 1);
+    if (s.firstUuid) byFirstUuid.set(s.firstUuid, s);
+    out.sessions.push(s);
   }
   return out;
 }
@@ -98,7 +126,11 @@ function desktopScheduledCodeSessions() {
 export function parseClaudeCodeTranscript(file, overrides = {}) {
   const recs = readJsonl(file);
   if (!recs.length) return null;
-  const main = recs.filter((r) => !r.isSidechain);
+  // A forked session starts with a replay of its parent's records (parent sessionId), so the last record names this
+  // file's session, and only its own records count: otherwise every fork repeats the parent's first message.
+  const sessionId = [...recs].reverse().find((r) => r.sessionId)?.sessionId || basename(file, '.jsonl');
+  const forked = recs.some((r) => r.sessionId && r.sessionId !== sessionId);
+  const main = recs.filter((r) => !r.isSidechain && (!forked || !r.sessionId || r.sessionId === sessionId));
   const users = main.filter((r) => r.type === 'user' && r.message);
   const assistants = main.filter((r) => r.type === 'assistant' && r.message);
   // Background-task and CI notifications are user-role records too; they are not the person's words.
@@ -109,11 +141,11 @@ export function parseClaudeCodeTranscript(file, overrides = {}) {
   if (!promptTexts.length) return null; // no human words in this file
   const times = main.map((r) => r.timestamp).filter(Boolean).sort();
   const first = humanTurns[0];
-  // A forked session starts with its parent's records (parent sessionId), so the last record names this file's session.
-  const sessionId = [...recs].reverse().find((r) => r.sessionId)?.sessionId || basename(file, '.jsonl');
   const title = recs.find((r) => r.type === 'custom-title')?.customTitle || recs.find((r) => r.type === 'ai-title')?.aiTitle || recs.find((r) => r.type === 'summary')?.summary || null;
   const toolNames = assistants.flatMap((r) => (Array.isArray(r.message.content) ? r.message.content : []).filter((b) => b.type === 'tool_use').map((b) => b.name));
   const { skills, agents } = skillsAndAgents(users, assistants);
+  // Headless pings: scripts and apps check that `claude -p` answers with a one-word prompt. Not a person using AI.
+  if (surfaceFromEntrypoint(first?.entrypoint) === 'sdk' && promptTexts.length === 1 && promptTexts[0].length < 12 && !toolNames.length) return null;
   const originKind = first?.origin?.kind || first?.turnOrigin || 'human';
   // Desktop scheduled tasks run with origin.kind "human"; the <scheduled-task> wrapper (or the state file) is the tell.
   const scheduled = overrides.scheduled || /^\s*<scheduled-task[\s>]/.test(turns[0].raw);
@@ -123,13 +155,13 @@ export function parseClaudeCodeTranscript(file, overrides = {}) {
   let resumed = false;
   for (let i = 1; i < humanTurns.length; i++) if (new Date(humanTurns[i].timestamp) - new Date(humanTurns[i - 1].timestamp) > 4 * 3600e3) { resumed = true; break; }
   const context = [promptTexts[1] ? 'Next: ' + trim(promptTexts[1], 300) : null, toolNames.length ? 'Tools: ' + uniq(toolNames).slice(0, 12).join(', ') : null, skills.length ? 'Skills: ' + skills.join(', ') : null, agents.length ? 'Agents: ' + agents.join(', ') : null, first?.gitBranch ? 'Branch: ' + first.gitBranch : null].filter(Boolean).join(' | ');
-  return baseSession({
+  return Object.defineProperty(baseSession({
     id: 's_claude-code_' + sessionId, source: overrides.source || 'claude-code', surface: overrides.surface || surfaceFromEntrypoint(first?.entrypoint),
     started_at: toISO(times[0]), ended_at: toISO(times[times.length - 1]), title, first_message: promptTexts[0], context,
     messages_user: promptTexts.length, messages_assistant: assistantIds.length, tools: toolNames, skills, agents,
     model: mostCommon(assistants.map((r) => r.message.model)), mode: trigger !== 'human' ? 'routine' : (toolNames.length ? 'agentic' : 'chat'),
-    trigger, project: first?.cwd || null, resumed,
-  });
+    trigger, project: first?.cwd || null, resumed, active_minutes: activeMinutes(times),
+  }), 'firstUuid', { value: forked ? null : first?.uuid || null, enumerable: false }); // not serialized
 }
 
 // ---------- Claude Desktop (Chat + Cowork sessions stored locally by the desktop app) ----------
@@ -239,7 +271,7 @@ export function parseDesktopStateFile(file, consumed = new Set()) {
     if (s) {
       consumed.add(transcript);
       if (new Date(s.ended_at) > new Date(ended_at)) ended_at = s.ended_at;
-      return { ...s, id: sid, title: trim(title, 200) || s.title, started_at: started_at || s.started_at, ended_at, duration_minutes: minutesBetween(started_at || s.started_at, ended_at), model: s.model || obj.model || null };
+      return { ...s, id: sid, title: trim(title, 200) || s.title, started_at: started_at || s.started_at, ended_at, model: s.model || obj.model || null };
     }
   }
 

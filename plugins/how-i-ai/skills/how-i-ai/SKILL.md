@@ -60,7 +60,8 @@ Then handle what is missing:
   data. Each emails a zip, usually within the hour, sometimes longer. Ask the person to
   request both now, drop the zips into `~/how-i-ai/inbox` when they arrive, and tell you.
   Do not wait: continue with what is on the machine and re-run collect when the zips
-  land (re-running is safe, everything dedupes by session id).
+  land (re-running is safe: everything dedupes by session id and judgments already merged
+  are kept).
 - **Claude Code cloud sessions** (claude.ai/code) are not on disk either. If this
   conversation is itself running in a cloud session and the `list_sessions` tool from
   the Claude Code Remote server is available, page through it (`limit` 100, follow

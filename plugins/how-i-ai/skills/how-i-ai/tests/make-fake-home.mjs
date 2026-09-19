@@ -48,6 +48,15 @@ ccSession('aaaa-7', daysAgo(1, 6), '<scheduled-task name="morning-brief" file="/
 // Fork: the file is named for the new session and replays the parent's records first.
 const parentLines = ccSession('aaaa-8', daysAgo(4, 9), 'Sketch two approaches for the billing migration', ['Read']);
 ccSession('aaaa-9', daysAgo(4, 10), 'Go with the second approach and draft the plan', ['Write'], { parentLines });
+// Resume copy: same conversation re-stamped with a new sessionId, message uuids unchanged; the longer copy wins.
+{
+  const orig = ccSession('aaaa-11', daysAgo(6, 9), 'Draft the quarterly investor update from these notes', ['Read', 'Write']);
+  const copy = orig.map((l) => ({ ...l, sessionId: 'aaaa-12' }));
+  copy.push({ isSidechain: false, type: 'user', message: { role: 'user', content: 'Tighten the intro' }, uuid: 'aaaa-12-more', timestamp: iso(daysAgo(5, 9)), cwd: '/Users/me/work/app', sessionId: 'aaaa-12' });
+  writeFileSync(join(projects, 'aaaa-12.jsonl'), copy.map((l) => JSON.stringify(l)).join('\n') + '\n');
+}
+// headless connectivity ping (entrypoint sdk-cli, one word, no tools): not a session
+ccSession('aaaa-10', daysAgo(3, 8), 'Hello', [], { entrypoint: 'sdk-cli' });
 // sidechain file must be ignored
 writeFileSync(join(projects, 'agent-xyz.jsonl'), JSON.stringify({ isSidechain: true, type: 'user', message: { role: 'user', content: 'subagent prompt' }, timestamp: iso(daysAgo(2)), sessionId: 'aaaa-1' }) + '\n');
 
@@ -65,7 +74,7 @@ function legacyDesktopSession(id, start, kind, title, prompts) {
 function coworkSession(id, start, title, prompt, tools, { transcript = true, skill = null } = {}) {
   const sessionId = `local_${id}`, cli = `cli-${id}`, wd = D(join(lam, sessionId)), cwd = join(wd, 'outputs');
   const t0 = start.getTime();
-  const state = { sessionId, processName: 'brave-tender-newton', cliSessionId: cli, cwd, userSelectedFolders: [], createdAt: t0, lastActivityAt: t0 + 20 * 60e3, model: 'claude-sonnet-4-6', isArchived: false, title, vmProcessName: 'brave-tender-newton', hostLoopMode: true, initialMessage: prompt, slashCommands: [], enabledMcpTools: {}, remoteMcpServersConfig: [], egressAllowedDomains: [], memoryEnabled: true, skillsEnabled: true, pluginsEnabled: true, systemPrompt: 'never read this', accountName: 'Test Person', emailAddress: 'test.person@example.com' };
+  const state = { sessionId, processName: 'brave-tender-newton', cliSessionId: cli, cwd, userSelectedFolders: [], createdAt: t0, lastActivityAt: t0 + 20 * 60e3, model: 'claude-sonnet-4-6', isArchived: false, title, vmProcessName: 'brave-tender-newton', hostLoopMode: true, initialMessage: prompt, slashCommands: [], enabledMcpTools: {}, remoteMcpServersConfig: [{ uuid: '11111111-2222-4333-8444-555555555555', name: 'Google Drive', tools: [] }], egressAllowedDomains: [], memoryEnabled: true, skillsEnabled: true, pluginsEnabled: true, systemPrompt: 'never read this', accountName: 'Test Person', emailAddress: 'test.person@example.com' };
   writeFileSync(join(lam, `${sessionId}.json`), JSON.stringify(state, null, 1));
   D(join(wd, 'outputs')); D(join(wd, 'uploads'));
   const stamp = (r, ms) => ({ ...r, session_id: cli, timestamp: iso(new Date(t0 + ms)), _audit_timestamp: iso(new Date(t0 + ms)), _audit_hmac: 'x'.repeat(64) });
@@ -89,7 +98,8 @@ function coworkSession(id, start, title, prompt, tools, { transcript = true, ski
   }
 }
 legacyDesktopSession('d1', daysAgo(4, 11), 'chat', 'Critique onboarding screens', ['Critique these onboarding screens for clarity and hierarchy', 'Now check contrast against WCAG AA']);
-coworkSession('d2', daysAgo(6, 16), 'Interview synthesis', 'Read the 12 interview transcripts in this folder and cluster them into themes', ['Read', 'Write', 'Skill', 'mcp__gdrive__search_files'], { skill: 'research-synthesis' });
+// claude.ai connectors are mcp__<uuid>__tool in transcripts; remoteMcpServersConfig in the state file maps uuid → name
+coworkSession('d2', daysAgo(6, 16), 'Interview synthesis', 'Read the 12 interview transcripts in this folder and cluster them into themes', ['Read', 'Write', 'Skill', 'mcp__11111111-2222-4333-8444-555555555555__search_files'], { skill: 'research-synthesis' });
 // transcript already cleaned up: state file + audit.jsonl only
 coworkSession('d3', daysAgo(0, 8), 'Birthday party', "Help me plan my 6 year old's birthday party for 12 kids on a $300 budget", ['WebSearch', 'Write'], { transcript: false });
 writeFileSync(join(lam, 'scheduled-tasks.json'), JSON.stringify({ scheduledTasks: [], recordedSkips: {} }));

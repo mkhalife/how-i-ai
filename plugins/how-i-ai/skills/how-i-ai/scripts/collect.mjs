@@ -5,7 +5,7 @@
 // Prints a source table and writes sessions.json. Nothing leaves the machine.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { parseArgs, workDir, ensureDir, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
+import { parseArgs, workDir, ensureDir, readJson, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
 import * as src from './lib/sources.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -36,6 +36,9 @@ for (const r of results) {
   r.in_window = r.sessions.length;
 }
 const sessions = [...seen.values()].sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
+// Re-running collect (new export zips, a second pass) must not throw away judgments already merged.
+const previous = new Map((readJson(out, { sessions: [] }).sessions || []).filter((s) => s.classification).map((s) => [s.id, s.classification]));
+for (const s of sessions) if (!s.classification && previous.has(s.id)) s.classification = previous.get(s.id);
 
 const HINTS = {
   'claude-code': 'Claude Code transcripts live in ~/.claude/projects. Nothing there means Claude Code was not used on this machine.',
