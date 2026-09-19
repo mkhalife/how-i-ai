@@ -647,7 +647,8 @@ function chatgptCatalogSignal() {
   return row && row.n ? { count: Number(row.n), last: fromEpoch(row.last) } : null;
 }
 
-export function chatgptDesktop() {
+// Folders the ChatGPT desktop app keeps its data in. Any one existing means the app is installed.
+export function chatgptDesktopRoots() {
   const h = home(); const p = os();
   const roots = [];
   if (p === 'darwin') roots.push(join(h, 'Library', 'Application Support', 'com.openai.chat'), join(h, 'Library', 'Application Support', 'Codex'));
@@ -657,6 +658,11 @@ export function chatgptDesktop() {
     try { for (const d of readdirSync(pk)) if (/^OpenAI\.ChatGPT-Desktop_/i.test(d)) roots.push(join(pk, d, 'LocalCache', 'Roaming', 'ChatGPT')); } catch { /* no packages dir */ }
     roots.push(join(process.env.APPDATA || join(h, 'AppData', 'Roaming'), 'OpenAI', 'ChatGPT'), join(la, 'OpenAI', 'ChatGPT'));
   }
+  return roots;
+}
+
+export function chatgptDesktop() {
+  const roots = chatgptDesktopRoots();
   const out = { source: 'chatgpt-desktop', found: false, path: null, sessions: [], notes: [], signal: null };
   for (const root of roots) {
     if (!existsSync(root)) continue;

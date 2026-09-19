@@ -77,6 +77,13 @@ start "" "https://chatgpt.com/?q=hello%20from%20how-i-ai"
 Fix `docs/index.html` if a target is wrong, and note which ones need the app opened once
 first.
 
+Then run `node plugins\how-i-ai\skills\how-i-ai\scripts\how-i-ai.mjs gather`. It opens the
+chat and Claude Code on the web links through `rundll32 url.dll,FileProtocolHandler` with
+the full prompts (links of about 1.8 KB and 2.5 KB, full of `%` and `&`). Report whether
+both open with the whole prompt filled in, and whether the two downloads are moved from
+`%USERPROFILE%\Downloads` into `%USERPROFILE%\how-i-ai\inbox`. If the prompt arrives cut
+off or mangled, fix `openLink` in `scripts/gather.mjs`.
+
 ## 5. Both entry points, end to end
 
 Follow `SKILL.md` from step 0 as the user of this machine would, twice: the Claude entry

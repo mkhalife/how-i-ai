@@ -62,7 +62,7 @@ const HINTS = {
   'claude-cowork': 'Cowork sessions live in Claude Desktop\'s local-agent-mode-sessions folder.',
   'chatgpt-export': `Optional: the ChatGPT export (Settings → Data controls → Export data) is worth it with more than ~50 conversations or very long ones in the window, or without the ChatGPT desktop app. Drop the zip in ${inbox}`,
   'claude-export': `Optional: the claude.ai export (Settings → Privacy → Export data) adds real first messages and message counts to the chat listing's summaries. Drop the zip in ${inbox}`,
-  'claude-chat': `No ${inbox}/claude-chat-threads.json yet. Optional: the "Claude chats" button on the landing page (PROMPT-claude-chat.md) has Claude in Chat mode list your chats into that file; save it there and re-run.`,
+  'claude-chat': `No ${inbox}/claude-chat-threads.json yet. \`gather\` opens Claude in Chat mode to list your chats into it (by hand: the "Claude chats" button on the landing page).`,
   'chatgpt-app': `No ${inbox}/chatgpt-app-threads.json yet. The agent inside the ChatGPT desktop app writes it (PROMPT-chatgpt-app.md step 2).`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
   'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT conversations).',
@@ -103,7 +103,7 @@ const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(pad('source', 16) + pad('found', 7) + pad('in window', 11) + pad('all time', 10) + 'path / hint');
 for (const t of table) console.log(pad(t.source, 16) + pad(t.found ? 'yes' : 'no', 7) + pad(t.sessions_in_window, 11) + pad(t.sessions_total, 10) + (t.found && t.sessions_in_window ? t.path : (t.hint || '')));
 console.log(`\n${sessions.length} sessions in window across ${table.filter((t) => t.sessions_in_window).length} sources.`);
-if (cloud && !cloud.found) console.log(`\nNo cloud-sessions.json in ${inbox}. Optional: the "Claude Code on the web" prompt (PROMPT-claude-cloud.md), pasted into a claude.ai/code session, lists your cloud sessions into that file.`);
+if (cloud && !cloud.found) console.log(`\nNo cloud-sessions.json in ${inbox}. \`gather\` opens a claude.ai/code session that lists your cloud sessions into it (by hand: the "Claude Code on the web" button on the landing page).`);
 for (const r of misplaced) console.log(`\nIgnored ${r.path}: it is a ${appOf(r.source) === 'chatgpt' ? 'ChatGPT' : 'claude.ai'} export, which belongs to the other entry point (${appOf(r.source) === 'chatgpt' ? 'run with --app chatgpt and put it in ~/how-i-ai-chatgpt/inbox' : 'run without --app and put it in ~/how-i-ai/inbox'}).`);
 if (args['dry-run']) process.exit(0);
 writeJson(out, doc);
