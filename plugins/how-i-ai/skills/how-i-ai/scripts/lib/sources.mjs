@@ -511,6 +511,24 @@ export function geminiCli() {
 // on Windows (a Chromium IndexedDB write-ahead log wiped on logout). We never try to read them.
 // What we report: the app is installed, how many conversation bundles its cache holds, and when
 // it was last written. The official export is the route for content.
+// The merged ChatGPT/Codex app keeps a thread catalog in $CODEX_HOME/sqlite/codex-dev.db. Table local_thread_catalog has
+// one row per thread the app has listed: source_kind "chatgpt" for ChatGPT conversations, "vscode" for local Codex
+// threads (those are the rollout files), with source_updated_at in epoch seconds. It holds titles, never message
+// bodies, and only the conversations the app has shown, so it is a signal, not history. Only count and max(updated)
+// are queried; display_title is never selected. Needs node:sqlite (Node 22.5+); older Node just skips it.
+function chatgptCatalogSignal() {
+  const db = join(process.env.CODEX_HOME || join(home(), '.codex'), 'sqlite', 'codex-dev.db');
+  if (!existsSync(db) || typeof process.getBuiltinModule !== 'function') return null;
+  let conn;
+  try {
+    const sqlite = process.getBuiltinModule('node:sqlite');
+    if (!sqlite) return null;
+    conn = new sqlite.DatabaseSync(db, { readOnly: true });
+    const row = conn.prepare("SELECT count(*) AS n, max(source_updated_at) AS last FROM local_thread_catalog WHERE source_kind = 'chatgpt'").get();
+    return row && row.n ? { count: Number(row.n), last: fromEpoch(row.last) } : null;
+  } catch { return null; } finally { try { conn?.close(); } catch { /* already closed */ } }
+}
+
 export function chatgptDesktop() {
   const h = home(); const p = os();
   const roots = [];
@@ -541,8 +559,10 @@ export function chatgptDesktop() {
         for (const f of ['Local State', join('Default', 'Preferences'), join('Default', 'Network Persistent State'), 'Default']) { const t = fileTimes(join(root, f)); if (t && t.mtime > last) last = t.mtime; }
       }
     } catch { /* unreadable */ }
+    const catalog = files ? null : chatgptCatalogSignal();
+    if (catalog) { files = catalog.count; if (catalog.last && catalog.last > last) last = catalog.last; }
     out.signal = { installed: true, layout: bundles ? 'conversation-cache' : existsSync(join(root, 'IndexedDB')) ? 'indexeddb' : 'chromium-profile', cached_conversations: files || null, last_activity: last ? toISO(last) : null };
-    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} cached conversation file(s)` : ''}${last ? `, last active ${localDate(toISO(last))}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
+    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} ${catalog ? 'catalogued conversation(s)' : 'cached conversation file(s)'}` : ''}${last ? `, last active ${localDate(toISO(last))}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
     break;
   }
   return out;

@@ -47,8 +47,16 @@ for plat in darwin win32; do
 done
 # Merged ChatGPT/Codex macOS app (bundle com.openai.codex): Chromium profile only, no conversation cache.
 M="$T/darwin-merged"; mkdir -p "$M/Library/Application Support/Codex/Default"; echo '{}' > "$M/Library/Application Support/Codex/Local State"
-HOW_I_AI_HOME_OVERRIDE="$M" HOW_I_AI_PLATFORM_OVERRIDE=darwin node --input-type=module -e "
+# Its thread catalog (sqlite) lists ChatGPT conversations by title; only the count and last update may be read.
+HAS_SQLITE=$(node -e "console.log(typeof process.getBuiltinModule==='function'&&process.getBuiltinModule('node:sqlite')?1:0)" 2>/dev/null)
+if [ "$HAS_SQLITE" = "1" ]; then mkdir -p "$M/.codex/sqlite"; node -e "
+  const { DatabaseSync } = require('node:sqlite'); const db = new DatabaseSync('$M/.codex/sqlite/codex-dev.db');
+  db.exec('CREATE TABLE local_thread_catalog (host_id TEXT, thread_id TEXT, display_title TEXT, source_created_at REAL, source_updated_at REAL, cwd TEXT, source_kind TEXT)');
+  const ins = db.prepare('INSERT INTO local_thread_catalog VALUES (?,?,?,?,?,?,?)'); const now = Date.now() / 1000;
+  ins.run('h1', 't1', 'SECRET TITLE ONE', now - 9000, now - 8000, null, 'chatgpt'); ins.run('h1', 't2', 'SECRET TITLE TWO', now - 500, now - 400, null, 'chatgpt'); ins.run('h2', 't3', 'local codex thread', now - 300, now - 200, '/x', 'vscode'); db.close();" 2>/dev/null; fi
+HOW_I_AI_HOME_OVERRIDE="$M" HOW_I_AI_PLATFORM_OVERRIDE=darwin CODEX_HOME="$M/.codex" HAS_SQLITE="$HAS_SQLITE" node --input-type=module -e "
   import { chatgptDesktop } from './scripts/lib/sources.mjs'; const r=chatgptDesktop();
-  if(!r.found||!r.signal.installed||r.signal.layout!=='chromium-profile'||r.signal.cached_conversations!==null||!r.signal.last_activity){console.error('FAIL merged chatgpt app signal',r);process.exit(1)}
+  const wantCount = process.env.HAS_SQLITE === '1' ? 2 : null;
+  if(!r.found||!r.signal.installed||r.signal.layout!=='chromium-profile'||r.signal.cached_conversations!==wantCount||!r.signal.last_activity||JSON.stringify(r).includes('SECRET')){console.error('FAIL merged chatgpt app signal',r);process.exit(1)}
   console.log('== darwin-merged: chatgpt signal ok', JSON.stringify(r.signal));"
 echo "ALL OK ($T)"

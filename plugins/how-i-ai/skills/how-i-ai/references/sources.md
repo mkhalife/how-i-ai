@@ -71,6 +71,19 @@ The desktop apps do not give a legitimate way to read conversation text from dis
 - **The merged ChatGPT/Codex app** (July 2026, bundle `com.openai.codex`) adds only a
   Chromium profile under `Application Support/Codex`; Codex transcripts still live in
   `~/.codex`, plaintext and complete, which the `codex` parser already reads.
+- **What else is in `~/.codex`** (verified September 2026). `session_index.jsonl` is
+  `{id, thread_name, updated_at}` per local thread (used for titles). `state_5.sqlite`
+  table `threads` indexes local Codex threads only, one row per rollout file
+  (`rollout_path`), so it adds nothing the rollouts lack. `thread_history_1.sqlite`
+  (`thread_turns`, `thread_items`) is a projection of the same rollouts.
+  `sqlite/codex-dev.db` table `local_thread_catalog` is the app's thread list:
+  `source_kind` is `chatgpt` for ChatGPT conversations and `vscode` for local threads,
+  with `display_title` and `source_updated_at` (epoch seconds) and no message bodies.
+  It only holds conversations the app has listed, so the collector uses it for the
+  signal (count and last update; titles are never selected) and nothing else. Its
+  `automations` / `automation_runs` tables are where scheduled Codex tasks would show
+  up; both were empty here. ChatGPT conversations shown inside the app are fetched
+  from the server and have no rollout file. Cloud Codex tasks are not on disk either.
 - **Never read:** `~/.codex/auth.json` (live tokens), `~/.codex/shell_snapshots/`
   (exported env vars), Atlas caches, or the opt-in "Computer History" telemetry under
   `Group Containers/2DC432GLL2.com.openai.sky.CUAService`. None are needed for usage
