@@ -1,7 +1,7 @@
 # how-i-ai: list my Claude Code cloud sessions (paste into a claude.ai/code session)
 
-Optional step before the main run. Claude in a cloud session lists your last 30 days of cloud sessions into
-`cloud-sessions.json`; save it to `~/how-i-ai/inbox` and the normal run (`PROMPT.md`) picks it up.
+Optional step before the main run. Claude in a cloud session lists your last 30 days of cloud sessions and gives
+you `cloud-sessions.json` as a download; save it to `~/how-i-ai/inbox` and the normal run (`PROMPT.md`) picks it up.
 
 ```
 You are running the "Claude Code on the web" step of how-i-ai, which shows me how I actually use AI. Your only job here: list my Claude Code cloud sessions from the last 30 days and give me one JSON file. Do not analyse anything, do not comment on the contents, and do not print session titles in your reply.

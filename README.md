@@ -3,7 +3,7 @@
 People describe how they use AI. This shows it, from the data.
 
 `how-i-ai` is a Claude skill that reads your own session history on this machine (Claude
-Code, Claude Desktop Chat and Cowork, plus the claude.ai data export), takes the first
+Code, Cowork, and the chat and cloud session lists Claude hands you), takes the first
 message of each session and a little context, classifies what every session was for and
 whether AI informed you or did the work, and renders a profile of your last 30 days.
 Then, only if you say yes after seeing the exact rows, it shares an anonymized version
@@ -20,10 +20,12 @@ team sheet; if you use both tools, run both.
 - **Skill:** `plugins/how-i-ai/skills/how-i-ai/SKILL.md`
 - **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code, Cowork); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
-  chat-only surfaces (chatgpt.com, claude.ai chat): `PROMPT-chat.md`
+  export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
+  `PROMPT-chat.md`
 - **Optional first steps for the Claude run:** `PROMPT-claude-chat.md` (claude.ai Chat lists
   your chats into `claude-chat-threads.json`) and `PROMPT-claude-cloud.md` (a claude.ai/code
-  session lists your cloud sessions into `cloud-sessions.json`). Save either file into
+  session lists your cloud sessions into `cloud-sessions.json`). Each gives you the file as
+  a download. Save either file into
   `~/how-i-ai/inbox`; the Claude Code or Cowork run picks it up
 - **Team sheet backend:** `apps-script/`
 
@@ -39,27 +41,28 @@ requirement (Claude Code already needs it).
 
 Without the plugin, paste `PROMPT.md` into Claude Code or Cowork, or
 `PROMPT-chatgpt-app.md` into a new task in the ChatGPT desktop app. Or use the buttons on
-the landing page, which open the app with the prompt pre-filled (the ChatGPT desktop app
-card copies the prompt instead):
+the landing page, which open the app with the prompt pre-filled:
 
 | Button | Link it opens | Reads |
 |---|---|---|
 | Optional first: Claude chats | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
-| Optional first: Claude Code on the web | copy and paste into claude.ai/code | lists your cloud sessions into `cloud-sessions.json` for the inbox |
-| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two optional inbox files, and your claude.ai export |
-| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two optional inbox files, and your claude.ai export |
+| Optional first: Claude Code on the web | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
+| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two optional inbox files, and a claude.ai export if present |
+| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two optional inbox files, and a claude.ai export if present |
 | Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code or Cowork) |
-| ChatGPT desktop app | copy and paste | ChatGPT conversations and Codex sessions |
-| ChatGPT on the web | `https://chatgpt.com/?q=…` | an uploaded export zip |
+| ChatGPT desktop app | `codex://threads/new?prompt=…` | ChatGPT conversations and Codex sessions |
+| ChatGPT on the web | `https://chatgpt.com/?q=…` | an uploaded export zip (fallback without the ChatGPT desktop app; chatgpt.com cannot list conversations) |
 
 ## What it does
 
 1. Asks your title and function (Design, Product, Engineering, …).
 2. `collect`: inventories sessions from every source its entry point owns, last 30
    days, into `~/how-i-ai/sessions.json` (`~/how-i-ai-chatgpt/sessions.json` with
-   `--app chatgpt`). Chat products need their official export zip dropped in that
-   folder's `inbox`; the skill tells you how to request it. Inside the ChatGPT desktop
-   app the agent can also list ChatGPT conversations itself.
+   `--app chatgpt`). Chat history comes from a listing file in that folder's `inbox`:
+   Claude in Chat mode lists Claude chats, and the agent inside the ChatGPT desktop app
+   lists ChatGPT conversations. The official data export is an optional top-up: it adds
+   real first messages and counts for Claude chats, covers ChatGPT accounts with more
+   than ~50 conversations in the window, and is the route without the desktop app.
 3. `classify`: Claude judges each session (category, subcategory, ask/make/do, a safe
    one-line paraphrase, surprise flag); the script validates and merges.
 4. `stats` + a short narrative → `profile.json`.
@@ -79,9 +82,9 @@ classification rules, and the sharing contract.
 | Claude Code (CLI, IDE, Desktop Code tab, teleported cloud sessions) | claude | `~/.claude/projects` transcripts |
 | Claude Desktop Chat and Cowork | claude | the desktop app's local session store |
 | Claude Code cloud sessions | claude | `cloud-sessions.json` in `~/how-i-ai/inbox`, listed by Claude inside a claude.ai/code session: titles and a status summary |
-| claude.ai chats | claude | `claude-chat-threads.json` in `~/how-i-ai/inbox`, listed by Claude in Chat mode (titles and summaries), or the official data export zip there (fuller, wins when both exist) |
+| claude.ai chats | claude | `claude-chat-threads.json` in `~/how-i-ai/inbox`, listed by Claude in Chat mode (titles and summaries); optionally the official data export zip there (fuller, wins when both exist) |
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
-| ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app, or the official data export zip in `~/how-i-ai-chatgpt/inbox` |
+| ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app (chatgpt.com has no listing tool); optionally the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 
 macOS, Windows, and Linux paths are handled. No cookies, no tokens, no scraping.
 

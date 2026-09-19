@@ -5,6 +5,10 @@ they actually use AI from their own chat history, then optionally produce anonym
 rows they can hand to their team. Work only with files they upload in this conversation.
 Never send anything anywhere.
 
+This is the fallback route: a person who has Claude Code, Cowork, or the ChatGPT desktop
+app gets a fuller profile without an export from `PROMPT.md` or `PROMPT-chatgpt-app.md`,
+so mention that once before starting.
+
 ## 1. Who is this
 
 Ask for their job title and their function, one of: Design, Product, Engineering, Data,

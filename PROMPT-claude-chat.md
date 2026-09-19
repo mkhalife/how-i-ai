@@ -1,7 +1,7 @@
 # how-i-ai: list my Claude chats (paste into claude.ai Chat, web or desktop)
 
-Optional step before the main run. Claude in Chat mode lists your last 30 days of chats into
-`claude-chat-threads.json`; save it to `~/how-i-ai/inbox` and the normal run (`PROMPT.md`) picks it up.
+Optional step before the main run. Claude in Chat mode lists your last 30 days of chats and gives you
+`claude-chat-threads.json` as a download; save it to `~/how-i-ai/inbox` and the normal run (`PROMPT.md`) picks it up.
 
 ```
 You are running the "Claude chat" step of how-i-ai, which shows me how I actually use AI. Your only job here: list my Claude chats from the last 30 days and give me one JSON file. Do not analyse anything, and do not print chat titles or summaries in your reply.

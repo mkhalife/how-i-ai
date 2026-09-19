@@ -63,9 +63,9 @@ and paths per source: `references/sources.md`.
 Then handle what is missing:
 
 - **Claude chats and Claude Code cloud sessions are not on disk, and the surfaces that
-  hold them cannot run these scripts.** Each of those surfaces can write one JSON file,
-  the person saves it into `~/how-i-ai/inbox`, and collect picks it up. Both are
-  optional:
+  hold them cannot run these scripts.** Each of those surfaces lists its own history and
+  hands the person one JSON file to download; they save it into `~/how-i-ai/inbox` and
+  collect picks it up. This is the normal route for both, and both are optional:
   - `claude-chat-threads.json`: the "Claude chats" button on the landing page (or
     `PROMPT-claude-chat.md` pasted into claude.ai Chat, web or desktop). Claude in Chat
     mode lists the last 30 days with its `recent_chats` tool. Per chat it holds the url,
@@ -75,26 +75,31 @@ Then handle what is missing:
     pasted into a claude.ai/code session). Claude there lists cloud sessions with the
     Claude Code Remote `list_sessions` tool. Per session it holds the id, title, two
     timestamps, environment, origin, tags, model, and a short status summary; no message
-    text. If this conversation is itself a cloud session and you have `list_sessions`,
-    follow `PROMPT-claude-cloud.md` and write the file into the inbox yourself.
+    text. Remote Control mirrors of local sessions (`environment_kind` `bridge`) are in
+    the list too and are skipped. If this conversation is itself a cloud session and you
+    have `list_sessions`, follow `PROMPT-claude-cloud.md` and write the file into the
+    inbox yourself.
   When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
   missing, mention the two buttons once and continue; do not block on them. Cowork and
   local Claude Code do not have either tool.
-- **The claude.ai export gives fuller chat data** (first messages, message counts, tools)
-  and wins over `claude-chat-threads.json` when a chat is in both: claude.ai Settings →
-  Privacy → Export data, zip into `~/how-i-ai/inbox`. It is emailed, usually within the
-  hour, sometimes longer. Ask the person to request it now, drop the zip into the inbox
-  when it arrives, and tell you. Do not wait: continue with what is on the machine and
-  re-run collect when the zip lands (re-running is safe: everything dedupes by session
-  id and judgments already merged are kept).
 - **ChatGPT chats are not readable on disk** (`--app chatgpt`). ChatGPT's desktop app
   encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the
   Windows app keeps only a volatile partial cache; the collector reports the app as a
   signal (installed, how many cached conversations, last used) and nothing more. Content
   comes from the agent inside the ChatGPT desktop app, which writes
-  `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`, or from the official export:
-  ChatGPT Settings → Data controls → Export data, zip into `~/how-i-ai-chatgpt/inbox`,
-  handled the same way as the claude.ai export above.
+  `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`. chatgpt.com on the web has no
+  tool that lists conversations, so there is no web route to that file.
+- **The data exports are an optional top-up.** Do not ask for one by default. Offer it
+  when the person wants real first messages and message counts for Claude chats (the
+  chat listing has only Claude's summaries), when a ChatGPT user has more than ~50
+  conversations in the window or conversations longer than ~50 turns (the in-app listing
+  stops there), or when they have no surface that can list (no ChatGPT desktop app, or
+  `recent_chats` is unavailable). claude.ai: Settings → Privacy → Export data, zip into
+  `~/how-i-ai/inbox`. ChatGPT: Settings → Data controls → Export data, zip into
+  `~/how-i-ai-chatgpt/inbox`. It is emailed, usually within the hour, sometimes longer.
+  Do not wait: continue with what is on the machine and re-run collect when the zip
+  lands (re-running is safe: everything dedupes by session id and judgments already
+  merged are kept). An export wins over a listing file for the same conversation.
 - **A source shows found but 0 sessions**: run
   `node SKILL_DIR/scripts/how-i-ai.mjs inspect "<one file from that folder>"` to see its
   key structure (no values are printed), then adapt the matching parser in

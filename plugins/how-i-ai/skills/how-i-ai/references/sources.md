@@ -10,21 +10,28 @@ parsers are in `scripts/lib/sources.mjs`.
 | Source | Entry point | Surface | Location | Status |
 |---|---|---|---|---|
 | `claude-code` | claude | cli, ide, desktop, cloud (teleported) | `~/.claude/projects/<encoded-cwd>/<session>.jsonl` (or `$CLAUDE_CONFIG_DIR/projects`) | on disk, parsed |
-| `claude-desktop` | claude | desktop chat | not on disk (verified macOS, September 2026): the desktop app keeps Chat conversations server-side, so they arrive with `claude-chat-threads.json` or the claude.ai export. The tolerant state-file parser still accepts an inline-`messages` shape in case a build writes one | export only |
+| `claude-desktop` | claude | desktop chat | not on disk (verified macOS, September 2026): the desktop app keeps Chat conversations server-side, so they arrive with `claude-chat-threads.json` (or the optional claude.ai export). The tolerant state-file parser still accepts an inline-`messages` shape in case a build writes one | listing file, or optional export |
 | `claude-cowork` | claude | cowork | macOS `~/Library/Application Support/Claude/local-agent-mode-sessions/<account>/<org>/`; Windows `%LOCALAPPDATA%\Claude\local-agent-mode-sessions\` (older builds `%APPDATA%`); Linux `~/.config/Claude/`. Also `Claude-3p` for managed installs. `local_<uuid>.json` state file plus working dir `local_<uuid>/` (layout below) | on disk, verified on macOS |
-| `claude-code` cloud | claude | cloud | not on disk. `~/how-i-ai/inbox/cloud-sessions.json` (the working folder is also checked, `--cloud-sessions` overrides), written by Claude inside a claude.ai/code session from the Claude Code Remote `list_sessions` tool (`PROMPT-claude-cloud.md`) and saved there by the person | title, timestamps, model, status summary |
+| `claude-code` cloud | claude | cloud | not on disk. `~/how-i-ai/inbox/cloud-sessions.json` (the working folder is also checked, `--cloud-sessions` overrides), written by Claude inside a claude.ai/code session from the Claude Code Remote `list_sessions` tool (`PROMPT-claude-cloud.md`) and saved there by the person | normal route: title, timestamps, model, status summary |
 | `codex` | chatgpt | cli, ide, desktop | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` and `~/.codex/archived_sessions/` (or `$CODEX_HOME`) | on disk, parsed |
 | `codex` cloud | chatgpt | cloud | `codex cloud list --json` (`{tasks[], cursor}`). The binary is looked for on PATH, then inside the ChatGPT desktop app: macOS `ChatGPT.app/Contents/Resources/codex` (verified), Windows `%LOCALAPPDATA%\Programs\ChatGPT\resources\codex.exe` and the Store package folder (unverified) | title and summary only |
-| `chatgpt-export` | chatgpt | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai-chatgpt/inbox` | parsed from `conversations.json` |
-| `chatgpt-app` | chatgpt | desktop | `~/how-i-ai-chatgpt/inbox/chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app from its `list_threads` / `read_thread` tools (`PROMPT-chatgpt-app.md`). Same ids as the export; when both exist the export wins | first message, counts, title |
-| `claude-chat` | claude | chat | `~/how-i-ai/inbox/claude-chat-threads.json`, written by Claude in claude.ai Chat mode (web or desktop) from its `recent_chats` tool (`PROMPT-claude-chat.md`) and saved there by the person. Same ids as the claude.ai export; when both exist the export wins | title, Claude's summary, one timestamp |
-| `claude-export` | claude | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
+| `chatgpt-export` | chatgpt | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai-chatgpt/inbox` | optional top-up, parsed from `conversations.json` |
+| `chatgpt-app` | chatgpt | desktop | `~/how-i-ai-chatgpt/inbox/chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app from its `list_threads` / `read_thread` tools (`PROMPT-chatgpt-app.md`). The only surface that can list ChatGPT conversations: chatgpt.com has no listing tool. Same ids as the export; when both exist the export wins | normal route: first message, counts, title |
+| `claude-chat` | claude | chat | `~/how-i-ai/inbox/claude-chat-threads.json`, written by Claude in claude.ai Chat mode (web or desktop) from its `recent_chats` tool (`PROMPT-claude-chat.md`) and saved there by the person. Same ids as the claude.ai export; when both exist the export wins | normal route: title, Claude's summary, one timestamp |
+| `claude-export` | claude | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | optional top-up, parsed from `conversations.json` |
 | `chatgpt-desktop` | chatgpt | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*` (classic app), or `~/Library/Application Support/Codex/` (merged app, Chromium profile only: no cached count, last activity from file times); Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\` | installed, cached conversation count, last activity. No message bodies |
 
 Not covered, on purpose: Cursor and Copilot (different product category), and any route
 that scrapes a logged-in web session with cookies or tokens. Those unofficial routes
-exist but they are against the products' terms and break without notice; the exports are
-the supported path.
+exist but they are against the products' terms and break without notice; the listing
+files and the exports are the supported paths.
+
+The exports are an optional top-up, not a step every person is asked to do. They matter
+when the person wants real first messages and message counts for Claude chats (the chat
+listing has only Claude's summaries), when a ChatGPT user has more than ~50 conversations
+in the window or conversations longer than ~50 turns, or when the person has no surface
+that can list (no ChatGPT desktop app, `recent_chats` unavailable). When an export zip
+is present it wins over the listing for the same conversation.
 
 ## Claude surfaces that hand over a file (verified September 2026)
 
@@ -32,7 +39,9 @@ Two Claude surfaces hold history the local run cannot reach, and neither can run
 scripts or post to the sheet. Each writes one JSON file, the person saves it into
 `~/how-i-ai/inbox`, and the normal Claude run (Claude Code or Cowork) reads it. One
 Claude profile, one id. The landing page has a card for each; both prompts are carried
-whole, with no fetch.
+whole, with no fetch. Both surfaces produce a real file download (`claude-chat-threads.json`
+from Chat, `cloud-sessions.json` from a claude.ai/code session), each verified end to end
+from its deep link.
 
 - **Claude chats** (`PROMPT-claude-chat.md` → `claude-chat-threads.json`). Claude in
   claude.ai Chat mode, web or desktop, has `recent_chats` (args `n` up to 20, `before`,
@@ -59,7 +68,8 @@ whole, with no fetch.
   (a bare array and the `{ ccr: { data } }` wrapper are accepted). The title stands in
   for the first message; `post_turn_summary.status_detail` and `recent_action` go into
   `context`; `environment_kind` containing `bridge` is a Remote Control mirror of a local
-  session and is skipped.
+  session and is skipped. In a real file most listed sessions were `bridge` and the rest
+  `anthropic_cloud`, so the collector keeps far fewer sessions than the file lists.
 
 ## Claude Desktop on disk (verified on macOS, September 2026)
 
@@ -129,12 +139,19 @@ The desktop apps do not give a legitimate way to read conversation text from dis
   by hand it answers "Codex did not provide CODEX_APP_TOOLS_PIPE_PATH", and under
   `codex exec` the tools are not offered at all (both tested). So listing ChatGPT
   conversations is a job for the agent inside the app, which is what
-  `PROMPT-chatgpt-app.md` is for.
+  `PROMPT-chatgpt-app.md` is for. It lists with `list_threads` (limit 50, plus pinned)
+  and reads with `read_thread` (10 turns per page, newest first).
+- **chatgpt.com has no listing tool.** Asked directly, ChatGPT on the web reports no tool
+  that lists conversations; it can only recall from memory. There is no web route that
+  produces `chatgpt-app-threads.json`, so without the desktop app the export is the only
+  source of ChatGPT conversations.
 - **Never read:** `~/.codex/auth.json` (live tokens), `~/.codex/shell_snapshots/`
   (exported env vars), Atlas caches, or the opt-in "Computer History" telemetry under
   `Group Containers/2DC432GLL2.com.openai.sky.CUAService`. None are needed for usage
   counts and all are more sensitive than chat text.
-- **The export.** Settings → Data controls → Export data. Arrives by email, usually in
+- **The export (optional).** Worth requesting with more than ~50 conversations in the
+  window, conversations longer than ~50 turns, or no desktop app. Settings → Data
+  controls → Export data. Arrives by email, usually in
   minutes, officially "up to 7 days"; the link expires after 24 hours. The zip holds
   `conversations.json` (or numbered conversation files on very large accounts),
   `chat.html`, `message_feedback.json`, `model_comparisons.json`, `user.json`. It does
@@ -142,8 +159,8 @@ The desktop apps do not give a legitimate way to read conversation text from dis
   images have been unreliable in exports since 2025.
 
 So the ChatGPT entry point reports the desktop app as a signal (installed, cached
-conversation count, last activity) and gets content from the export or from the in-app
-agent's `chatgpt-app-threads.json`.
+conversation count, last activity) and gets content from the in-app agent's
+`chatgpt-app-threads.json`, topped up by the export when one is in the inbox.
 
 `codex cloud` writes an `error.log` containing an account id into its working directory,
 so the collector runs it in a throwaway temp dir and deletes that afterwards.
