@@ -66,7 +66,7 @@ the landing page, which open the app with the prompt pre-filled:
 3. `classify`: Claude judges each session (category, subcategory, ask/make/do, a safe
    one-line paraphrase, surprise flag); the script validates and merges.
 4. `stats` + a short narrative → `profile.json`.
-   Top skills and top custom sub-agents (from Claude Code transcripts) are counted too.
+   Top skills and top custom sub-agents are counted too.
 5. `render`: a self-contained HTML profile in the wrapped design (`editorial` and
    `terminal` templates are also included). Works offline.
 6. `share preview` shows the exact rows; `share send` posts them only on an explicit yes.
@@ -86,14 +86,15 @@ classification rules, and the sharing contract.
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
 | ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app (chatgpt.com has no listing tool); optionally the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 
-macOS, Windows, and Linux paths are handled. No cookies, no tokens, no scraping.
+macOS, Windows, and Linux paths are handled; the Windows ones are still unverified. No
+cookies, no tokens, no scraping.
 
 ## Privacy
 
 Everything stays in `~/how-i-ai` (`~/how-i-ai-chatgpt` for the ChatGPT entry point). The
-only thing that can leave is the row set shown in
-`share preview`: id, function, title (optional), and per-session category, paraphrase,
-timing, counts, tool, skill and agent names. Never the prompts. Details: `references/sharing.md`.
+only thing that can leave is the row set shown in `share preview`: id, function, title
+(optional), and per-session category, paraphrase, timing, counts, model, and tool,
+connector, skill and agent names. Never the prompts. Details: `references/sharing.md`.
 
 ## Develop
 

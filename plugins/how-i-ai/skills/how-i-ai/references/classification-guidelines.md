@@ -38,7 +38,8 @@ Edge cases:
   real ask: classify from the context.
 - Scheduled or routine sessions: classify the job the routine does (a nightly PR review
   is Review & explain code).
-- Only a title and a short status summary are available (cloud sessions): classify from
+- Only a title and a short status summary are available (Claude and Codex cloud sessions,
+  and a ChatGPT thread whose opening the in-app agent could not reach): classify from
   those, lower confidence.
 - `claude-chat` sessions: the text is Claude's summary of the conversation, not the
   person's words. Classify from it at confidence 0.6 to 0.7, and still write your own
