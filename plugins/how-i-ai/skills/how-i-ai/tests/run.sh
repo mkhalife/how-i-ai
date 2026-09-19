@@ -15,11 +15,15 @@ for plat in darwin win32; do
     console.log('   bundled codex binary ok');" 
   node -e "
     const d=require('$H/how-i-ai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
-    const want={'claude-code':9,'claude-desktop':1,'claude-cowork':2,'claude-export':2,'codex':0,'chatgpt-export':0,'chatgpt-app':0};
+    const want={'claude-code':9,'claude-desktop':1,'claude-cowork':2,'claude-export':2,'claude-chat':1,'codex':0,'chatgpt-export':0,'chatgpt-app':0};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
     const c=d.sessions.find(s=>s.id.includes('cloud1')); if(!c||c.surface!=='cloud') {console.error('FAIL cloud');process.exit(1)}
     if(c.duration_minutes!==null||c.messages_user!==null||c.messages_assistant!==null) {console.error('FAIL a title-only cloud session has no duration and no message counts',c);process.exit(1)}
+    if(!c.context.includes('all checks green')||!c.context.includes('Opened a pull request')||!c.context.includes('only the title and a status summary')||c.model!=='claude-opus-4-1') {console.error('FAIL cloud context comes from post_turn_summary',c);process.exit(1)}
+    const cc=d.sessions.filter(s=>s.source==='claude-chat')[0]; if(!cc||cc.id!=='s_claude-export_0b5f7c1e-3d2a-4e61-9a77-5c1d2e3f4a5b'||cc.surface!=='chat'||cc.messages_user!==null||cc.messages_assistant!==null||cc.duration_minutes!==null||cc.model!==null||cc.title!=='Pricing page critique'||!cc.first_message.startsWith('The person asked for a critique')||!cc.context.includes('Summary written by Claude')||cc.started_at!==cc.ended_at) {console.error('FAIL claude-chat parse',cc);process.exit(1)}
+    const k1=d.sessions.find(s=>s.id==='s_claude-export_k1'); if(!k1||k1.source!=='claude-export'||k1.messages_user!==1) {console.error('FAIL export should win over the chat listing for the same chat',k1);process.exit(1)}
+    if(!d.sources.some(r=>r.source==='claude-chat'&&r.found)) {console.error('FAIL claude-chat row missing from the source table');process.exit(1)}
     if(d.sessions.filter(s=>s.source==='claude-export').some(s=>s.duration_minutes!==null)) {console.error('FAIL export duration must be null');process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('bridge1'))) {console.error('FAIL bridge should be skipped');process.exit(1)}
     const a1=d.sessions.find(s=>s.id.endsWith('aaaa-1')); if(!a1.connectors.includes('github')||a1.messages_user!==1||!a1.tools.includes('Edit')) {console.error('FAIL cc parse',a1);process.exit(1)}
@@ -47,11 +51,13 @@ for plat in darwin win32; do
   for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/profile.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
   node scripts/share.mjs preview | head -4 | sed 's/^/   /'
   node -e "const p=require('$H/how-i-ai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; if(!cols.includes('skills')||!cols.includes('agents')){console.error('FAIL skills columns');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
+  node -e "const p=require('$H/how-i-ai/share-rows.json'); const r=p.sessions.filter(r=>r.source==='claude-chat'); if(r.length!==1||r[0].messages_user!==''||r[0].messages_assistant!==''||r[0].duration_minutes!==''||r[0].surface!=='chat'){console.error('FAIL claude-chat row should be shared with blank counts and duration',r);process.exit(1)}; console.log('   claude-chat row shared with blank counts')"
   echo "== $plat: chatgpt entry point"; node scripts/how-i-ai.mjs --app chatgpt collect --no-codex-cloud --days 30 | sed 's/^/   /'
   node -e "
     const d=require('$H/how-i-ai-chatgpt/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
     const want={'codex':5,'chatgpt-export':3,'chatgpt-app':2,'claude-code':0,'claude-cowork':0,'claude-export':0};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
+    if(d.sessions.some(s=>s.source==='claude-chat')||d.sources.some(r=>r.source==='claude-chat')) {console.error('FAIL the ChatGPT entry point must not read claude-chat-threads.json');process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_codex_c3-review')) {console.error('FAIL codex sub-agent rollout counted as a session');process.exit(1)}

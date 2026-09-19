@@ -107,6 +107,6 @@ export function uniq(arr) { return [...new Set(arr.filter((x) => x != null && x 
 export function appOf(source) { return /^(codex|chatgpt)/.test(String(source || '')) ? 'chatgpt' : 'claude'; }
 
 export const SOURCE_LABELS = {
-  'claude-code': 'Claude Code', 'claude-desktop': 'Claude Desktop', 'claude-cowork': 'Cowork', 'claude-export': 'Claude',
+  'claude-code': 'Claude Code', 'claude-desktop': 'Claude Desktop', 'claude-cowork': 'Cowork', 'claude-export': 'Claude', 'claude-chat': 'Claude',
   codex: 'Codex', 'chatgpt-export': 'ChatGPT', 'chatgpt-app': 'ChatGPT',
 };

@@ -20,16 +20,20 @@ const results = [];
 const push = (r) => { if (r) results.push(r); };
 // Each entry point reads its own product's sessions and nothing else.
 const app = appName();
+let cloud = null;
 if (app === 'claude') {
   push(src.claudeCode());
   push(src.claudeDesktop());
-  push(src.claudeCloud(args['cloud-sessions'] || (existsSync(join(dir, 'cloud-sessions.json')) ? join(dir, 'cloud-sessions.json') : null)));
+  // cloud-sessions.json is saved by the person into the inbox (PROMPT-claude-cloud.md); the working folder is also checked.
+  cloud = src.claudeCloud(args['cloud-sessions'] || [join(inbox, 'cloud-sessions.json'), join(dir, 'cloud-sessions.json')].find((f) => existsSync(f)) || null);
+  push(cloud);
 } else {
   push(src.codex());
   if (!args['no-codex-cloud']) push(src.codexCloud());
 }
 const misplaced = [];
 for (const r of src.exportsInbox(inbox)) { if (r.source === 'export' || appOf(r.source) === app) push(r); else misplaced.push(r); }
+if (app === 'claude') push(src.claudeChatThreads(inbox)); // after the export: same ids, the export is richer
 if (app === 'chatgpt') {
   push(src.chatgptAppThreads(inbox)); // after the export: same ids, the export is richer
   push(src.chatgptDesktop());
@@ -50,10 +54,11 @@ for (const s of sessions) if (!s.classification && previous.has(s.id)) s.classif
 
 const HINTS = {
   'claude-code': 'Claude Code transcripts live in ~/.claude/projects. Nothing there means Claude Code was not used on this machine.',
-  'claude-desktop': 'Claude Desktop not found on this machine. Its Chat history comes from the claude.ai export either way.',
+  'claude-desktop': 'Claude Desktop not found on this machine. Its Chat history comes from claude-chat-threads.json or the claude.ai export either way.',
   'claude-cowork': 'Cowork sessions live in Claude Desktop\'s local-agent-mode-sessions folder.',
   'chatgpt-export': `Request your ChatGPT export (Settings → Data controls → Export data), then drop the zip in ${inbox}`,
   'claude-export': `Request your claude.ai export (Settings → Privacy → Export data), then drop the zip in ${inbox}`,
+  'claude-chat': `No ${inbox}/claude-chat-threads.json yet. Optional: the "Claude chats" button on the landing page (PROMPT-claude-chat.md) has Claude in Chat mode list your chats into that file; save it there and re-run.`,
   'chatgpt-app': `No ${inbox}/chatgpt-app-threads.json yet. The agent inside the ChatGPT desktop app writes it (PROMPT-chatgpt-app.md step 2).`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
   'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT conversations).',
@@ -61,7 +66,7 @@ const HINTS = {
 
 // Found, but nothing parsed and no parser note: say why that is expected.
 const FOUND_EMPTY = {
-  'claude-desktop': 'Desktop app found. Chat conversations are not stored on disk (only Cowork sessions are), so Chat history comes from the claude.ai export.',
+  'claude-desktop': 'Desktop app found. Chat conversations are not stored on disk (only Cowork sessions are), so Chat history comes from claude-chat-threads.json or the claude.ai export.',
 };
 
 const table = [];
@@ -94,6 +99,7 @@ const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(pad('source', 16) + pad('found', 7) + pad('in window', 11) + pad('all time', 10) + 'path / hint');
 for (const t of table) console.log(pad(t.source, 16) + pad(t.found ? 'yes' : 'no', 7) + pad(t.sessions_in_window, 11) + pad(t.sessions_total, 10) + (t.found && t.sessions_in_window ? t.path : (t.hint || '')));
 console.log(`\n${sessions.length} sessions in window across ${table.filter((t) => t.sessions_in_window).length} sources.`);
+if (cloud && !cloud.found) console.log(`\nNo cloud-sessions.json in ${inbox}. Optional: the "Claude Code on the web" prompt (PROMPT-claude-cloud.md), pasted into a claude.ai/code session, lists your cloud sessions into that file.`);
 for (const r of misplaced) console.log(`\nIgnored ${r.path}: it is a ${appOf(r.source) === 'chatgpt' ? 'ChatGPT' : 'claude.ai'} export, which belongs to the other entry point (${appOf(r.source) === 'chatgpt' ? 'run with --app chatgpt and put it in ~/how-i-ai-chatgpt/inbox' : 'run without --app and put it in ~/how-i-ai/inbox'}).`);
 if (args['dry-run']) process.exit(0);
 writeJson(out, doc);

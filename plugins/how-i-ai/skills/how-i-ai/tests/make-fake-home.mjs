@@ -228,11 +228,20 @@ writeFileSync(join(gptInbox, 'chatgpt-app-threads.json'), JSON.stringify({ sourc
 const gptRoot = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Packages', 'OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0', 'LocalCache', 'Roaming', 'ChatGPT', 'IndexedDB', 'https_chatgpt.com_0.indexeddb.leveldb') : join(dir, 'Library', 'Application Support', 'com.openai.chat', 'conversations-v3-1111');
 D(gptRoot); writeFileSync(join(gptRoot, plat === 'win32' ? '000003.log' : 'abc.data'), Buffer.from([1, 2, 3, 4]));
 
-// ---- cloud sessions list (as exported from inside a claude.ai/code session) ----
-writeFileSync(join(dir, 'how-i-ai', 'cloud-sessions.json'), JSON.stringify({ ccr: { data: [
-  { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'web', environment_kind: 'anthropic_cloud', session_context: { model: 'claude-opus-4-1' } },
-  { id: 'session_bridge1', title: 'mirror of a local session', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'claude_code_cli', environment_kind: 'bridge' },
-] } }));
+// ---- cloud sessions list, as handed over by Claude inside a claude.ai/code session (PROMPT-claude-cloud.md) ----
+writeFileSync(join(inbox, 'cloud-sessions.json'), JSON.stringify({ source: 'claude-cloud', exported_at: iso(new Date()), data: [
+  { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), environment_kind: 'anthropic_cloud', origin: 'web', tags: [], configured_model: 'claude-opus-4-1', session_context: { model: 'claude-opus-4-1' }, post_turn_summary: { status_detail: 'Retry added to the integration suite; all checks green', recent_action: 'Opened a pull request' } },
+  { id: 'session_bridge1', title: 'mirror of a local session', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), environment_kind: 'bridge', origin: 'claude_code_cli', tags: [], configured_model: null },
+] }));
+
+// ---- Claude chats as listed by Claude in Chat mode (PROMPT-claude-chat.md): summaries, one timestamp, no counts ----
+const claudeChats = { source: 'claude-chat', exported_at: iso(new Date()), chats: [
+  { url: 'https://claude.ai/chat/k1', updated_at: iso(daysAgo(7, 16)), title: 'Roadmap tradeoffs', summary: 'same chat as the export, must not be counted twice' },
+  { url: 'https://claude.ai/chat/0b5f7c1e-3d2a-4e61-9a77-5c1d2e3f4a5b', updated_at: iso(daysAgo(4, 11)), title: 'Pricing page critique', summary: 'The person asked for a critique of a pricing page layout and Claude suggested a clearer plan comparison.' },
+  { url: 'https://claude.ai/chat/9e8d7c6b-5a49-4382-b716-0f1e2d3c4b5a', updated_at: iso(daysAgo(45, 11)), title: 'Old chat', summary: 'too old to count' },
+] };
+writeFileSync(join(inbox, 'claude-chat-threads.json'), JSON.stringify(claudeChats));
+writeFileSync(join(gptInbox, 'claude-chat-threads.json'), JSON.stringify(claudeChats)); // wrong inbox: the ChatGPT entry point must not read it
 
 console.log(`fake ${plat} home at ${dir}`);
 

@@ -52,8 +52,9 @@ node SKILL_DIR/scripts/how-i-ai.mjs collect --days 30
 ```
 
 Read the source table it prints. It looks for, in order: Claude Code transcripts,
-Claude Desktop Chat and Cowork sessions, a Claude Code cloud session list (see below),
-and a claude.ai export zip in `~/how-i-ai/inbox`. With `--app chatgpt` it looks instead
+Claude Desktop Chat and Cowork sessions, and in `~/how-i-ai/inbox` a Claude Code cloud
+session list (`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
+(`claude-chat-threads.json`), see below. With `--app chatgpt` it looks instead
 for Codex sessions (and cloud tasks if a signed-in `codex` binary is on PATH or inside
 the ChatGPT desktop app), a ChatGPT export zip and `chatgpt-app-threads.json` in
 `~/how-i-ai-chatgpt/inbox`, and whether the ChatGPT desktop app is installed. Details
@@ -61,26 +62,39 @@ and paths per source: `references/sources.md`.
 
 Then handle what is missing:
 
-- **claude.ai chats and ChatGPT chats are not readable on disk.** ChatGPT's desktop app
+- **Claude chats and Claude Code cloud sessions are not on disk, and the surfaces that
+  hold them cannot run these scripts.** Each of those surfaces can write one JSON file,
+  the person saves it into `~/how-i-ai/inbox`, and collect picks it up. Both are
+  optional:
+  - `claude-chat-threads.json`: the "Claude chats" button on the landing page (or
+    `PROMPT-claude-chat.md` pasted into claude.ai Chat, web or desktop). Claude in Chat
+    mode lists the last 30 days with its `recent_chats` tool. Per chat it holds the url,
+    `updated_at`, the title, and a summary written by Claude; no first message, no
+    counts, no model. These become `claude-chat` sessions.
+  - `cloud-sessions.json`: the "Claude Code on the web" card (or `PROMPT-claude-cloud.md`
+    pasted into a claude.ai/code session). Claude there lists cloud sessions with the
+    Claude Code Remote `list_sessions` tool. Per session it holds the id, title, two
+    timestamps, environment, origin, tags, model, and a short status summary; no message
+    text. If this conversation is itself a cloud session and you have `list_sessions`,
+    follow `PROMPT-claude-cloud.md` and write the file into the inbox yourself.
+  When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
+  missing, mention the two buttons once and continue; do not block on them. Cowork and
+  local Claude Code do not have either tool.
+- **The claude.ai export gives fuller chat data** (first messages, message counts, tools)
+  and wins over `claude-chat-threads.json` when a chat is in both: claude.ai Settings →
+  Privacy → Export data, zip into `~/how-i-ai/inbox`. It is emailed, usually within the
+  hour, sometimes longer. Ask the person to request it now, drop the zip into the inbox
+  when it arrives, and tell you. Do not wait: continue with what is on the machine and
+  re-run collect when the zip lands (re-running is safe: everything dedupes by session
+  id and judgments already merged are kept).
+- **ChatGPT chats are not readable on disk** (`--app chatgpt`). ChatGPT's desktop app
   encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the
   Windows app keeps only a volatile partial cache; the collector reports the app as a
-  signal (installed, how many cached conversations, last used) and nothing more. Both
-  products need the official export, and each entry point takes its own product's zip
-  in its own inbox: claude.ai Settings → Privacy → Export data, into `~/how-i-ai/inbox`;
-  ChatGPT Settings → Data controls → Export data, into `~/how-i-ai-chatgpt/inbox`. Each
-  emails a zip, usually within the hour, sometimes longer. Ask the person to request it
-  now, drop the zip into the inbox when it arrives, and tell you. Do not wait: continue
-  with what is on the machine and re-run collect when the zip lands (re-running is safe:
-  everything dedupes by session id and judgments already merged are kept). ChatGPT
-  conversations can also be listed by the agent inside the ChatGPT desktop app, which
-  writes `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`.
-- **Claude Code cloud sessions** (claude.ai/code) are not on disk either. If this
-  conversation is itself running in a cloud session and the `list_sessions` tool from
-  the Claude Code Remote server is available, page through it (`limit` 100, follow
-  `last_id`), collect the raw results into one JSON file at `~/how-i-ai/cloud-sessions.json`
-  (the array of session objects, or the `{"ccr":{"data":[...]}}` wrapper as returned),
-  and re-run collect. Only titles and timestamps are available for those, and that is
-  fine. If the tool is not available, say so once and move on.
+  signal (installed, how many cached conversations, last used) and nothing more. Content
+  comes from the agent inside the ChatGPT desktop app, which writes
+  `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`, or from the official export:
+  ChatGPT Settings → Data controls → Export data, zip into `~/how-i-ai-chatgpt/inbox`,
+  handled the same way as the claude.ai export above.
 - **A source shows found but 0 sessions**: run
   `node SKILL_DIR/scripts/how-i-ai.mjs inspect "<one file from that folder>"` to see its
   key structure (no values are printed), then adapt the matching parser in

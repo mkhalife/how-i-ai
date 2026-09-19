@@ -21,6 +21,10 @@ team sheet; if you use both tools, run both.
 - **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code, Cowork); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   chat-only surfaces (chatgpt.com, claude.ai chat): `PROMPT-chat.md`
+- **Optional first steps for the Claude run:** `PROMPT-claude-chat.md` (claude.ai Chat lists
+  your chats into `claude-chat-threads.json`) and `PROMPT-claude-cloud.md` (a claude.ai/code
+  session lists your cloud sessions into `cloud-sessions.json`). Save either file into
+  `~/how-i-ai/inbox`; the Claude Code or Cowork run picks it up
 - **Team sheet backend:** `apps-script/`
 
 ## Install
@@ -40,9 +44,11 @@ card copies the prompt instead):
 
 | Button | Link it opens | Reads |
 |---|---|---|
-| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, and your claude.ai export |
-| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, and your claude.ai export |
-| Claude chat | `claude://claude.ai/new?q=…` | an uploaded export zip |
+| Optional first: Claude chats | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
+| Optional first: Claude Code on the web | copy and paste into claude.ai/code | lists your cloud sessions into `cloud-sessions.json` for the inbox |
+| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two optional inbox files, and your claude.ai export |
+| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two optional inbox files, and your claude.ai export |
+| Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code or Cowork) |
 | ChatGPT desktop app | copy and paste | ChatGPT conversations and Codex sessions |
 | ChatGPT on the web | `https://chatgpt.com/?q=…` | an uploaded export zip |
 
@@ -72,8 +78,8 @@ classification rules, and the sharing contract.
 |---|---|---|
 | Claude Code (CLI, IDE, Desktop Code tab, teleported cloud sessions) | claude | `~/.claude/projects` transcripts |
 | Claude Desktop Chat and Cowork | claude | the desktop app's local session store |
-| Claude Code cloud sessions | claude | listed from inside a claude.ai/code session, titles only |
-| claude.ai chats | claude | official data export zip in `~/how-i-ai/inbox` |
+| Claude Code cloud sessions | claude | `cloud-sessions.json` in `~/how-i-ai/inbox`, listed by Claude inside a claude.ai/code session: titles and a status summary |
+| claude.ai chats | claude | `claude-chat-threads.json` in `~/how-i-ai/inbox`, listed by Claude in Chat mode (titles and summaries), or the official data export zip there (fuller, wins when both exist) |
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
 | ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app, or the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 

@@ -40,21 +40,31 @@
   <p class="lede">People describe how they use AI. This shows it, from your own session history: Claude, Claude Code, Cowork, Codex, ChatGPT. Everything runs on your machine. Sharing with the team is optional and you see the exact rows first.</p>
 
   <h2>Run it</h2>
-  <p class="mute">Each button opens the app with the prompt already typed. Read it, press Enter. The prompt only tells Claude to fetch the instructions from this repository.</p>
+  <p class="mute">Each button opens the app with the prompt already typed. Read it, press Enter. The two optional cards carry their whole prompt; the others tell Claude to fetch the instructions from this repository.</p>
   <div class="grid">
     <div class="card">
+      <h3>Optional first: Claude chats</h3>
+      <p>Your claude.ai chats are not on your disk. This opens a chat where Claude lists your last 30 days of chats into one file, <code>claude-chat-threads.json</code>. Save it to <code>how-i-ai/inbox</code> in your home folder, then run Claude Code or Cowork below.</p>
+      <div class="row"><a class="btn primary" id="btn-claude-chats" href="#">Open in Claude</a><button class="btn" data-copy="claude-chats">Copy prompt</button></div>
+    </div>
+    <div class="card">
+      <h3>Optional first: Claude Code on the web</h3>
+      <p>Cloud sessions are not on your disk either. Paste this prompt into a session on claude.ai/code and Claude lists them into <code>cloud-sessions.json</code>. Save it to <code>how-i-ai/inbox</code> in your home folder, then run Claude Code or Cowork below.</p>
+      <div class="row"><button class="btn primary" data-copy="claude-cloud">Copy prompt</button></div>
+    </div>
+    <div class="card">
       <h3>Claude Code</h3>
-      <p>Best option for Claude. Reads Claude Code, Cowork, and your claude.ai export. Opens a terminal with the prompt filled in.</p>
+      <p>Best option for Claude. Reads Claude Code, Cowork, the two optional files above, and your claude.ai export. Opens a terminal with the prompt filled in.</p>
       <div class="row"><a class="btn primary" id="btn-code" href="#">Open in Claude Code</a><button class="btn" data-copy="code">Copy prompt</button></div>
     </div>
     <div class="card">
       <h3>Cowork</h3>
-      <p>For people who do not use a terminal. Reads Claude Code, Cowork, and your claude.ai export. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
+      <p>For people who do not use a terminal. Reads Claude Code, Cowork, the two optional files above, and your claude.ai export. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
       <div class="row"><a class="btn primary" id="btn-cowork" href="#">Open in Cowork</a><button class="btn" data-copy="code">Copy prompt</button></div>
     </div>
     <div class="card">
-      <h3>Claude chat</h3>
-      <p>Chat cannot read your disk, so this path works from your claude.ai or ChatGPT export zip that you upload. Opens Claude Desktop.</p>
+      <h3>Chat only, from an export</h3>
+      <p>Fallback if you have neither Claude Code nor Cowork. Chat cannot read your disk, so you upload your claude.ai or ChatGPT export zip and Claude builds the profile in the chat. Opens Claude Desktop.</p>
       <div class="row"><a class="btn primary" id="btn-claude-chat" href="#">Open in Claude</a><button class="btn" data-copy="chat">Copy prompt</button></div>
     </div>
     <div class="card">
@@ -106,9 +116,28 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
   const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs how-i-ai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
   const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs how-i-ai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
   const CHATGPT_APP_PROMPT = `Fetch ${REPO_RAW}PROMPT-chatgpt-app.md and follow it exactly. It runs how-i-ai from inside the ChatGPT desktop app: you list my ChatGPT conversations with your own thread tools, the scripts inventory my Codex sessions on this machine, you classify them, and I get a profile of how I actually use AI. Do not share anything unless I say yes to a preview.`;
+  // Whole prompts, inline: these two surfaces must not depend on fetching a file. Same text as PROMPT-claude-chat.md and PROMPT-claude-cloud.md.
+  const CLAUDE_CHAT_PROMPT = `You are running the "Claude chat" step of how-i-ai, which shows me how I actually use AI. Your only job here: list my Claude chats from the last 30 days and give me one JSON file. Do not analyse anything, and do not print chat titles or summaries in your reply.
+
+1. Call recent_chats with n=20. Keep calling it with before set to the earliest updated_at you have seen, until you pass 30 days ago or nothing new comes back (stop after 25 calls at most).
+2. For every chat inside the last 30 days keep: url, updated_at, title, summary (the text the tool gave you, unedited, at most 600 characters).
+3. Create a downloadable file named claude-chat-threads.json with exactly this shape:
+{"source":"claude-chat","exported_at":"<now, ISO>","chats":[{"url":"...","updated_at":"...","title":"...","summary":"..."}]}
+4. Reply with only: how many chats are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file to the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+If recent_chats is not available, say so and tell me to turn on "Search and reference chats" in Settings, or to use Settings > Privacy > Export data instead.`;
+  const CLAUDE_CLOUD_PROMPT = `You are running the "Claude Code on the web" step of how-i-ai, which shows me how I actually use AI. Your only job here: list my Claude Code cloud sessions from the last 30 days and give me one JSON file. Do not analyse anything, do not comment on the contents, and do not print session titles in your reply.
+
+1. Call list_sessions (from the Claude Code Remote tools) with mine=true and limit=100. While has_more is true and the oldest session you have seen is newer than 30 days ago, call it again with after_id set to the last_id of the previous response (stop after 10 calls at most).
+2. For every session created or updated inside the last 30 days keep only: id, title, created_at, updated_at, environment_kind, origin, tags, configured_model, session_context.model, post_turn_summary.status_detail, post_turn_summary.recent_action. Drop every other field.
+3. Write cloud-sessions.json with exactly this shape:
+{"source":"claude-cloud","exported_at":"<now, ISO>","data":[{"id":"...","title":"...","created_at":"...","updated_at":"...","environment_kind":"...","origin":"...","tags":[],"configured_model":"...","session_context":{"model":"..."},"post_turn_summary":{"status_detail":"...","recent_action":"..."}}]}
+4. Give me the file as a download if you can here; otherwise print its contents in one fenced code block and nothing else from it.
+5. Reply with only: how many sessions are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file as cloud-sessions.json in the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+If list_sessions is not available, say so: it only exists inside a Claude Code session on claude.ai/code.`;
   const enc = encodeURIComponent;
   document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
   document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);
+  document.getElementById('btn-claude-chats').href = 'claude://claude.ai/new?q=' + enc(CLAUDE_CHAT_PROMPT);
   document.getElementById('btn-claude-chat').href = 'claude://claude.ai/new?q=' + enc(CHAT_PROMPT);
   document.getElementById('btn-chatgpt').href = 'https://chatgpt.com/?q=' + enc(CHAT_PROMPT);
   const toast = (t) => { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1400); };
@@ -118,6 +147,8 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
     if (k === 'code') return copy(CODE_PROMPT);
     if (k === 'chat') return copy(CHAT_PROMPT);
     if (k === 'chatgpt-app') return copy(CHATGPT_APP_PROMPT);
+    if (k === 'claude-chats') return copy(CLAUDE_CHAT_PROMPT);
+    if (k === 'claude-cloud') return copy(CLAUDE_CLOUD_PROMPT);
     try { const r = await fetch(REPO_RAW + 'PROMPT-chat.md'); copy(await r.text()); } catch { copy(CHAT_PROMPT); }
   }));
 </script>

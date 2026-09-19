@@ -25,7 +25,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
     {
       "id": "s_claude-code_ff558e1b",       // stable: source + native id
       "source": "claude-code",                // see Sources
-      "surface": "cli",                        // cli | desktop | web | cloud | cowork | app | export
+      "surface": "cli",                        // cli | desktop | web | cloud | cowork | app | chat | export
       "started_at": "2026-09-19T01:37:01.378Z",
       "ended_at": "2026-09-19T02:10:44.102Z",
       "duration_minutes": 33.7,                // active minutes from per-record timestamps (gaps over 15 min dropped); null when the source only knows created/updated times
@@ -33,7 +33,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
       "first_message": "Make me a new skills repo like...", // raw, trimmed to 2,000 chars
       "first_message_chars": 2410,
       "context": "Second message: ... | Tools: Bash, Read, WebSearch",   // ≤ 600 chars of extra signal
-      "messages_user": 4,                      // both counts are null when the source gives only a title (cloud lists, a thread the in-app agent could not open)
+      "messages_user": 4,                      // both counts are null when the source gives only a title (cloud lists, `claude-chat`, a thread the in-app agent could not open)
       "messages_assistant": 9,
       "tools": ["Bash", "Read", "WebSearch"],          // built-in tool names
       "connectors": ["github", "Google_Drive"],        // MCP server names (mcp__<server>__*)
@@ -57,6 +57,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
 | `claude-code` | `~/.claude/projects/**/*.jsonl` (local CLI, IDE, desktop "Code" tab) |
 | `claude-cowork` | Claude Desktop Cowork session store |
 | `claude-export` | claude.ai data export zip (`conversations.json`) |
+| `claude-chat` | `claude-chat-threads.json`, written by Claude in claude.ai Chat mode (`PROMPT-claude-chat.md`) |
 | `codex` | `~/.codex/sessions/**/*.jsonl`, and cloud tasks from `codex cloud list --json` |
 | `chatgpt-export` | ChatGPT data export zip (`conversations.json`) |
 | `chatgpt-app` | `chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app |

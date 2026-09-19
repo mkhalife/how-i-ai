@@ -333,7 +333,9 @@ function withCodexDb(root, fn) {
 
 // Thread ids started by a Codex scheduled task (automation): automation_runs.thread_id is one row per run, and
 // automations.target_thread_id is the thread a task keeps posting into. Only the id columns are selected, never
-// prompt, name, or titles. Unverified against a real scheduled run: both tables were empty on the machine checked.
+// prompt, name, or titles. The target_thread_id path is verified: a kind "heartbeat" automation fires into that one
+// long-lived thread and writes no automation_runs row, so the thread is one scheduled session. The automation_runs
+// path is unverified.
 function codexAutomationThreads(root) {
   const ids = new Set();
   for (const [table, col] of [['automation_runs', 'thread_id'], ['automations', 'target_thread_id']])
@@ -466,7 +468,10 @@ function codexCloudList(bin, cwd, out) {
   return out;
 }
 
-// ---------- Claude Code cloud sessions (list exported by Claude from inside a cloud session) ----------
+// ---------- Claude Code cloud sessions (listed by Claude from inside a claude.ai/code session) ----------
+// Only a cloud session has the Claude Code Remote list_sessions tool. The agent there follows PROMPT-claude-cloud.md
+// and hands the person cloud-sessions.json ({ source: "claude-cloud", exported_at, data: [...] }), which they save
+// into the inbox. The list has a title and a status summary per session, never message text.
 export function claudeCloud(file) {
   const out = { source: 'claude-code', found: false, path: file || null, sessions: [], notes: [] };
   if (!file || !existsSync(file)) return out;
@@ -481,7 +486,8 @@ export function claudeCloud(file) {
     const isRoutine = /routine|schedul|trigger/.test(originStr) || (s.tags || []).some((t) => /routine|schedule/.test(String(t)));
     out.sessions.push(baseSession({
       id: 's_claude-cloud_' + s.id, source: 'claude-code', surface: 'cloud', started_at: started, ended_at: toISO(s.updated_at) || started,
-      title: s.title || null, first_message: s.title || '', context: 'Cloud session; only the title is available locally',
+      title: s.title || null, first_message: s.title || '',
+      context: [trim(s.post_turn_summary?.status_detail, 250), trim(s.post_turn_summary?.recent_action, 250), 'Cloud session; only the title and a status summary are available'].filter(Boolean).join(' | '),
       messages_user: null, messages_assistant: null, tools: [], model: s.session_context?.model || s.configured_model || null,
       mode: isRoutine ? 'routine' : 'agentic', trigger: isRoutine ? 'routine' : 'human',
       project: s.session_context?.sources?.[0]?.git_repository?.url || null,
@@ -558,6 +564,35 @@ export function parseClaudeExport(convs) {
       title: c.name || null, first_message: prompts[0],
       context: [prompts[1] ? 'Next: ' + trim(prompts[1], 300) : null, tools.length ? 'Tools: ' + tools.slice(0, 8).join(', ') : null].filter(Boolean).join(' | '),
       messages_user: prompts.length, messages_assistant: assistants.length, tools, model: c.model || null, mode: 'chat', trigger: 'human',
+    }));
+  }
+  return out;
+}
+
+// ---------- Claude chats listed from inside claude.ai Chat ----------
+// Only Claude in Chat mode (web or desktop) has the recent_chats tool. It follows PROMPT-claude-chat.md and hands the
+// person claude-chat-threads.json, which they save into the inbox:
+//   { "source": "claude-chat", "exported_at": ISO, "chats": [ { "url", "updated_at", "title", "summary" } ] }
+// The tool gives Claude's summary of each chat and one timestamp: no first message, created time, counts, or model.
+// Same id space as the claude.ai export (the uuid that ends the url), so a chat present in both is counted once.
+export function claudeChatThreads(inbox) {
+  const file = join(inbox, 'claude-chat-threads.json');
+  const out = { source: 'claude-chat', found: existsSync(file), path: file, sessions: [], notes: [] };
+  if (!out.found) return out;
+  const data = readJson(file, null);
+  const chats = Array.isArray(data) ? data : data?.chats;
+  if (!Array.isArray(chats)) { out.notes.push('claude-chat-threads.json has no chats array; see PROMPT-claude-chat.md for the shape'); return out; }
+  for (const c of chats) {
+    if (!c) continue;
+    const id = String(pickKey(c, ['url', 'uuid', 'id']) || '').split(/[?#]/)[0].split('/').filter(Boolean).pop();
+    const when = toISO(pickKey(c, ['updated_at', 'updatedAt']));
+    const title = pickKey(c, ['title', 'name']);
+    const summary = pickKey(c, ['summary', 'description']);
+    if (!id || !when || (!summary && !title)) continue;
+    out.sessions.push(baseSession({
+      id: 's_claude-export_' + id, source: 'claude-chat', surface: 'chat', started_at: when, ended_at: when,
+      title, first_message: String(summary || title), context: 'Summary written by Claude; the first message is not available',
+      messages_user: null, messages_assistant: null, tools: [], model: null, mode: 'chat', trigger: 'human',
     }));
   }
   return out;

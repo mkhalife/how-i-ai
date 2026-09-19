@@ -38,7 +38,11 @@ Edge cases:
   real ask: classify from the context.
 - Scheduled or routine sessions: classify the job the routine does (a nightly PR review
   is Review & explain code).
-- Only a title is available (cloud sessions): classify from the title, lower confidence.
+- Only a title and a short status summary are available (cloud sessions): classify from
+  those, lower confidence.
+- `claude-chat` sessions: the text is Claude's summary of the conversation, not the
+  person's words. Classify from it at confidence 0.6 to 0.7, and still write your own
+  paraphrase.
 - Desktop scheduled tasks (`trigger: scheduled`): the first message opens with the same
   harness preamble on every run ("This is an automated run of a scheduled task…"). Skip
   it; the title and the tools say what the task does. Every run of one task gets the

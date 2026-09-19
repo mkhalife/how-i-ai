@@ -45,6 +45,15 @@ person's title and function, inventory their sessions, have you classify them us
 `references/classification-guidelines.md`, write the narrative, render the profile, and
 only then ask whether to share anonymized rows after showing the exact preview.
 
+Two optional files add history this machine does not hold. The person gets each from
+another Claude surface and saves it into `~/how-i-ai/inbox`; collect reads them when
+present. Mention them once, do not wait for them.
+
+- `claude-chat-threads.json`: their claude.ai chats, listed by Claude in Chat mode
+  (`PROMPT-claude-chat.md`, or the "Claude chats" button on the landing page).
+- `cloud-sessions.json`: their Claude Code cloud sessions, listed by Claude inside a
+  claude.ai/code session (`PROMPT-claude-cloud.md`, or the "Claude Code on the web" card).
+
 ## 3. If you are the agent inside the ChatGPT desktop app
 
 Use `PROMPT-chatgpt-app.md` from the same repository instead. It is the ChatGPT entry
