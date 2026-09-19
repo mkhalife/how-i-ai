@@ -25,8 +25,11 @@ rows. Cells are written as plain strings (formula-looking values are prefixed wi
 so nothing in a paraphrase can execute in the sheet.
 
 Share the sheet itself read-only with the team; the data is meant to be looked at
-together. To remove someone, filter both tabs by their `participant_id` and delete the
-rows.
+together.
+
+Each entry point folder mints its own `participant_id`, so someone who runs both the
+Claude and the ChatGPT entry point appears as two ids. To remove them, ask for the id from
+each folder's `config.json`, then filter both tabs by each id and delete the rows.
 
 ## Building the report
 

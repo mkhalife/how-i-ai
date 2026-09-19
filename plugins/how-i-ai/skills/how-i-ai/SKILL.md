@@ -211,7 +211,8 @@ node SKILL_DIR/scripts/how-i-ai.mjs share send
 The endpoint comes from `SKILL_DIR/team.json` (`share_url`). If it is empty the command
 refuses; the team owner sets it up per `apps-script/README.md`. Re-running replaces that
 participant's earlier rows, so re-sharing after new exports arrive is fine. To withdraw,
-the person sends their `participant_id` (in `~/how-i-ai/config.json`) to the sheet owner.
+the person sends the `participant_id` from this folder's `~/how-i-ai/config.json` to the
+sheet owner; the other entry point has its own id and is withdrawn separately.
 
 ## 7. The team report (whoever owns the sheet)
 
