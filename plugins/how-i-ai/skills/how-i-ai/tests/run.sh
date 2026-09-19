@@ -19,7 +19,8 @@ for plat in darwin win32; do
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(d2.source!=='claude-cowork'||!d2.tools.includes('Google Drive')) {console.error('FAIL cowork parse',d2);process.exit(1)}
     if(d.sessions.some(s=>s.id.endsWith('aaaa-5')||s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
-    console.log('   sources ok:',JSON.stringify(by));"
+    const sig=d.signals.find(x=>x.source==='chatgpt-desktop'); if(!sig||!sig.installed){console.error('FAIL chatgpt desktop signal',d.signals);process.exit(1)}
+    console.log('   sources ok:',JSON.stringify(by),'signals:',JSON.stringify(d.signals));"
   node scripts/config.mjs --title "Senior Product Designer" --function Design >/dev/null
   node scripts/classify.mjs prep --size 6 | sed 's/^/   /'
   node tests/fake-classify.mjs "$H/how-i-ai/classify" >/dev/null

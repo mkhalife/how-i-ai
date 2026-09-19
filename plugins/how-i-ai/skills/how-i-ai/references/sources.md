@@ -14,11 +14,45 @@ that is `%USERPROFILE%`. All parsers are in `scripts/lib/sources.mjs`.
 | `chatgpt-export` | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
 | `claude-export` | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
 | `gemini-cli` | cli | `~/.gemini/tmp/<project>/chats/` | optional, tolerant |
+| `chatgpt-desktop` | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*`; Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\` | installed, cached conversation count, last activity. No message bodies |
 
-Not covered, on purpose: the ChatGPT desktop app cache (encrypted), Cursor and Copilot
-(different product category), and any route that scrapes a logged-in web session with
-cookies or tokens. Those unofficial routes exist but they are against the products'
-terms and break without notice; the exports are the supported path.
+Not covered, on purpose: Cursor and Copilot (different product category), and any route
+that scrapes a logged-in web session with cookies or tokens. Those unofficial routes
+exist but they are against the products' terms and break without notice; the exports are
+the supported path.
+
+## Why ChatGPT is export-only (researched September 2026)
+
+The desktop apps do not give a legitimate way to read conversation text from disk:
+
+- **macOS.** After a 2024 disclosure that the app stored chats in plain text, OpenAI
+  moved them to `conversations-v2-<uuid>/*.data` (later `-v3-`), encrypted with a key
+  held in the Keychain under `com.openai.chat.conversations_v2_cache`. That item sits in
+  an access group scoped to OpenAI's Team ID, so a third-party process cannot read it
+  without the person exporting the key by hand. Building around that would be undoing a
+  security fix, so this tool does not. Forensics tooling that has looked at v2/v3 treats
+  them as inventory only (ids, sizes, timestamps) and notes newer builds may keep text
+  cloud-only anyway.
+- **Windows.** The Store app is a Chromium wrapper; chats the person opened sit in an
+  IndexedDB write-ahead log under `LocalCache\Roaming\ChatGPT\IndexedDB\`. It is
+  unencrypted but volatile: only chats typed or opened in the app, and the folder is
+  wiped on logout. Good enough for "the app is used", not for history.
+- **The merged ChatGPT/Codex app** (July 2026, bundle `com.openai.codex`) adds only a
+  Chromium profile under `Application Support/Codex`; Codex transcripts still live in
+  `~/.codex`, plaintext and complete, which the `codex` parser already reads.
+- **Never read:** `~/.codex/auth.json` (live tokens), `~/.codex/shell_snapshots/`
+  (exported env vars), Atlas caches, or the opt-in "Computer History" telemetry under
+  `Group Containers/2DC432GLL2.com.openai.sky.CUAService`. None are needed for usage
+  counts and all are more sensitive than chat text.
+- **The export.** Settings → Data controls → Export data. Arrives by email, usually in
+  minutes, officially "up to 7 days"; the link expires after 24 hours. The zip holds
+  `conversations.json` (or numbered conversation files on very large accounts),
+  `chat.html`, `message_feedback.json`, `model_comparisons.json`, `user.json`. It does
+  not include Codex sessions, Projects as a unit, or scheduled Tasks, and generated
+  images have been unreliable in exports since 2025.
+
+So the collector reports the ChatGPT desktop app as a signal (installed, cached
+conversation count, last activity) and asks for the export for content.
 
 ## What is extracted per session
 

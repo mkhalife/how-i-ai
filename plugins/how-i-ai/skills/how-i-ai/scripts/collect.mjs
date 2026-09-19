@@ -25,6 +25,7 @@ if (!args['no-codex-cloud']) push(src.codexCloud());
 push(src.claudeCloud(args['cloud-sessions'] || (existsSync(join(dir, 'cloud-sessions.json')) ? join(dir, 'cloud-sessions.json') : null)));
 for (const r of src.exportsInbox(inbox)) push(r);
 push(src.geminiCli());
+push(src.chatgptDesktop());
 
 // Merge, dedupe, filter to window.
 const seen = new Map();
@@ -43,6 +44,7 @@ const HINTS = {
   'claude-export': `Request your claude.ai export (Settings → Privacy → Export data), then drop the zip in ${inbox}`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
   'gemini-cli': 'optional',
+  'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT).',
 };
 
 const table = [];
@@ -55,11 +57,12 @@ for (const r of results) {
 }
 for (const want of ['chatgpt-export', 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, notes: [] });
 for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || HINTS[row.source] || null) });
+const signals = results.filter((r) => r.signal).map((r) => ({ source: r.source, path: r.path, ...r.signal }));
 
 const doc = {
   schema_version: 1, collected_at: toISO(now), window: { days, start: localDate(start.toISOString()), end: localDate(now.toISOString()) },
   machine: { platform: os(), hostname_hash: hostHash(), node: process.version },
-  sources: table, sessions,
+  sources: table, signals, sessions,
 };
 
 console.log(`how-i-ai collect · last ${days} days (${doc.window.start} → ${doc.window.end})\n`);

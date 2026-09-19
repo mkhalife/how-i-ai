@@ -256,6 +256,29 @@ blockquote.oneliner {
   font-weight: 400; text-wrap: balance;
 }
 
+/* ---- favorite moves (skills / agents) ---- */
+.moves { display: grid; gap: 32px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .moves { grid-template-columns: 1fr 1fr; gap: 48px; } }
+.moves-col { min-width: 0; }
+.moves-list { list-style: none; margin: 0; padding: 0; }
+.moves-list li {
+  display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: baseline;
+  border-top: 1px solid var(--rule-soft); padding: 12px 0;
+}
+.moves-list li:first-child { border-top: 0; }
+.moves-list li .n { color: var(--s1); font-weight: 800; font-variant-numeric: tabular-nums; font-size: clamp(17px, 2.8vw, 21px); }
+.moves-col:nth-of-type(2) .moves-list li .n { color: var(--s4); }
+.moves-list li .name {
+  font-weight: 700; font-size: clamp(15px, 2.2vw, 18px); letter-spacing: -.012em;
+  line-height: 1.24; text-wrap: pretty; word-break: break-word;
+}
+.moves-list li .meta { color: var(--ink-3); font-size: 13px; margin-top: 3px; }
+.moves-sub { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--rule-soft); }
+.moves-sub .cap { color: var(--ink-3); margin: 0 0 9px; }
+.moves-sub ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.moves-sub li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.moves-sub li span:last-child { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 /* ---- numbers band ---- */
 .band {
   background: var(--ink); color: var(--paper); border-radius: 5px;
@@ -346,6 +369,8 @@ footer {
   var byHour = arr(DATA.by_hour);
   var tools = arr(DATA.tools);
   var connectors = arr(DATA.connectors);
+  var skills = arr(DATA.skills).filter(function (sk) { return str(sk && sk.name); });
+  var agents = arr(DATA.agents).filter(function (a) { return str(a && a.name); });
   var surprises = arr(DATA.surprises).filter(function (s) { return str(s && s.paraphrase); });
   var highlights = obj(DATA.highlights);
   var narrative = obj(DATA.narrative);
@@ -1044,6 +1069,60 @@ footer {
     ]);
   })();
 
+  /* ==================== the team's favorite moves ================ */
+  function moveMeta(row) {
+    var bits = [fmt(row.sessions) + ' ' + plural(row.sessions, 'session')];
+    if (num(row.participants)) bits.push('used by ' + fmt(row.participants) + ' ' + plural(row.participants, 'person', 'people'));
+    return bits.join(' · ');
+  }
+  function movesList(list) {
+    return h('ol', { class: 'moves-list' }, list.map(function (row, i) {
+      return h('li', {}, [
+        h('span', { class: 'n mono', text: String(i + 1).padStart(2, '0') }),
+        h('div', {}, [
+          h('div', { class: 'name', text: str(row.name) }),
+          h('div', { class: 'meta mono', text: moveMeta(row) })
+        ])
+      ]);
+    }));
+  }
+  function builtinAgentsList(list) {
+    return h('div', { class: 'moves-sub' }, [
+      h('p', { class: 'cap mono', text: 'Also spawned' }),
+      h('ul', {}, list.map(function (row) {
+        return h('li', {}, [
+          h('span', { text: str(row.name) }),
+          h('span', { text: moveMeta(row) })
+        ]);
+      }))
+    ]);
+  }
+  (function moves() {
+    if (!skills.length && !agents.length) return;
+    var cols = [];
+    if (skills.length) {
+      var topSkills = skills.slice().sort(function (a, b) { return num(b.sessions) - num(a.sessions); }).slice(0, 8);
+      cols.push(h('div', { class: 'moves-col' }, [
+        h('p', { class: 'block-head mono', text: 'Skills' }),
+        movesList(topSkills)
+      ]));
+    }
+    if (agents.length) {
+      var sortedAgents = agents.slice().sort(function (a, b) { return num(b.sessions) - num(a.sessions); });
+      var customAgents = sortedAgents.filter(function (a) { return !!a.custom; });
+      var builtinAgents = sortedAgents.filter(function (a) { return !a.custom; });
+      var colKids = [h('p', { class: 'block-head mono', text: 'Custom agents' })];
+      if (customAgents.length) colKids.push(movesList(customAgents.slice(0, 8)));
+      if (builtinAgents.length) colKids.push(builtinAgentsList(builtinAgents));
+      cols.push(h('div', { class: 'moves-col' }, colKids));
+    }
+    section('moves', [
+      h('h2', { class: 'sec', text: "The team's favorite moves" }),
+      h('p', { class: 'sec-note', text: 'Skills the team reached for in Claude Code, and the sub-agents it spun up to get the work done.' }),
+      h('div', { class: 'moves' }, cols)
+    ]);
+  })();
+
   /* ====================== by the numbers ======================== */
   (function numbers() {
     var stats = [];
@@ -1080,6 +1159,12 @@ footer {
 
     var topConn = maxBy(connectors, 'sessions');
     if (topConn && str(topConn.name)) push(str(topConn.name), 'most-connected app');
+
+    var topSkill = maxBy(skills, 'sessions');
+    if (topSkill && str(topSkill.name)) push(str(topSkill.name), 'most-used skill');
+
+    var topCustomAgent = maxBy(agents.filter(function (a) { return !!a.custom; }), 'sessions');
+    if (topCustomAgent && str(topCustomAgent.name)) push(str(topCustomAgent.name), 'most-used custom agent');
 
     if (str(highlights.most_agentic_function)) push(str(highlights.most_agentic_function), 'hands over the most');
     if (str(highlights.most_curious_function)) push(str(highlights.most_curious_function), 'asks the most');

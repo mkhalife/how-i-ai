@@ -12,7 +12,8 @@ The numbers are in `profile.json` (or `aggregate.json`). The words go in
   and one thing about timing. Every sentence should be checkable against the numbers.
 - **patterns** (3 to 5 items, each under 90 characters): observations that would make
   them nod. Day-of-week spikes, "ChatGPT for quick questions, Claude for long ones",
-  "most agentic sessions start with a pasted error", "nothing on weekends".
+  "most agentic sessions start with a pasted error", "nothing on weekends", "reaches for
+  the code-review skill before every push".
 - **one_liner** (under 80 characters): the line on the share card. Plain, specific, a
   little proud. "Critiques with Claude by day, learns engineering vocabulary at night".
 - **signature_move** (under 100 characters): the recurring habit visible in the first

@@ -206,6 +206,11 @@ section{margin-top:52px}
 .legend{display:flex; flex-wrap:wrap; gap:6px 18px; font-family:var(--sans); font-size:12px; color:var(--ink-2); margin-top:10px}
 .legend .k{display:inline-flex; align-items:center; gap:7px; white-space:nowrap}
 .legend .sw{width:11px; height:11px; border-radius:2px; display:inline-block}
+.tag-mini{
+  display:inline-block; font-family:var(--sans); font-size:9px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-3); border:1px solid var(--rule); border-radius:2px;
+  padding:1px 5px; margin-left:7px; vertical-align:middle;
+}
 
 /* ---------- assist axis ---------- */
 .axis-bar{display:flex; gap:2px; height:56px; margin-top:6px}
@@ -849,23 +854,27 @@ function sectionHead(title, stand){
   });
 })();
 
-/* --- tools and connectors ------------------------------------------- */
+/* --- tools, connectors, skills and agents ---------------------------- */
 (function(){
-  var tools = arr(D.tools), conns = arr(D.connectors);
-  if (!tools.length && !conns.length) return;
-  function table(caption, rows, head){
+  var tools = arr(D.tools), conns = arr(D.connectors), skls = arr(D.skills), agts = arr(D.agents);
+  if (!tools.length && !conns.length && !skls.length && !agts.length) return;
+  function table(caption, rows, head, tagFn){
     var max = maxOf(rows, 'sessions'), body = '';
     for (var i = 0; i < rows.length; i++) {
-      body += '<tr><td class="l">' + esc(rows[i].name) + '</td><td class="bar">' + barCell(rows[i].sessions, max, 'thin') +
+      var tag = tagFn ? tagFn(rows[i]) : '';
+      body += '<tr><td class="l">' + esc(rows[i].name) + tag + '</td><td class="bar">' + barCell(rows[i].sessions, max, 'thin') +
         '</td><td class="n strong">' + esc(num(rows[i].sessions)) + '</td></tr>';
     }
     return '<table class="btable"><caption>' + esc(caption) + '</caption><thead><tr><th class="l">' + esc(head) +
       '</th><th class="l"></th><th>Sessions</th></tr></thead><tbody>' + body + '</tbody></table>';
   }
+  function customTag(row){ return row.custom ? '<span class="tag-mini">custom</span>' : ''; }
   var cols = '';
   if (tools.length) cols += '<div>' + table('Built-in tools', tools, 'Tool') + '</div>';
   if (conns.length) cols += '<div>' + table('Connectors', conns, 'Connector') + '</div>';
-  out.push('<section>' + sectionHead('Tools and connectors',
+  if (skls.length) cols += '<div>' + table('Skills', skls, 'Skill') + '</div>';
+  if (agts.length) cols += '<div>' + table('Agents', agts, 'Agent', customTag) + '</div>';
+  out.push('<section>' + sectionHead('Tools, connectors, skills and agents',
     'Counted by the number of sessions each one appeared in, not by how often it was called.') +
     '<div class="cols-even">' + cols + '</div></section>');
 })();

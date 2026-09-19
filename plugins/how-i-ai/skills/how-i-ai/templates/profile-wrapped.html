@@ -600,7 +600,8 @@ ul,ol{ padding: 0; list-style: none; }
     pink:       { bg: "#FF7FB6", ink: "#2A0716", accent: "#0B2AD1" },
     midnight:   { bg: "#101418", ink: "#ECEFF1", accent: "#FF9D5C" },
     forest:     { bg: "#12332C", ink: "#EFFBF5", accent: "#FFD22E" },
-    finale:     { bg: "#120A2E", ink: "#FFFFFF", accent: "#D6FF3F", pop: "#FF4E28" }
+    finale:     { bg: "#120A2E", ink: "#FFFFFF", accent: "#D6FF3F", pop: "#FF4E28" },
+    teal:       { bg: "#083B42", ink: "#EAFBF9", accent: "#FFB23E" }
   };
 
   var cards = [];
@@ -644,6 +645,8 @@ ul,ol{ padding: 0; list-style: none; }
   var MODES = arr(DATA.by_mode);
   var TOOLS = arr(DATA.tools);
   var CONNECTORS = arr(DATA.connectors);
+  var SKILLS = arr(DATA.skills).filter(function (x) { return str(x && x.name); });
+  var AGENTS = arr(DATA.agents).filter(function (x) { return str(x && x.name); });
   var MODELS = arr(DATA.models);
   var LEN = obj(DATA.session_length);
   var SAMPLES = arr(DATA.sample_sessions).filter(function (x) { return str(x && x.paraphrase); });
@@ -1051,6 +1054,108 @@ ul,ol{ padding: 0; list-style: none; }
     }
     if (TOOLS.length) add(grid, listBlock("built-in tools", TOOLS, 7));
     if (CONNECTORS.length) add(grid, listBlock("connectors", CONNECTORS, 7));
+    add(b, grid);
+    stagger(b, 70);
+  })();
+
+  /* ========================================  8b. skills & agents ===== */
+  if (SKILLS.length || AGENTS.length) (function () {
+    var c = card("skills_agents", "teal", "Your skills");
+    var b = c.body;
+    var i;
+    var skillsRanked = SKILLS.slice().sort(function (a, z) { return n(z.sessions) - n(a.sessions); });
+    var agentsRanked = AGENTS.slice().sort(function (a, z) { return n(z.sessions) - n(a.sessions); });
+    var skillsShown = skillsRanked.slice(0, 6);
+    var agentsShown = agentsRanked.slice(0, 6);
+    var skillsTotal = 0, agentsTotal = 0;
+    for (i = 0; i < SKILLS.length; i++) skillsTotal += n(SKILLS[i].sessions);
+    for (i = 0; i < AGENTS.length; i++) agentsTotal += n(AGENTS[i].sessions);
+
+    add(b, eyebrow("what you reached for"));
+    var h = el("h2", "h2");
+    h.textContent = skillsShown.length
+      ? "Your go-to skill: " + str(skillsShown[0].name) + "."
+      : "Your go-to agent: " + str(agentsShown[0].name) + ".";
+    add(b, anim(h));
+    var ledeParts = [];
+    if (SKILLS.length) ledeParts.push(fmt(skillsTotal) + " skill " + plural(skillsTotal, "invocation", "invocations") +
+      " across " + fmt(SKILLS.length) + " " + plural(SKILLS.length, "skill", "skills"));
+    if (AGENTS.length) ledeParts.push(fmt(agentsTotal) + " sub-agent " + plural(agentsTotal, "spawn", "spawns") +
+      " across " + fmt(AGENTS.length) + " agent " + plural(AGENTS.length, "type", "types"));
+    var lede = el("p", "lede", ledeParts.join(" · ") + ".");
+    add(b, anim(lede));
+
+    var grid = el("div", "cols cols--even");
+    if (skillsShown.length) {
+      var skillsWrap = el("div");
+      add(skillsWrap, el("div", "chart-title", "top skills"));
+      add(skillsWrap, rankedBars(skillsShown.map(function (x, idx) {
+        return {
+          label: str(x.name) || "—",
+          value: n(x.sessions),
+          valueLabel: fmt(n(x.sessions)) + " " + plural(n(x.sessions), "session", "sessions"),
+          hot: idx === 0
+        };
+      }), {}));
+      if (skillsRanked.length > skillsShown.length) {
+        var moreS = el("p", "small", "+ " + (skillsRanked.length - skillsShown.length) + " more");
+        moreS.style.marginTop = "10px";
+        add(skillsWrap, moreS);
+      }
+      add(grid, anim(skillsWrap));
+    }
+    if (agentsShown.length) {
+      var agentsWrap = el("div");
+      add(agentsWrap, el("div", "chart-title", "top agents"));
+      var max = 0;
+      for (i = 0; i < agentsShown.length; i++) max = Math.max(max, n(agentsShown[i].sessions));
+      var ul = el("div", "rows");
+      for (i = 0; i < agentsShown.length; i++) {
+        var x = agentsShown[i];
+        var r = el("div", "row");
+        var left = el("div");
+        left.style.minWidth = "0";
+        var nmRow = el("div");
+        nmRow.style.display = "flex";
+        nmRow.style.alignItems = "center";
+        nmRow.style.flexWrap = "wrap";
+        nmRow.style.gap = "7px";
+        add(nmRow, el("span", "nm", str(x.name) || "—"));
+        if (x.custom) {
+          var chip = el("span", "chip", "custom");
+          chip.style.padding = "2px 8px";
+          chip.style.fontSize = "10.5px";
+          chip.style.fontWeight = "700";
+          chip.style.letterSpacing = ".04em";
+          chip.style.textTransform = "uppercase";
+          nmRow.appendChild(chip);
+        }
+        var track = el("div");
+        track.style.height = "6px";
+        track.style.marginTop = "7px";
+        track.style.borderRadius = "999px";
+        track.style.background = "color-mix(in srgb, var(--ink) 16%, transparent)";
+        track.style.overflow = "hidden";
+        var fill = el("div", "grow-x");
+        fill.style.height = "100%";
+        fill.style.borderRadius = "999px";
+        fill.style.background = i === 0 ? "var(--accent)" : "currentColor";
+        fill.style.opacity = i === 0 ? "1" : ".45";
+        fill.style.width = (max > 0 ? Math.max(4, (n(x.sessions) / max) * 100) : 4) + "%";
+        track.appendChild(fill);
+        add(left, nmRow, track);
+        var v = el("div", "v", fmt(n(x.sessions)));
+        add(r, left, v);
+        ul.appendChild(r);
+      }
+      add(agentsWrap, ul);
+      if (agentsRanked.length > agentsShown.length) {
+        var moreA = el("p", "small", "+ " + (agentsRanked.length - agentsShown.length) + " more");
+        moreA.style.marginTop = "10px";
+        add(agentsWrap, moreA);
+      }
+      add(grid, anim(agentsWrap));
+    }
     add(b, grid);
     stagger(b, 70);
   })();

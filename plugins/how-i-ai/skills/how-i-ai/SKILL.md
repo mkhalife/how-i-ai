@@ -45,12 +45,17 @@ node SKILL_DIR/scripts/how-i-ai.mjs collect --days 30
 
 Read the source table it prints. It looks for, in order: Claude Code transcripts,
 Claude Desktop Chat and Cowork sessions, Codex sessions (and cloud tasks if the
-`codex` CLI is signed in), a cloud session list (see below), and any export zips in
-`~/how-i-ai/inbox`. Details and paths per source: `references/sources.md`.
+`codex` CLI is signed in), a cloud session list (see below), any export zips in
+`~/how-i-ai/inbox`, and whether the ChatGPT desktop app is installed. Details and paths
+per source: `references/sources.md`.
 
 Then handle what is missing:
 
-- **claude.ai chats and ChatGPT chats are not on disk.** Both need the official export:
+- **claude.ai chats and ChatGPT chats are not readable on disk.** ChatGPT's desktop app
+  encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the
+  Windows app keeps only a volatile partial cache; the collector reports the app as a
+  signal (installed, how many cached conversations, last used) and nothing more. Both
+  products need the official export:
   claude.ai Settings → Privacy → Export data; ChatGPT Settings → Data controls → Export
   data. Each emails a zip, usually within the hour, sometimes longer. Ask the person to
   request both now, drop the zips into `~/how-i-ai/inbox` when they arrive, and tell you.
@@ -72,8 +77,9 @@ Then handle what is missing:
 
 `~/how-i-ai/sessions.json` now holds the private inventory: one record per session with
 the first message (trimmed to 2,000 chars), a little context (the second message and
-tools used), counts, timings, tools and connectors, model, mode (chat, agentic, routine),
-and a hash of the project path. Never share or upload this file.
+tools used), counts, timings, tools and connectors, skills invoked and sub-agents spawned,
+model, mode (chat, agentic, routine), and a hash of the project path. Never share or
+upload this file.
 
 ## 3. Classify
 
@@ -155,7 +161,8 @@ deciding:
    node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/aggregate-boardroom.html --data ~/how-i-ai/sample-aggregate.json --out ~/how-i-ai/example-aggregate.html
    ```
    Say in one line what it answers: biggest use case, surprise use case, sessions per
-   week and their distribution, ask/make/do by function. (The same page is hosted at
+   week and their distribution, ask/make/do by function, top skills and custom agents.
+   (The same page is hosted at
    the project's landing page under `examples/`.)
 2. **Exactly what leaves the machine.**
    ```

@@ -98,6 +98,10 @@ const claude = [
 writeFileSync(join(inbox, 'chatgpt-export.zip'), zip([['conversations.json', JSON.stringify(chatgpt)], ['user.json', '{}']], true));
 writeFileSync(join(inbox, 'claude-export.zip'), zip([['data-2026/conversations.json', JSON.stringify(claude)], ['data-2026/projects.json', '[]']], false));
 
+// ---- ChatGPT desktop app cache (encrypted on macOS, so only counted)
+const gptRoot = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Packages', 'OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0', 'LocalCache', 'Roaming', 'ChatGPT', 'IndexedDB', 'https_chatgpt.com_0.indexeddb.leveldb') : join(dir, 'Library', 'Application Support', 'com.openai.chat', 'conversations-v3-1111');
+D(gptRoot); writeFileSync(join(gptRoot, plat === 'win32' ? '000003.log' : 'abc.data'), Buffer.from([1, 2, 3, 4]));
+
 // ---- cloud sessions list (as exported from inside a claude.ai/code session) ----
 writeFileSync(join(dir, 'how-i-ai', 'cloud-sessions.json'), JSON.stringify({ ccr: { data: [
   { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'web', environment_kind: 'anthropic_cloud', session_context: { model: 'claude-opus-4-1' } },

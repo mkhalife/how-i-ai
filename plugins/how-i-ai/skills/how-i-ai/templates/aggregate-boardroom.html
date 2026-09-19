@@ -226,6 +226,19 @@ tbody tr:last-child td{border-bottom:0}
 .list-row .bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
 .list-row .n{text-align:right;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
 .list-row .k{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-row .k.stacked{white-space:normal}
+.list-row .k .nm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.list-row .k .ppl-row{display:flex;align-items:center;gap:6px;min-width:0;margin-top:2px}
+.list-row .k .ppl{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+.mini-chip{
+  flex:none;display:inline-block;font-size:9px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--accent);border:1px solid var(--hairline);border-radius:999px;
+  padding:1px 6px;vertical-align:middle;
+}
+.list-row.muted .k .nm{color:var(--muted)}
+.list-row.muted .bar i{background:var(--muted);opacity:.55}
+.list-row.muted .n{color:var(--muted);opacity:.8}
+.list-row.roomy{grid-template-columns:minmax(0,1fr) 60px 34px}
 
 /* ---------- surprises ---------- */
 .surprise-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
@@ -310,6 +323,8 @@ var BY_WEEKDAY = arr(D.by_weekday);
 var BY_HOUR = arr(D.by_hour);
 var TOOLS = arr(D.tools);
 var CONNECTORS = arr(D.connectors);
+var SKILLS = arr(D.skills);
+var AGENTS = arr(D.agents);
 var SURPRISES = arr(D.surprises);
 var HL = obj(D.highlights);
 var NAR = obj(D.narrative);
@@ -1196,7 +1211,7 @@ function assistLabel(k){
 
 /* ================= 4. tools & sources ================= */
 (function sources(){
-  if (!BY_SOURCE.length && !TOOLS.length && !CONNECTORS.length && !BY_MODE.length) return;
+  if (!BY_SOURCE.length && !TOOLS.length && !CONNECTORS.length && !BY_MODE.length && !SKILLS.length && !AGENTS.length) return;
   var sec = h('section', {}, secHead('Where', 'Which tools the team reaches for',
     'Sources are the products people work in. Tools and connectors are what those sessions touched.'));
   var grid = h('div', { class:'grid g-auto' });
@@ -1252,24 +1267,71 @@ function assistLabel(k){
     grid.appendChild(card);
   }
 
-  function listCard(title, sub, items){
-    var maxV = Math.max.apply(null, items.map(function(i){ return num(i.sessions); }).concat([1]));
-    return h('div', { class:'card' }, [
+  function peopleNote(n){
+    n = num(n);
+    if (!n) return null;
+    return fmt(n) + ' ' + (n === 1 ? 'person' : 'people');
+  }
+
+  function listCard(title, sub, items, opts){
+    opts = opts || {};
+    var top = items.slice(0, 10);
+    var maxV = Math.max.apply(null, top.map(function(i){ return num(i.sessions); }).concat([1]));
+    var card = h('div', { class:'card' }, [
       h('div', { class:'card-head' }, [ h('div', {}, [
         h('h3', { text:title }), h('div', { class:'card-sub', text:sub })
       ]) ]),
-      h('div', { class:'list-rows' }, items.slice(0, 10).map(function(it){
-        return h('div', { class:'list-row' }, [
-          h('span', { class:'k', text: str(it.name) || '—' }),
+      h('div', { class:'list-rows' }, top.map(function(it){
+        var muted = !!(opts.mutedIf && opts.mutedIf(it));
+        var chip = !!(opts.chipIf && opts.chipIf(it));
+        var note = opts.people ? peopleNote(it.participants) : null;
+        var nameCell = h('span', { class:'k' + ((note || chip) ? ' stacked' : '') }, [
+          h('span', { class:'nm', text: str(it.name) || '—' }),
+          (note || chip) ? h('span', { class:'ppl-row' }, [
+            note ? h('span', { class:'ppl', text:note }) : null,
+            chip ? h('span', { class:'mini-chip', text:'custom' }) : null
+          ]) : null
+        ]);
+        return h('div', { class:'list-row' + (muted ? ' muted' : '') + (opts.roomy ? ' roomy' : '') }, [
+          nameCell,
           h('span', { class:'bar' }, [ h('i', { style:'width:' + Math.max(3, (num(it.sessions)/maxV)*100) + '%' }) ]),
           h('span', { class:'n', text: fmt(it.sessions) })
         ]);
-      }))
+      })),
+      !top.length ? h('div', { class:'empty', text:'Nothing shared for this window.' }) : null
     ]);
+    if (opts.table && top.length){
+      card.appendChild(tableView('Table view', opts.cols || ['Name', 'Sessions', 'People'],
+        top.map(function(it){
+          return opts.tableRow ? opts.tableRow(it) : [
+            str(it.name) || '—', fmt(it.sessions), num(it.participants) ? fmt(it.participants) : '—'
+          ];
+        })));
+    }
+    return card;
   }
 
   if (TOOLS.length) grid.appendChild(listCard('Built-in tools', 'Sessions that used each tool', TOOLS.slice().sort(function(a,b){ return num(b.sessions)-num(a.sessions); })));
   if (CONNECTORS.length) grid.appendChild(listCard('Connectors', 'Sessions that reached an outside system', CONNECTORS.slice().sort(function(a,b){ return num(b.sessions)-num(a.sessions); })));
+
+  if (SKILLS.length){
+    var skillRows = SKILLS.slice().sort(function(a,b){ return num(b.sessions) - num(a.sessions); });
+    grid.appendChild(listCard('Top skills', 'Skills invoked in Claude Code, by sessions', skillRows, {
+      people: true, table: true, roomy: true, cols: ['Skill', 'Sessions', 'People'],
+      tableRow: function(it){ return [str(it.name) || '—', fmt(it.sessions), num(it.participants) ? fmt(it.participants) : '—']; }
+    }));
+  }
+  if (AGENTS.length){
+    var customAgents = AGENTS.filter(function(a){ return !!a.custom; }).sort(function(a,b){ return num(b.sessions) - num(a.sessions); });
+    var builtinAgents = AGENTS.filter(function(a){ return !a.custom; }).sort(function(a,b){ return num(b.sessions) - num(a.sessions); });
+    var agentRows = customAgents.concat(builtinAgents);
+    grid.appendChild(listCard('Top custom agents', 'Sub-agent types spawned · custom agents first, built-in ones muted', agentRows, {
+      people: true, table: true, roomy: true, cols: ['Agent', 'Sessions', 'People', 'Custom'],
+      chipIf: function(a){ return !!a.custom; },
+      mutedIf: function(a){ return !a.custom; },
+      tableRow: function(it){ return [str(it.name) || '—', fmt(it.sessions), num(it.participants) ? fmt(it.participants) : '—', it.custom ? 'Yes' : 'No']; }
+    }));
+  }
 
   sec.appendChild(grid);
   app.appendChild(sec);

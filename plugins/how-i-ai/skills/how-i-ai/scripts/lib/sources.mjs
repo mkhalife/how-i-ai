@@ -383,3 +383,41 @@ export function geminiCli() {
   }
   return out;
 }
+
+// ---------- ChatGPT desktop app: presence and cache size only ----------
+// Message bodies are encrypted on macOS (Keychain key scoped to OpenAI's Team ID) and volatile
+// on Windows (a Chromium IndexedDB write-ahead log wiped on logout). We never try to read them.
+// What we report: the app is installed, how many conversation bundles its cache holds, and when
+// it was last written. The official export is the route for content.
+export function chatgptDesktop() {
+  const h = home(); const p = os();
+  const roots = [];
+  if (p === 'darwin') roots.push(join(h, 'Library', 'Application Support', 'com.openai.chat'), join(h, 'Library', 'Application Support', 'Codex'));
+  else if (p === 'win32') {
+    const la = process.env.LOCALAPPDATA || join(h, 'AppData', 'Local');
+    const pk = join(la, 'Packages');
+    try { for (const d of readdirSync(pk)) if (/^OpenAI\.ChatGPT-Desktop_/i.test(d)) roots.push(join(pk, d, 'LocalCache', 'Roaming', 'ChatGPT')); } catch { /* no packages dir */ }
+    roots.push(join(process.env.APPDATA || join(h, 'AppData', 'Roaming'), 'OpenAI', 'ChatGPT'), join(la, 'OpenAI', 'ChatGPT'));
+  }
+  const out = { source: 'chatgpt-desktop', found: false, path: null, sessions: [], notes: [], signal: null };
+  for (const root of roots) {
+    if (!existsSync(root)) continue;
+    out.found = true; out.path = root;
+    let bundles = 0, files = 0, last = 0;
+    try {
+      for (const d of readdirSync(root)) {
+        if (!/^conversations-v\d+-/i.test(d)) continue;
+        bundles++;
+        for (const f of walk(join(root, d), { maxDepth: 2, filter: (fp, n) => n.endsWith('.data') })) { files++; const t = fileTimes(f); if (t && t.mtime > last) last = t.mtime; }
+      }
+      if (!bundles) { // Windows layout: IndexedDB folder only
+        const idb = join(root, 'IndexedDB');
+        if (existsSync(idb)) for (const f of walk(idb, { maxDepth: 3 })) { const t = fileTimes(f); if (t && t.mtime > last) last = t.mtime; }
+      }
+    } catch { /* unreadable */ }
+    out.signal = { installed: true, cached_conversations: files || null, last_activity: last ? toISO(last) : null };
+    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} cached conversation file(s)` : ''}${last ? `, last active ${toISO(last).slice(0, 10)}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
+    break;
+  }
+  return out;
+}

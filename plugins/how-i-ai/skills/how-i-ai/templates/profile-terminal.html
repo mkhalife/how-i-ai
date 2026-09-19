@@ -364,6 +364,8 @@
   var tools = has(data.tools) ? data.tools.slice() : [];
   var connectors = has(data.connectors) ? data.connectors.slice() : [];
   var models = has(data.models) ? data.models.slice() : [];
+  var skills = has(data.skills) ? data.skills.slice() : [];
+  var agents = has(data.agents) ? data.agents.slice() : [];
   var weekdays = has(data.by_weekday) ? data.by_weekday.slice() : [];
   var hours = has(data.by_hour) ? data.by_hour.slice() : [];
   var samples = has(data.sample_sessions) ? data.sample_sessions.slice() : [];
@@ -986,24 +988,21 @@
     }
   })();
 
-  /* ================= 8. TOOLS / CONNECTORS / MODELS ================= */
+  /* ================= 8. TOOLS / CONNECTORS / MODELS / SKILLS / AGENTS ================= */
   (function () {
     var groups = [];
     if (tools.length) groups.push({ title: "top processes", meta: "built-in tools", items: tools, unit: "sessions", noun: "tools" });
     if (connectors.length) groups.push({ title: "connectors", meta: "mcp servers", items: connectors, unit: "sessions", noun: "connectors" });
     if (models.length) groups.push({ title: "models", meta: "engines used", items: models, unit: "sessions", noun: "models" });
+    if (skills.length) groups.push({ title: "skills", meta: "/invocations", items: skills, unit: "sessions", noun: "skills" });
+    if (agents.length) groups.push({ title: "agents", meta: "spawned", items: agents, unit: "sessions", noun: "agents", isAgents: true });
     if (!groups.length) return;
 
     var procRow = el("div", "procrow s12");
     app.appendChild(procRow);
-    var procCol = null;
-    groups.forEach(function (g, gi) {
-      var opts = { title: g.title, meta: g.meta, parent: procRow };
-      if (gi > 0 && groups.length > 2) {
-        if (!procCol) { procCol = el("div", "stack"); procRow.appendChild(procCol); }
-        opts.parent = procCol;
-      }
-      var p = panel(opts);
+
+    function renderGroup(g, parent) {
+      var p = panel({ title: g.title, meta: g.meta, parent: parent });
       var items = g.items.slice(0, 10);
       var max = maxOf(items, "sessions") || 1;
       var COLS = "22px 1fr 96px 34px";
@@ -1020,7 +1019,14 @@
         var r = el("div", "row");
         r.style.gridTemplateColumns = COLS;
         r.appendChild(el("div", "idx", (i + 1 < 10 ? "0" : "") + (i + 1)));
-        r.appendChild(el("div", "nm", it.name));
+        var nm = el("div", "nm");
+        nm.appendChild(document.createTextNode(it.name));
+        if (g.isAgents && it.custom) {
+          var tag = el("span", null, " [custom]");
+          tag.style.color = "var(--ink-3)";
+          nm.appendChild(tag);
+        }
+        r.appendChild(nm);
         var barwrap = el("div");
         var bar = el("div", "bar");
         var fill = el("i");
@@ -1032,7 +1038,7 @@
         n.style.fontSize = "11.5px";
         r.appendChild(n);
         var share = totalSessions ? (Number(it.sessions) || 0) / totalSessions : null;
-        bindTip(r, it.name + "\n" + num(it.sessions) + " " + g.unit +
+        bindTip(r, it.name + (g.isAgents && it.custom ? " [custom]" : "") + "\n" + num(it.sessions) + " " + g.unit +
           (share !== null ? "\n" + pct(share) + " of all sessions" : ""));
         rows.appendChild(r);
       });
@@ -1045,7 +1051,27 @@
       foot.style.paddingTop = "9px";
       foot.style.borderTop = "1px solid var(--border)";
       p.body.appendChild(foot);
-    });
+    }
+
+    /* first group stands alone in its own column; the rest pair up into
+       stacked columns (2 panels each) so the row stays balanced regardless
+       of how many of the five groups are present */
+    if (groups.length === 1) {
+      renderGroup(groups[0], procRow);
+    } else {
+      renderGroup(groups[0], procRow);
+      var rest = groups.slice(1);
+      for (var i = 0; i < rest.length; i += 2) {
+        var chunk = rest.slice(i, i + 2);
+        if (chunk.length === 1) {
+          renderGroup(chunk[0], procRow);
+        } else {
+          var stack = el("div", "stack");
+          procRow.appendChild(stack);
+          chunk.forEach(function (g) { renderGroup(g, stack); });
+        }
+      }
+    }
   })();
 
   /* ================= 10. SURPRISE ================= */
