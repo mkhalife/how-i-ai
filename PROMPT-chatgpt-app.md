@@ -49,13 +49,22 @@ Use this app's own tools, `list_threads` and `read_thread` (they may appear with
 `codex_app` prefix). If they are not available in this session, say so, skip to step 3,
 and the person's ChatGPT history will come from the data export instead.
 
-1. Call `list_threads` and keep paging until the entries are older than 30 days. Keep
-   entries whose `kind` is `chatgpt`. Skip `kind: codex`: those are local files the
-   scripts already read.
-2. For each kept conversation call `read_thread` for its first page of turns. Take the
-   first message the person wrote, their second message if there is one, how many
-   messages each side wrote (the counts the tool gives you; do not page through a long
-   conversation to count), the model, and any tool names that appear.
+1. Call `list_threads`. Its payload has `threads[]` with `id`, `kind`, `title`,
+   `updatedAt`, `summary`, `status` (also `pinnedThreads` and `sections`, which repeat
+   the same threads). Keep entries whose `kind` is `chatgpt` and whose `updatedAt` is
+   within the last 30 days. Skip `kind: codex`: those are local files the scripts
+   already read.
+2. For each kept conversation call `read_thread`. Its payload has `thread` (`id`,
+   `title`, `createdAt`, `updatedAt`), `turns[]` (`startedAt`, `items[]` with `type`
+   and either `text` or `content[].text`), and `page` (`order`, `limit`, `nextCursor`,
+   `hasMore`). You need the opening of the conversation: ask for the oldest turns first
+   if the tool lets you choose, otherwise follow `page.nextCursor` until you reach the
+   first turn, for at most five pages. Take the first message the person wrote and
+   their second one if there is one. `created_at` is `thread.createdAt`. For
+   `messages_user` and `messages_assistant`, count the person's and the assistant's
+   items across the pages you read when `page.hasMore` ended false; otherwise use
+   `null`. The tools do not report a model, so `model` is `null`. `tools` is any tool
+   names that appear in the item types.
 3. Write `~/how-i-ai-chatgpt/inbox/chatgpt-app-threads.json`. Use a script or your file
    tool; do not print the contents into this conversation.
 
@@ -68,8 +77,9 @@ and the person's ChatGPT history will come from the data export instead.
     "messages_user": 3, "messages_assistant": 3, "model": "<model or null>", "tools": [] } ] }
 ```
 
-The tool's field names may differ from the ones above; map them. If `read_thread`
-fails for a conversation, keep the entry with its title and times and leave
+Field names above are from the app build of September 2026; if yours differ, map them.
+Add no other fields to the file. If `read_thread` fails for a conversation, or you
+could not reach its first turn, keep the entry with its title and times and leave
 `first_message` empty. This file is private: it stays in `~/how-i-ai-chatgpt/inbox`, the
 same as an export zip, and is never shared, committed, or pasted anywhere.
 

@@ -52,6 +52,7 @@ for plat in darwin win32; do
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
+    if(d.sessions.some(s=>s.id==='s_codex_c3-review')) {console.error('FAIL codex sub-agent rollout counted as a session');process.exit(1)}
     const c3=d.sessions.find(s=>s.id==='s_codex_c3'); if(!c3||!c3.first_message.startsWith('Find the meeting notes')||c3.messages_user!==1||c3.surface!=='desktop'||!c3.connectors.includes('notion')||c3.title!=='Open action items'||c3.model!=='gpt-6') {console.error('FAIL codex desktop parse',c3);process.exit(1)}
     const app1=d.sessions.find(s=>s.id==='s_chatgpt_app1'); if(!app1||app1.source!=='chatgpt-app'||app1.messages_user!==2||!app1.context.includes('Make day two lighter')) {console.error('FAIL chatgpt-app parse',app1);process.exit(1)}
     if(d.sessions.find(s=>s.id==='s_chatgpt_g1').source!=='chatgpt-export') {console.error('FAIL export should win over the app listing for the same conversation');process.exit(1)}

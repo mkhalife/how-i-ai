@@ -149,6 +149,11 @@ function codexDesktopSession(id, start, prompt, threadName) {
   writeFileSync(join(codexDir, `rollout-2026-09-10T11-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
   writeFileSync(join(dir, '.codex', 'session_index.jsonl'), JSON.stringify({ id, thread_name: threadName, updated_at: at(61e3) }) + '\n');
 }
+// sub-agent rollout (automatic review of the parent thread): must be ignored
+writeFileSync(join(codexDir, 'rollout-2026-09-10T11-05-00-c3-review.jsonl'), [
+  { timestamp: iso(daysAgo(1, 12)), type: 'session_meta', payload: { id: 'c3-review', parent_thread_id: 'c3', timestamp: iso(daysAgo(1, 12)), cwd: '/x', originator: 'Codex Desktop', source: { subagent: { kind: 'review' } }, thread_source: 'guardian_review' } },
+  { timestamp: iso(daysAgo(1, 12)), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Review the following transcript ...' }] } },
+].map((l) => JSON.stringify(l)).join('\n') + '\n');
 codexDesktopSession('c3', daysAgo(1, 12), 'Find the meeting notes from last week and list the open action items', 'Open action items');
 codexSession('c1', daysAgo(9, 10), 'Migrate the users endpoint from REST to gRPC and keep the tests green', ['shell', 'apply_patch']);
 codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell']);

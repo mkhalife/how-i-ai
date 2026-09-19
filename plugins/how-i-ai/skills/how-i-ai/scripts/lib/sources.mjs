@@ -318,6 +318,9 @@ export function parseCodexRollout(file) {
   const recs = readJsonl(file);
   if (!recs.length) return null;
   const meta = recs.find((r) => r.type === 'session_meta')?.payload || {};
+  // Sub-agent threads (the desktop app's automatic reviewer, spawned workers) get their own rollout: parent_thread_id,
+  // source { subagent }, thread_source such as "guardian_review". They belong to the parent session, like agent-*.jsonl.
+  if (meta.parent_thread_id || (meta.source && typeof meta.source === 'object' && meta.source.subagent)) return null;
   const id = meta.id || meta.session_id || basename(file, '.jsonl').replace(/^rollout-/, '');
   const times = recs.map((r) => r.timestamp).filter(Boolean).sort();
   // The person's prompt, by build: CLI writes event_msg/user_message { message }; the desktop app (0.155, Sept 2026)
