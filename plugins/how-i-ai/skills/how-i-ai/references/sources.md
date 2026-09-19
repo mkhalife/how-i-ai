@@ -84,9 +84,9 @@ The desktop apps do not give a legitimate way to read conversation text from dis
   `source_kind` is `chatgpt` for ChatGPT conversations and `vscode` for local threads,
   with `display_title` and `source_updated_at` (epoch seconds) and no message bodies.
   It only holds conversations the app has listed, so the collector uses it for the
-  signal (count and last update; titles are never selected) and nothing else. Its
-  `automations` / `automation_runs` tables are where scheduled Codex tasks would show
-  up; both were empty here. ChatGPT conversations shown inside the app are fetched
+  signal (count and last update; titles are never selected). Its `automations` /
+  `automation_runs` tables list scheduled Codex tasks and their runs (thread ids only
+  are read, see below); both were empty here. ChatGPT conversations shown inside the app are fetched
   from the server and have no rollout file. Cloud Codex tasks are not on disk either.
 - **The app's `list_threads` / `read_thread` tools** come from the bundled
   `codex-app-tools` MCP server. It only works for agents the desktop app hosts: started
@@ -119,12 +119,13 @@ so the collector runs it in a throwaway temp dir and deletes that afterwards.
 | id | `sessionId` | file name | `session_meta.payload.id` | `id` | `uuid` |
 | started / ended | first and last `timestamp` | `createdAt`/`lastActivityAt` or file times | line timestamps | `create_time`/`update_time` | `created_at`/`updated_at` |
 | first message | first `type:user` with human text, harness tags stripped | transcript's first human turn, else `audit.jsonl`, else `initialMessage` | first `user_message` event or `item_completed` `UserMessage` item (falls back to `response_item` items of kind `user.text`) | first visible `author.role=user` node | first `sender=human` |
-| context | second message, tools, branch | second message, tools, skills, agents | second message, tools | second message, custom GPT, tools | second message, tools |
+| duration | active time (below) | active time from the transcript, else from `audit.jsonl`; null for an inline-`messages` state file | active time from line timestamps | null | null |
+| context | second message, tools, branch | second message, tools, skills, agents | second message, tools, skills | second message, custom GPT, tools | second message, tools |
 | counts | human turns, distinct assistant messages | user and assistant entries | user events, assistant messages | visible user and assistant nodes | human and assistant |
-| tools / connectors | `tool_use` names; `mcp__<server>__` → connector | same, from the transcript or `audit.jsonl` `tool_use` blocks | `function_call` / `custom_tool_call` names; MCP server from `mcp_tool_call` or the `McpToolCall` item | tool-author names, `code` parts → python | `tool_use` blocks |
-| skills / agents | `Skill` tool `input.skill`; `/slash` commands that are not built-ins; `Agent` tool `input.subagent_type` (omitted = `general-purpose`; custom = not a built-in type) | same | n/a | n/a | n/a |
+| tools / connectors | `tool_use` names; `mcp__<server>__` → connector | same, from the transcript or `audit.jsonl` `tool_use` blocks | `function_call` / `custom_tool_call` names; desktop builds: `item_completed` items instead of the generic `exec` (`CommandExecution` → `shell`, `Extension.kind` `web.search` → `web_search`); MCP server from `mcp_tool_call` or the `McpToolCall` item | tool-author names, `code` parts → python | `tool_use` blocks |
+| skills / agents | `Skill` tool `input.skill`; `/slash` commands that are not built-ins; `Agent` tool `input.subagent_type` (omitted = `general-purpose`; custom = not a built-in type) | same | skills: reads of `<skills root>/<skill>/SKILL.md` → `<skill>`, or `<plugin>:<skill>` under a plugin cache; plugins: `McpToolCall.pluginId` → `plugin:<plugin>` (details below). No agents | n/a | n/a |
 | model | most common `message.model` | if present | `turn_context.model` | `model_slug` | if present |
-| mode / trigger | `origin.kind` (human vs routine), `<scheduled-task>` wrapper or desktop `scheduledTaskId` → scheduled; tool use → agentic | `scheduledTaskId` | tools → agentic | chat | chat |
+| mode / trigger | `origin.kind` (human vs routine), `<scheduled-task>` wrapper or desktop `scheduledTaskId` → scheduled; tool use → agentic | `scheduledTaskId` | automation thread → scheduled / routine (below); tools → agentic | chat | chat |
 | surface | `entrypoint` (`cli`, `claude-desktop` → desktop, `sdk-cli` → sdk, `local-agent` → cowork, ide, remote → cloud) | cowork | `originator` | export or gpt | export |
 
 Harness noise is removed before anything is counted: `<system-reminder>`, slash
@@ -144,6 +145,47 @@ More things real transcripts do (verified on macOS, September 2026):
   short word (`entrypoint: sdk-cli`, one prompt under 12 characters, no tools). Dropped.
 - **Duration** is active time: gaps between consecutive records, ignoring any gap over
   15 minutes. Desktop sessions stay open for days, so first-to-last is not time spent.
+  Sources without per-record timestamps (both exports, `chatgpt-app`, the Claude cloud
+  list, Codex cloud) get `duration_minutes: null` rather than the created-to-updated
+  span. `profile.json` sums hours over the sessions that have a duration
+  (`totals.sessions_timed`).
+- **Title-only sources have no message counts.** The Claude cloud list and
+  `codex cloud list` give a title and two timestamps, so `messages_user` and
+  `messages_assistant` are null (shared as blank), not a placeholder.
+
+## Codex rollouts: skills, plugins, scheduled tasks (desktop build 0.155, macOS, September 2026)
+
+Record types: `session_meta`, `event_msg`, `response_item`, `world_state`, `turn_context`,
+`token_usage_record`. What the agent did is on `event_msg` / `item_completed` items:
+`UserMessage`, `AgentMessage`, `Reasoning`, `CommandExecution` (`command`, `cwd`,
+`parsed_cmd[]`, `exit_code`, ...), `McpToolCall` (`server`, `tool`, `pluginId`, ...),
+`Extension` (`kind: "web.search"`). The matching `response_item` is a `custom_tool_call`
+named `exec` for all three, so it is dropped whenever items name the tools.
+
+- **Skills.** There is no skill item type and no skill field on a turn. The skills list
+  reaches the model in `world_state.state.host_skills.body` (every installed skill, so
+  not a usage signal), and the model uses a skill by reading its file: a
+  `CommandExecution` whose `parsed_cmd[]` holds `{ type: "read", name: "SKILL.md", path }`.
+  Skills roots seen: `~/.agents/skills/<skill>/`, `~/.codex/skills/.system/<skill>/`,
+  and for plugin skills `~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/skills/<skill>/`.
+  The parser looks for a `SKILL.md` under a `.codex` or `.agents` folder in
+  `parsed_cmd[].path` and the command (CLI builds: the `function_call` arguments) and
+  keeps only the folder name: `<skill>`, or `<plugin>:<skill>` under a plugin cache, the
+  same convention as Claude. A `SKILL.md` anywhere else is a file in the person's
+  project and is ignored. Commands and paths are never stored; every
+  `CommandExecution` is the one tool `shell`.
+- **Plugins.** `McpToolCall.pluginId` is `<plugin>@<marketplace>` (seen:
+  `codex-app-tools@openai-bundled`). It is recorded in `skills` as `plugin:<plugin>`,
+  marketplace dropped, so a plugin used only through its MCP tools still shows up.
+  A plugin skill read gives `<plugin>:<skill>` (seen: `visualize:visualize` from
+  `openai-bundled`; a system skill reads as plain `openai-docs`).
+- **Scheduled tasks (automations).** Unverified against a real scheduled run: no
+  automation existed on the machine checked. Two signals set `trigger: scheduled`,
+  `mode: routine`: the thread id is listed in `sqlite/codex-dev.db`
+  (`automation_runs.thread_id`, or `automations.target_thread_id`), or
+  `session_meta.payload.thread_source` matches `automation|schedul` (seen values:
+  `user`, `guardian_review`). Only those id columns are selected; `prompt`, `name` and
+  titles are never read. Needs `node:sqlite` (Node 22.5+); older Node skips the lookup.
 - **Connector names.** claude.ai connectors appear as `mcp__<uuid>__tool`. The desktop
   state files' `remoteMcpServersConfig[] { uuid, name }` maps them to names; without the
   desktop app the uuid is kept.

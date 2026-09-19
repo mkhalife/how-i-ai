@@ -103,8 +103,6 @@ export function mostCommon(arr) {
 
 export function uniq(arr) { return [...new Set(arr.filter((x) => x != null && x !== ''))]; }
 
-export function minutesBetween(a, b) { if (!a || !b) return null; const ms = new Date(b) - new Date(a); return ms >= 0 ? Math.round(ms / 6000) / 10 : null; }
-
 // Which entry point a source belongs to.
 export function appOf(source) { return /^(codex|chatgpt)/.test(String(source || '')) ? 'chatgpt' : 'claude'; }
 

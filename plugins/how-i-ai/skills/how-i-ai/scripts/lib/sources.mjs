@@ -6,7 +6,7 @@ import { join, basename, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   home, os, walk, readJsonl, readJson, fileTimes, toISO, fromEpoch, trim, cleanPrompt, isHarnessOnly,
-  mostCommon, uniq, sha, minutesBetween, localDate,
+  mostCommon, uniq, sha, localDate,
 } from './util.mjs';
 import { readZipText } from './zip.mjs';
 
@@ -77,7 +77,8 @@ function connectorsFromTools(tools) {
 function baseSession(o) {
   return {
     id: o.id, source: o.source, surface: o.surface || 'cli', started_at: o.started_at, ended_at: o.ended_at || o.started_at,
-    duration_minutes: o.active_minutes != null ? o.active_minutes : minutesBetween(o.started_at, o.ended_at || o.started_at),
+    // Active time from per-record timestamps, or null: created-to-updated spans are not time spent.
+    duration_minutes: o.active_minutes ?? null,
     title: trim(o.title, 200) || null,
     first_message: trim(o.first_message, FIRST_MESSAGE_CHARS) || '',
     first_message_chars: (o.first_message || '').length,
@@ -245,7 +246,7 @@ function readAudit(file) {
     .map((r) => textOf(r.message.content)).filter((t) => !isHarnessOnly(t)).map((t) => cleanPrompt(t)).filter((t) => !isHarnessOnly(t));
   const tools = assistants.flatMap((r) => (Array.isArray(r.message.content) ? r.message.content : []).filter((b) => b.type === 'tool_use').map((b) => b.name));
   const times = recs.map((r) => r.timestamp).filter(Boolean).sort();
-  return { prompts, tools, ...skillsAndAgents(users, assistants), assistants: uniq(assistants.map((r) => r.message.id || r.uuid)).length, model: mostCommon(assistants.map((r) => r.message.model)), last: times[times.length - 1] || null };
+  return { prompts, tools, ...skillsAndAgents(users, assistants), assistants: uniq(assistants.map((r) => r.message.id || r.uuid)).length, model: mostCommon(assistants.map((r) => r.message.model)), last: times[times.length - 1] || null, active: times.length > 1 ? activeMinutes(times) : null };
 }
 
 export function parseDesktopStateFile(file, consumed = new Set()) {
@@ -279,7 +280,7 @@ export function parseDesktopStateFile(file, consumed = new Set()) {
 
   // 2. No transcript (cleaned up, or an older build): state-file fields plus audit.jsonl.
   const auditFile = join(workDir, 'audit.jsonl');
-  const audit = existsSync(auditFile) ? readAudit(auditFile) : { prompts: [], tools: [], skills: [], agents: [], assistants: 0, model: null, last: null };
+  const audit = existsSync(auditFile) ? readAudit(auditFile) : { prompts: [], tools: [], skills: [], agents: [], assistants: 0, model: null, last: null, active: null };
   if (!audit.tools.length && existsSync(auditFile)) for (const r of readJsonl(auditFile)) { const t = pickKey(r, ['tool', 'toolName', 'tool_name', 'name']); if (typeof t === 'string' && /tool|invoc|call/i.test(JSON.stringify(r).slice(0, 200))) audit.tools.push(t); }
   const msgs = findMessages(obj) || [];
   const humans = msgs.filter((m) => /user|human/.test(roleOf(m)));
@@ -296,7 +297,7 @@ export function parseDesktopStateFile(file, consumed = new Set()) {
     context: [texts[1] ? 'Next: ' + trim(texts[1], 300) : null, audit.tools.length ? 'Tools: ' + uniq(audit.tools).slice(0, 12).join(', ') : null, audit.skills.length ? 'Skills: ' + audit.skills.join(', ') : null, audit.agents.length ? 'Agents: ' + audit.agents.join(', ') : null].filter(Boolean).join(' | '),
     messages_user: texts.length || (title ? 1 : 0), messages_assistant: assistants.length || audit.assistants, tools: audit.tools, skills: audit.skills, agents: audit.agents,
     model: pickKey(obj, ['model', 'modelId', 'model_id']) || audit.model, mode: scheduled ? 'routine' : (isCowork ? 'agentic' : 'chat'), trigger: scheduled ? 'scheduled' : 'human',
-    project: pickKey(obj, ['cwd', 'folder', 'workingDirectory', 'projectId']),
+    project: pickKey(obj, ['cwd', 'folder', 'workingDirectory', 'projectId']), active_minutes: audit.active,
   });
 }
 
@@ -308,14 +309,52 @@ export function codex({ codexHome } = {}) {
   const seen = new Set();
   // session_index.jsonl: one { id, thread_name, updated_at } line per thread. Only source of a title.
   const names = new Map(readJsonl(join(root, 'session_index.jsonl')).filter((r) => r && r.id && r.thread_name).map((r) => [String(r.id), String(r.thread_name)]));
+  const scheduledIds = codexAutomationThreads(root);
   for (const dir of dirs) for (const file of walk(dir, { maxDepth: 6, filter: (p, n) => n.endsWith('.jsonl') })) {
-    const s = parseCodexRollout(file);
+    const s = parseCodexRollout(file, { scheduledIds });
     if (s && !seen.has(s.id)) { seen.add(s.id); if (!s.title) s.title = trim(names.get(s.id.replace(/^s_codex_/, '')), 200) || null; out.sessions.push(s); }
   }
   return out;
 }
 
-export function parseCodexRollout(file) {
+// Read-only handle on the desktop app's $CODEX_HOME/sqlite/codex-dev.db. Needs node:sqlite (Node 22.5+); returns
+// null when the file, the module, or the table is missing.
+function withCodexDb(root, fn) {
+  const db = join(root, 'sqlite', 'codex-dev.db');
+  if (!existsSync(db) || typeof process.getBuiltinModule !== 'function') return null;
+  let conn;
+  try {
+    const sqlite = process.getBuiltinModule('node:sqlite');
+    if (!sqlite) return null;
+    conn = new sqlite.DatabaseSync(db, { readOnly: true });
+    return fn(conn);
+  } catch { return null; } finally { try { conn?.close(); } catch { /* already closed */ } }
+}
+
+// Thread ids started by a Codex scheduled task (automation): automation_runs.thread_id is one row per run, and
+// automations.target_thread_id is the thread a task keeps posting into. Only the id columns are selected, never
+// prompt, name, or titles. Unverified against a real scheduled run: both tables were empty on the machine checked.
+function codexAutomationThreads(root) {
+  const ids = new Set();
+  for (const [table, col] of [['automation_runs', 'thread_id'], ['automations', 'target_thread_id']])
+    for (const row of withCodexDb(root, (conn) => conn.prepare(`SELECT ${col} AS id FROM ${table} WHERE ${col} IS NOT NULL`).all()) || []) if (row.id) ids.add(String(row.id));
+  return ids;
+}
+
+// A skill is used by reading its SKILL.md from a skills root: ~/.agents/skills/<skill>/, $CODEX_HOME/skills/[.system/]<skill>/,
+// or a plugin's $CODEX_HOME/plugins/cache/<marketplace>/<plugin>/<version>/skills/<skill>/. Only the skill folder (and the
+// plugin folder) is taken from the path. A SKILL.md anywhere else is a file in the person's project, not a skill in use.
+const CODEX_SKILL_PATH = /(?:^|[\\/\s'"`=])\.(?:codex|agents)[\\/][^\s'"`]*?([\w][\w.-]*)[\\/]+SKILL\.md/g;
+function codexSkillsIn(text) {
+  const out = [];
+  for (const m of String(text || '').matchAll(CODEX_SKILL_PATH)) {
+    const plugin = m[0].match(/plugins[\\/]+cache[\\/]+[^\\/]+[\\/]+([^\\/]+)[\\/]+[^\\/]+[\\/]+skills[\\/]+[^\\/]+[\\/]+SKILL\.md$/);
+    out.push(plugin ? `${plugin[1]}:${m[1]}` : m[1]);
+  }
+  return out;
+}
+
+export function parseCodexRollout(file, { scheduledIds } = {}) {
   const recs = readJsonl(file);
   if (!recs.length) return null;
   const meta = recs.find((r) => r.type === 'session_meta')?.payload || {};
@@ -343,22 +382,31 @@ export function parseCodexRollout(file) {
   if (!prompts.length) return null;
   const assistantItems = recs.filter((r) => r.type === 'response_item' && r.payload?.type === 'message' && r.payload.role === 'assistant');
   const assistants = assistantItems.length ? assistantItems : [...recs.filter((r) => r.type === 'event_msg' && r.payload?.type === 'agent_message'), ...items.filter((it) => it.type === 'AgentMessage')];
-  // Desktop builds route shell and MCP calls through one custom_tool_call named "exec"; the MCP server and tool only
-  // show up on the item_completed McpToolCall item { server, tool }.
+  // Desktop builds route shell, MCP and web search through one custom_tool_call named "exec"; what ran is on the
+  // item_completed items: CommandExecution (recorded as the single tool "shell", never the command), McpToolCall
+  // { server, tool, pluginId }, Extension { kind: "web.search" }. When items name the tools, "exec" adds nothing.
   const mcpItems = items.filter((it) => it.type === 'McpToolCall' && it.server);
-  const tools = [...recs.filter((r) => r.type === 'response_item' && r.payload && /^(function_call|custom_tool_call|local_shell_call|mcp_tool_call|web_search_call)$/.test(r.payload.type))
-    .map((r) => r.payload.name || r.payload.type.replace(/_call$/, '')), ...mcpItems.map((it) => `mcp__${it.server}__${it.tool || 'call'}`)];
+  const cmdItems = items.filter((it) => it.type === 'CommandExecution');
+  const itemTools = [...cmdItems.map(() => 'shell'), ...mcpItems.map((it) => `mcp__${it.server}__${it.tool || 'call'}`), ...items.filter((it) => it.type === 'Extension' && typeof it.kind === 'string').map((it) => it.kind.replace(/\W+/g, '_'))];
+  const calls = recs.filter((r) => r.type === 'response_item' && r.payload && /^(function_call|custom_tool_call|local_shell_call|mcp_tool_call|web_search_call)$/.test(r.payload.type));
+  const tools = [...calls.map((r) => r.payload.name || r.payload.type.replace(/_call$/, '')).filter((n) => !(n === 'exec' && itemTools.length)), ...itemTools];
+  // Skills: SKILL.md reads, from the parsed command when the item has one, else from the raw call. Plugins: the
+  // McpToolCall pluginId is "<plugin>@<marketplace>"; kept as "plugin:<plugin>" next to "<plugin>:<skill>".
+  const skillTexts = cmdItems.length ? cmdItems.flatMap((it) => [...(Array.isArray(it.parsed_cmd) ? it.parsed_cmd.map((p) => p && p.path) : []), Array.isArray(it.command) ? it.command.join(' ') : it.command])
+    : calls.map((r) => (typeof r.payload.arguments === 'string' ? r.payload.arguments : typeof r.payload.input === 'string' ? r.payload.input : ''));
+  const skills = uniq([...skillTexts.flatMap(codexSkillsIn), ...mcpItems.map((it) => (typeof it.pluginId === 'string' && it.pluginId.split('@')[0] ? 'plugin:' + it.pluginId.split('@')[0] : null))]);
   const connectors = uniq([...recs.filter((r) => r.type === 'response_item' && r.payload?.type === 'mcp_tool_call').map((r) => r.payload.server), ...mcpItems.map((it) => it.server)].filter(Boolean));
   const model = mostCommon(recs.filter((r) => r.type === 'turn_context').map((r) => r.payload?.model)) || meta.model || null;
   const cwd = meta.cwd || recs.find((r) => r.type === 'turn_context')?.payload?.cwd || null;
   // originator wins over source: the desktop app reports source "vscode" with originator "Codex Desktop" / "codex_work_desktop".
   const originator = String(meta.originator || meta.source || '').toLowerCase();
   const surface = /app|desktop|gui/.test(originator) ? 'desktop' : /vscode|ide/.test(originator) ? 'ide' : 'cli';
+  const scheduled = !!(scheduledIds && scheduledIds.has(String(id))) || /automation|schedul/i.test(String(meta.thread_source || ''));
   return baseSession({
     id: 's_codex_' + id, source: 'codex', surface, started_at: toISO(meta.timestamp || times[0]), ended_at: toISO(times[times.length - 1] || meta.timestamp),
-    title: null, first_message: prompts[0], context: [prompts[1] ? 'Next: ' + trim(prompts[1], 300) : null, tools.length ? 'Tools: ' + uniq(tools).slice(0, 12).join(', ') : null].filter(Boolean).join(' | '),
-    messages_user: prompts.length, messages_assistant: assistants.length, tools, connectors, model,
-    mode: tools.length ? 'agentic' : 'chat', trigger: 'human', project: cwd,
+    title: null, first_message: prompts[0], context: [prompts[1] ? 'Next: ' + trim(prompts[1], 300) : null, tools.length ? 'Tools: ' + uniq(tools).slice(0, 12).join(', ') : null, skills.length ? 'Skills: ' + skills.join(', ') : null].filter(Boolean).join(' | '),
+    messages_user: prompts.length, messages_assistant: assistants.length, tools, connectors, skills, model,
+    mode: scheduled ? 'routine' : tools.length ? 'agentic' : 'chat', trigger: scheduled ? 'scheduled' : 'human', project: cwd, active_minutes: times.length > 1 ? activeMinutes(times) : null,
   });
 }
 
@@ -410,7 +458,7 @@ function codexCloudList(bin, cwd, out) {
       out.sessions.push(baseSession({
         id: 's_codex-cloud_' + t.id, source: 'codex', surface: 'cloud', started_at: started, ended_at: toISO(t.updated_at) || started,
         title: t.title || null, first_message: t.title || t.summary || '', context: t.summary ? trim(t.summary, 300) : '',
-        messages_user: 1, messages_assistant: 1, tools: [], model: null, mode: 'agentic', trigger: t.is_review ? 'review' : 'human', project: t.environment_label || null,
+        messages_user: null, messages_assistant: null, tools: [], model: null, mode: 'agentic', trigger: t.is_review ? 'review' : 'human', project: t.environment_label || null,
       }));
     }
     cursor = data.cursor; if (!cursor || !tasks.length) break;
@@ -434,7 +482,7 @@ export function claudeCloud(file) {
     out.sessions.push(baseSession({
       id: 's_claude-cloud_' + s.id, source: 'claude-code', surface: 'cloud', started_at: started, ended_at: toISO(s.updated_at) || started,
       title: s.title || null, first_message: s.title || '', context: 'Cloud session; only the title is available locally',
-      messages_user: 1, messages_assistant: 1, tools: [], model: s.session_context?.model || s.configured_model || null,
+      messages_user: null, messages_assistant: null, tools: [], model: s.session_context?.model || s.configured_model || null,
       mode: isRoutine ? 'routine' : 'agentic', trigger: isRoutine ? 'routine' : 'human',
       project: s.session_context?.sources?.[0]?.git_repository?.url || null,
     }));
@@ -560,16 +608,8 @@ export function chatgptAppThreads(inbox) {
 // bodies, and only the conversations the app has shown, so it is a signal, not history. Only count and max(updated)
 // are queried; display_title is never selected. Needs node:sqlite (Node 22.5+); older Node just skips it.
 function chatgptCatalogSignal() {
-  const db = join(process.env.CODEX_HOME || join(home(), '.codex'), 'sqlite', 'codex-dev.db');
-  if (!existsSync(db) || typeof process.getBuiltinModule !== 'function') return null;
-  let conn;
-  try {
-    const sqlite = process.getBuiltinModule('node:sqlite');
-    if (!sqlite) return null;
-    conn = new sqlite.DatabaseSync(db, { readOnly: true });
-    const row = conn.prepare("SELECT count(*) AS n, max(source_updated_at) AS last FROM local_thread_catalog WHERE source_kind = 'chatgpt'").get();
-    return row && row.n ? { count: Number(row.n), last: fromEpoch(row.last) } : null;
-  } catch { return null; } finally { try { conn?.close(); } catch { /* already closed */ } }
+  const row = withCodexDb(process.env.CODEX_HOME || join(home(), '.codex'), (conn) => conn.prepare("SELECT count(*) AS n, max(source_updated_at) AS last FROM local_thread_catalog WHERE source_kind = 'chatgpt'").get());
+  return row && row.n ? { count: Number(row.n), last: fromEpoch(row.last) } : null;
 }
 
 export function chatgptDesktop() {

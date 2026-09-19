@@ -28,16 +28,16 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
       "surface": "cli",                        // cli | desktop | web | cloud | cowork | app | export
       "started_at": "2026-09-19T01:37:01.378Z",
       "ended_at": "2026-09-19T02:10:44.102Z",
-      "duration_minutes": 33.7,
+      "duration_minutes": 33.7,                // active minutes from per-record timestamps (gaps over 15 min dropped); null when the source only knows created/updated times
       "title": "Howiai skills plugin",         // product-generated title if any
       "first_message": "Make me a new skills repo like...", // raw, trimmed to 2,000 chars
       "first_message_chars": 2410,
       "context": "Second message: ... | Tools: Bash, Read, WebSearch",   // ≤ 600 chars of extra signal
-      "messages_user": 4,
+      "messages_user": 4,                      // both counts are null when the source gives only a title (cloud lists, a thread the in-app agent could not open)
       "messages_assistant": 9,
       "tools": ["Bash", "Read", "WebSearch"],          // built-in tool names
       "connectors": ["github", "Google_Drive"],        // MCP server names (mcp__<server>__*)
-      "skills": ["code-review", "pm-storytelling:brag-to-bets"], // skills invoked (Skill tool or a /slash command that is not a built-in)
+      "skills": ["code-review", "pm-storytelling:brag-to-bets"], // skills invoked (Skill tool or a /slash command that is not a built-in); plugin skills are "<plugin>:<skill>". Codex: SKILL.md reads, plus "plugin:<plugin>" for a plugin used through its MCP tools
       "agents": ["general-purpose", "evidence-researcher"],       // sub-agent types spawned (Agent tool subagent_type)
       "model": "claude-opus-4-1",
       "mode": "agentic",                               // chat | agentic | routine
@@ -94,7 +94,7 @@ one entry point's sources.
   "person": { "participant_id": "p_ab12cd34", "title": "Senior Product Designer", "function": "Design" },
   "totals": {
     "sessions": 142, "sessions_per_week": 33.1, "messages": 1180,
-    "active_days": 22, "hours_estimated": 41.5, "longest_streak_days": 9,
+    "active_days": 22, "hours_estimated": 41.5, "sessions_timed": 120, "longest_streak_days": 9, // hours sum only the sessions_timed sessions that have a duration; null when none do
     "sources": 3
   },
   "by_source": [ { "source": "claude-code", "label": "Claude Code", "sessions": 80, "messages": 900, "share": 0.56 } ],

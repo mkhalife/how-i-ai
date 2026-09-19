@@ -11,7 +11,7 @@ for plat in darwin win32; do
   node --input-type=module -e "
     import { codexBinaries, codexCloud } from './scripts/lib/sources.mjs';
     const bins = codexBinaries().filter((b) => b.includes('how-i-ai-test-')); if (bins.length !== 1) { console.error('FAIL bundled codex lookup', codexBinaries()); process.exit(1); }
-    if ('$plat' === 'darwin') { process.env.HOW_I_AI_CODEX_BIN = bins[0]; const r = codexCloud(); if (!r.found || r.sessions.length !== 1 || r.sessions[0].surface !== 'cloud' || r.sessions[0].id !== 's_codex-cloud_task_cloud1') { console.error('FAIL codex cloud via bundled binary', r); process.exit(1); } }
+    if ('$plat' === 'darwin') { process.env.HOW_I_AI_CODEX_BIN = bins[0]; const r = codexCloud(); if (!r.found || r.sessions.length !== 1 || r.sessions[0].surface !== 'cloud' || r.sessions[0].id !== 's_codex-cloud_task_cloud1' || r.sessions[0].duration_minutes !== null || r.sessions[0].messages_user !== null || r.sessions[0].messages_assistant !== null) { console.error('FAIL codex cloud via bundled binary', r); process.exit(1); } }
     console.log('   bundled codex binary ok');" 
   node -e "
     const d=require('$H/how-i-ai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
@@ -19,6 +19,8 @@ for plat in darwin win32; do
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
     const c=d.sessions.find(s=>s.id.includes('cloud1')); if(!c||c.surface!=='cloud') {console.error('FAIL cloud');process.exit(1)}
+    if(c.duration_minutes!==null||c.messages_user!==null||c.messages_assistant!==null) {console.error('FAIL a title-only cloud session has no duration and no message counts',c);process.exit(1)}
+    if(d.sessions.filter(s=>s.source==='claude-export').some(s=>s.duration_minutes!==null)) {console.error('FAIL export duration must be null');process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('bridge1'))) {console.error('FAIL bridge should be skipped');process.exit(1)}
     const a1=d.sessions.find(s=>s.id.endsWith('aaaa-1')); if(!a1.connectors.includes('github')||a1.messages_user!==1||!a1.tools.includes('Edit')) {console.error('FAIL cc parse',a1);process.exit(1)}
     if(!a1.skills.includes('code-review')||!a1.skills.includes('simplify')||!a1.agents.includes('evidence-researcher')) {console.error('FAIL skills/agents',a1.skills,a1.agents);process.exit(1)}
@@ -29,7 +31,7 @@ for plat in darwin win32; do
     if(d.sessions.some(s=>s.id.endsWith('aaaa-10'))) {console.error('FAIL headless ping counted as a session');process.exit(1)}
     const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(!d2||d2.source!=='claude-cowork'||d2.surface!=='cowork'||d2.title!=='Interview synthesis'||d2.messages_user!==1||!d2.tools.includes('Write')||!d2.skills.includes('research-synthesis')||!d2.connectors.includes('Google Drive')||d2.duration_minutes>10) {console.error('FAIL cowork parse',d2);process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('cli-d2'))) {console.error('FAIL cowork transcript counted twice');process.exit(1)}
-    const d3=d.sessions.find(s=>s.id==='s_claude-desktop_d3'); if(!d3||d3.source!=='claude-cowork'||d3.messages_user!==1||!d3.first_message.startsWith('Help me plan')||!d3.tools.includes('WebSearch')||d3.tools.includes('SubagentOnlyTool')||d3.model!=='claude-sonnet-4-6') {console.error('FAIL cowork audit-only parse',d3);process.exit(1)}
+    const d3=d.sessions.find(s=>s.id==='s_claude-desktop_d3'); if(!d3||d3.source!=='claude-cowork'||d3.messages_user!==1||!d3.first_message.startsWith('Help me plan')||!d3.tools.includes('WebSearch')||d3.tools.includes('SubagentOnlyTool')||d3.model!=='claude-sonnet-4-6'||!(d3.duration_minutes>0&&d3.duration_minutes<10)) {console.error('FAIL cowork audit-only parse',d3);process.exit(1)}
     if(JSON.stringify(d).includes('never read this')||JSON.stringify(d).includes('test.person@example.com')) {console.error('FAIL read private state-file fields');process.exit(1)}
     const tb=Object.fromEntries(d.sources.map(r=>[r.source,r.sessions_in_window])); if(tb['claude-cowork']!==2||tb['claude-desktop']!==1) {console.error('FAIL source table split',tb);process.exit(1)}
     if(d.sessions.some(s=>s.id.endsWith('aaaa-5'))) {console.error('FAIL window filter');process.exit(1)}
@@ -48,12 +50,20 @@ for plat in darwin win32; do
   echo "== $plat: chatgpt entry point"; node scripts/how-i-ai.mjs --app chatgpt collect --no-codex-cloud --days 30 | sed 's/^/   /'
   node -e "
     const d=require('$H/how-i-ai-chatgpt/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
-    const want={'codex':3,'chatgpt-export':3,'chatgpt-app':2,'claude-code':0,'claude-cowork':0,'claude-export':0};
+    const want={'codex':5,'chatgpt-export':3,'chatgpt-app':2,'claude-code':0,'claude-cowork':0,'claude-export':0};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_codex_c3-review')) {console.error('FAIL codex sub-agent rollout counted as a session');process.exit(1)}
     const c3=d.sessions.find(s=>s.id==='s_codex_c3'); if(!c3||!c3.first_message.startsWith('Find the meeting notes')||c3.messages_user!==1||c3.surface!=='desktop'||!c3.connectors.includes('notion')||c3.title!=='Open action items'||c3.model!=='gpt-6') {console.error('FAIL codex desktop parse',c3);process.exit(1)}
+    const want3=['meeting-notes','notes-kit:action-items','plugin:notes-kit']; if(want3.some(k=>!c3.skills.includes(k))||c3.skills.length!==3||!c3.tools.includes('shell')||!c3.tools.includes('web_search')||c3.tools.includes('exec')||/secret-project|\/Users\/me|SKILL/.test(JSON.stringify([c3.skills,c3.tools,c3.context]))) {console.error('FAIL codex skills, plugins and tool names',c3.skills,c3.tools,c3.context);process.exit(1)}
+    const c2=d.sessions.find(s=>s.id==='s_codex_c2'); if(!c2.skills.includes('pr-labels')||c2.skills.length!==1||c2.trigger!=='human') {console.error('FAIL codex cli skill read',c2);process.exit(1)}
+    if(c3.duration_minutes!==1||c2.duration_minutes!==5) {console.error('FAIL codex duration is active time from record timestamps',c3.duration_minutes,c2.duration_minutes);process.exit(1)}
+    const c4=d.sessions.find(s=>s.id==='s_codex_c4'); if(c4.trigger!=='scheduled'||c4.mode!=='routine') {console.error('FAIL codex scheduled task by thread_source',c4);process.exit(1)}
+    const hasSqlite=typeof process.getBuiltinModule==='function'&&!!process.getBuiltinModule('node:sqlite'); const c5=d.sessions.find(s=>s.id==='s_codex_c5');
+    if(hasSqlite?(c5.trigger!=='scheduled'||c5.mode!=='routine'):c5.trigger!=='human') {console.error('FAIL codex scheduled task by automation_runs.thread_id',c5);process.exit(1)}
+    if(JSON.stringify(d).includes('SECRET')) {console.error('FAIL read automation name, prompt or title');process.exit(1)}
+    for(const id of ['s_chatgpt_g1','s_chatgpt_app1']) if(d.sessions.find(s=>s.id===id).duration_minutes!==null) {console.error('FAIL duration must be null without per-message timestamps',id);process.exit(1)}
     const app1=d.sessions.find(s=>s.id==='s_chatgpt_app1'); if(!app1||app1.source!=='chatgpt-app'||app1.messages_user!==2||!app1.context.includes('Make day two lighter')) {console.error('FAIL chatgpt-app parse',app1);process.exit(1)}
     const app2=d.sessions.find(s=>s.id==='s_chatgpt_app2'); if(!app2||app2.messages_user!==null||app2.messages_assistant!==null||app2.first_message!=='Long thread, opening not reached') {console.error('FAIL unknown counts must stay null and the title stands in for the opening',app2);process.exit(1)}
     if(d.sessions.find(s=>s.id==='s_chatgpt_g1').source!=='chatgpt-export') {console.error('FAIL export should win over the app listing for the same conversation');process.exit(1)}

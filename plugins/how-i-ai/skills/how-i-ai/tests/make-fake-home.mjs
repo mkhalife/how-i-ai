@@ -111,25 +111,28 @@ writeFileSync(join(ccs, 'local_code7.json'), JSON.stringify({ sessionId: 'local_
 
 // ---- Codex ----
 const codexDir = D(join(dir, '.codex', 'sessions', '2026', '09', '10'));
-function codexSession(id, start, prompt, tools) {
+function codexSession(id, start, prompt, tools, { args = '{}', threadSource = null } = {}) {
   const t0 = start.getTime();
   const lines = [
-    { timestamp: iso(start), type: 'session_meta', payload: { id, timestamp: iso(start), cwd: '/Users/me/work/api', originator: 'codex_cli_rs', cli_version: '0.140.0', instructions: null } },
+    { timestamp: iso(start), type: 'session_meta', payload: { id, timestamp: iso(start), cwd: '/Users/me/work/api', originator: 'codex_cli_rs', cli_version: '0.140.0', instructions: null, ...(threadSource ? { thread_source: threadSource } : {}) } },
     { timestamp: iso(start), type: 'turn_context', payload: { cwd: '/Users/me/work/api', model: 'gpt-5-codex', approval_policy: 'on-request' } },
     { timestamp: iso(start), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: '<environment_context>cwd=/x</environment_context>' }] } },
     { timestamp: iso(start), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: prompt }] } },
     { timestamp: iso(start), type: 'event_msg', payload: { type: 'user_message', message: prompt } },
-    ...tools.map((t, i) => ({ timestamp: iso(new Date(t0 + (i + 1) * 30e3)), type: 'response_item', payload: { type: 'function_call', name: t, arguments: '{}', call_id: 'c' + i } })),
+    ...tools.map((t, i) => ({ timestamp: iso(new Date(t0 + (i + 1) * 30e3)), type: 'response_item', payload: { type: 'function_call', name: t, arguments: args, call_id: 'c' + i } })),
     { timestamp: iso(new Date(t0 + 300e3)), type: 'event_msg', payload: { type: 'agent_message', message: 'Done.' } },
   ];
   writeFileSync(join(codexDir, `rollout-2026-09-10T10-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
 // Desktop app build (0.155, September 2026): no user_message event; prompt is an item_completed UserMessage, injected
-// context shares the user role, shell and MCP go through custom_tool_call "exec", MCP detail is on the McpToolCall item.
+// context shares the user role, shell, MCP and web search go through custom_tool_call "exec"; what ran is on the
+// item_completed items. A skill is used by reading its SKILL.md from a skills root (CommandExecution parsed_cmd
+// { type: 'read', name: 'SKILL.md', path }); a plugin shows as McpToolCall.pluginId "<plugin>@<marketplace>".
 function codexDesktopSession(id, start, prompt, threadName) {
   const t0 = start.getTime(); const at = (ms) => iso(new Date(t0 + ms)); let n = 0;
   const rec = (ms, type, payload) => ({ timestamp: at(ms), ordinal: n++, type, payload });
   const meta = (kinds) => ({ turn_id: 't1', content_item_kinds: kinds });
+  const cmd = (ms, itemId, command, parsed_cmd) => rec(ms, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'CommandExecution', id: itemId, process_id: 'p1', command, cwd: '/Users/me/Documents/Codex/x', parsed_cmd, source: 'unified_exec_startup', status: 'completed', stdout: '', stderr: '', aggregated_output: 'ok', exit_code: 0, duration: { secs: 0, nanos: 1 }, formatted_output: 'ok' } });
   const lines = [
     rec(0, 'session_meta', { session_id: id, id, timestamp: at(0), cwd: '/Users/me/Documents/Codex/x', originator: 'Codex Desktop', cli_version: '0.155.0-alpha.9.2', source: 'vscode', thread_source: 'user', model_provider: 'openai', base_instructions: { text: '...' } }),
     rec(0, 'event_msg', { type: 'task_started', turn_id: 't1', started_at: t0 / 1000 }),
@@ -141,7 +144,12 @@ function codexDesktopSession(id, start, prompt, threadName) {
     rec(4, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'UserMessage', id: 'i1', client_id: 'c1', content: [{ type: 'text', text: prompt, text_elements: [] }] } }),
     rec(30e3, 'response_item', { type: 'custom_tool_call', id: 'ctc1', status: 'completed', call_id: 'call1', name: 'exec', input: '...' }),
     rec(31e3, 'response_item', { type: 'custom_tool_call_output', call_id: 'call1', output: 'ok' }),
-    rec(32e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'McpToolCall', id: 'i2', server: 'notion', tool: 'search', arguments: {}, pluginId: 'p', status: 'completed', result: {}, duration: { secs: 1, nanos: 0 } } }),
+    rec(32e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'McpToolCall', id: 'i2', server: 'notion', tool: 'search', arguments: {}, pluginId: 'notes-kit@example-market', status: 'completed', result: {}, duration: { secs: 1, nanos: 0 } } }),
+    cmd(40e3, 'i4', "sed -n '1,200p' /Users/me/.codex/skills/.system/meeting-notes/SKILL.md", [{ type: 'read', cmd: 'sed ...', name: 'SKILL.md', path: '/Users/me/.codex/skills/.system/meeting-notes/SKILL.md' }]),
+    cmd(42e3, 'i5', 'cat /Users/me/.codex/plugins/cache/example-market/notes-kit/1.2.3/skills/action-items/SKILL.md && ls', [{ type: 'unknown', cmd: 'cat ... && ls' }]),
+    // a SKILL.md inside the person's project is a file being worked on, not a skill in use
+    cmd(44e3, 'i6', 'cat /Users/me/work/secret-project/skills/not-a-skill/SKILL.md', [{ type: 'read', cmd: 'cat ...', name: 'SKILL.md', path: '/Users/me/work/secret-project/skills/not-a-skill/SKILL.md' }]),
+    rec(46e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'Extension', kind: 'web.search', id: 'i7', query: 'q', action: { type: 'search', query: 'q' }, results: [] } }),
     rec(60e3, 'response_item', { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'Done.' }] }),
     rec(60e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'AgentMessage', id: 'i3', content: [{ type: 'Text', text: 'Done.' }], phase: 'final' } }),
     rec(61e3, 'event_msg', { type: 'task_complete', turn_id: 't1' }),
@@ -156,7 +164,23 @@ writeFileSync(join(codexDir, 'rollout-2026-09-10T11-05-00-c3-review.jsonl'), [
 ].map((l) => JSON.stringify(l)).join('\n') + '\n');
 codexDesktopSession('c3', daysAgo(1, 12), 'Find the meeting notes from last week and list the open action items', 'Open action items');
 codexSession('c1', daysAgo(9, 10), 'Migrate the users endpoint from REST to gRPC and keep the tests green', ['shell', 'apply_patch']);
-codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell']);
+// CLI build: the skill read is only visible in the shell call's arguments
+codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell'], { args: JSON.stringify({ command: ['bash', '-lc', 'cat ~/.agents/skills/pr-labels/SKILL.md'] }) });
+// Scheduled tasks (automations). Two signals, neither seen on a real machine yet: session_meta.thread_source, and the
+// thread id listed in the desktop app's sqlite/codex-dev.db (automation_runs.thread_id, automations.target_thread_id).
+codexSession('c4', daysAgo(2, 6), 'Summarize new issues filed since yesterday', ['shell'], { threadSource: 'automation' });
+codexSession('c5', daysAgo(3, 6), 'Check the nightly build and report failures', ['shell']);
+{
+  const sqlite = typeof process.getBuiltinModule === 'function' ? process.getBuiltinModule('node:sqlite') : null;
+  if (sqlite) {
+    const db = new sqlite.DatabaseSync(join(D(join(dir, '.codex', 'sqlite')), 'codex-dev.db'));
+    db.exec("CREATE TABLE automations (id TEXT PRIMARY KEY, name TEXT, prompt TEXT, status TEXT, target_thread_id TEXT)");
+    db.exec("CREATE TABLE automation_runs (thread_id TEXT PRIMARY KEY, automation_id TEXT, status TEXT, thread_title TEXT, created_at INTEGER)");
+    db.prepare('INSERT INTO automations VALUES (?,?,?,?,?)').run('auto1', 'SECRET AUTOMATION NAME', 'SECRET AUTOMATION PROMPT', 'ACTIVE', null);
+    db.prepare('INSERT INTO automation_runs VALUES (?,?,?,?,?)').run('c5', 'auto1', 'DONE', 'SECRET RUN TITLE', Math.floor(now / 1000));
+    db.close();
+  }
+}
 
 // ---- exports in the inbox ----
 const inbox = D(join(dir, 'how-i-ai', 'inbox'));
