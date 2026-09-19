@@ -83,6 +83,11 @@ node plugins/how-i-ai/skills/how-i-ai/scripts/sample-data.mjs profile    # sampl
 Templates take `profile.json` or `aggregate.json` through `scripts/render.mjs`; the
 contract is in `templates/README.md`.
 
+## Verifying on a real machine
+
+The Claude Desktop and ChatGPT parsers were written without those apps present. To
+check and fix them on a machine that has them, hand an agent `HANDOFF-verify-on-machine.md`.
+
 ## License
 
 MIT
