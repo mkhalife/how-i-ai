@@ -600,7 +600,7 @@ export function chatgptDesktop() {
     const catalog = files ? null : chatgptCatalogSignal();
     if (catalog) { files = catalog.count; if (catalog.last && catalog.last > last) last = catalog.last; }
     out.signal = { installed: true, layout: bundles ? 'conversation-cache' : existsSync(join(root, 'IndexedDB')) ? 'indexeddb' : 'chromium-profile', cached_conversations: files || null, last_activity: last ? toISO(last) : null };
-    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} ${catalog ? 'catalogued conversation(s)' : 'cached conversation file(s)'}` : ''}${last ? `, last active ${localDate(toISO(last))}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
+    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} ${catalog ? 'catalogued conversation(s)' : 'cached conversation file(s)'}` : ''}${last ? `, last active ${localDate(toISO(last))}` : ''}. Conversation text is not on disk: it comes from the agent inside the app (PROMPT-chatgpt-app.md) or the export.`);
     break;
   }
   return out;

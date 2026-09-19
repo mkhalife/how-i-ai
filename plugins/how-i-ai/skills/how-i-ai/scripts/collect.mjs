@@ -28,7 +28,8 @@ if (app === 'claude') {
   push(src.codex());
   if (!args['no-codex-cloud']) push(src.codexCloud());
 }
-for (const r of src.exportsInbox(inbox)) if (r.source === 'export' || appOf(r.source) === app) push(r);
+const misplaced = [];
+for (const r of src.exportsInbox(inbox)) { if (r.source === 'export' || appOf(r.source) === app) push(r); else misplaced.push(r); }
 if (app === 'chatgpt') {
   push(src.chatgptAppThreads(inbox)); // after the export: same ids, the export is richer
   push(src.chatgptDesktop());
@@ -55,7 +56,7 @@ const HINTS = {
   'claude-export': `Request your claude.ai export (Settings → Privacy → Export data), then drop the zip in ${inbox}`,
   'chatgpt-app': `No ${inbox}/chatgpt-app-threads.json yet. The agent inside the ChatGPT desktop app writes it (PROMPT-chatgpt-app.md step 2).`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
-  'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT).',
+  'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT conversations).',
 };
 
 // Found, but nothing parsed and no parser note: say why that is expected.
@@ -93,6 +94,7 @@ const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(pad('source', 16) + pad('found', 7) + pad('in window', 11) + pad('all time', 10) + 'path / hint');
 for (const t of table) console.log(pad(t.source, 16) + pad(t.found ? 'yes' : 'no', 7) + pad(t.sessions_in_window, 11) + pad(t.sessions_total, 10) + (t.found && t.sessions_in_window ? t.path : (t.hint || '')));
 console.log(`\n${sessions.length} sessions in window across ${table.filter((t) => t.sessions_in_window).length} sources.`);
+for (const r of misplaced) console.log(`\nIgnored ${r.path}: it is a ${appOf(r.source) === 'chatgpt' ? 'ChatGPT' : 'claude.ai'} export, which belongs to the other entry point (${appOf(r.source) === 'chatgpt' ? 'run with --app chatgpt and put it in ~/how-i-ai-chatgpt/inbox' : 'run without --app and put it in ~/how-i-ai/inbox'}).`);
 if (args['dry-run']) process.exit(0);
 writeJson(out, doc);
 console.log(`wrote ${out}`);

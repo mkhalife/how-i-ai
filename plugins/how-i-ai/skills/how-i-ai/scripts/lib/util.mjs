@@ -110,5 +110,5 @@ export function appOf(source) { return /^(codex|chatgpt)/.test(String(source || 
 
 export const SOURCE_LABELS = {
   'claude-code': 'Claude Code', 'claude-desktop': 'Claude Desktop', 'claude-cowork': 'Cowork', 'claude-export': 'Claude',
-  codex: 'Codex', 'chatgpt-export': 'ChatGPT', 'chatgpt-app': 'ChatGPT', 'gemini-cli': 'Gemini CLI', 'copilot-cli': 'Copilot CLI',
+  codex: 'Codex', 'chatgpt-export': 'ChatGPT', 'chatgpt-app': 'ChatGPT',
 };

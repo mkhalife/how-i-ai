@@ -8,7 +8,10 @@ import { dirname, join } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 // `--app chatgpt` right after the script name switches every command to the ChatGPT entry point (see util.mjs appName).
 const argv = process.argv.slice(2);
-if (argv[0] === '--app') { process.env.HOW_I_AI_APP = argv[1]; argv.splice(0, 2); }
+if (argv[0] === '--app') {
+  if (!['claude', 'chatgpt'].includes(argv[1])) { console.error('--app must be claude or chatgpt'); process.exit(2); }
+  process.env.HOW_I_AI_APP = argv[1]; argv.splice(0, 2);
+}
 const [cmd, ...rest] = argv;
 const map = { collect: 'collect.mjs', classify: 'classify.mjs', stats: 'stats.mjs', render: 'render.mjs', share: 'share.mjs', aggregate: 'aggregate.mjs', config: 'config.mjs', inspect: 'inspect.mjs', sample: 'sample-data.mjs' };
 if (!map[cmd]) {
