@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 T="${TMPDIR:-/tmp}/how-i-ai-test-$$"; mkdir -p "$T"
 for plat in darwin win32; do
   H="$T/$plat"; node tests/make-fake-home.mjs "$H" "$plat" >/dev/null
-  unset HOW_I_AI_DIR HOW_I_AI_APP; export HOW_I_AI_HOME_OVERRIDE="$H" HOW_I_AI_PLATFORM_OVERRIDE="$plat" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
+  unset HOW_I_AI_DIR HOW_I_AI_APP CLAUDE_CODE_ENTRYPOINT; export HOW_I_AI_HOME_OVERRIDE="$H" HOW_I_AI_PLATFORM_OVERRIDE="$plat" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
   echo "== $plat: collect"; node scripts/collect.mjs --no-codex-cloud --days 30 | sed 's/^/   /'
   # The bundled codex binary is found without PATH; on the win32 pass only the lookup can be checked (no .exe to run).
   node --input-type=module -e "
@@ -110,6 +110,10 @@ for plat in darwin win32; do
     console.log('   gathered listing collected')"
 done
 node tests/check-prompts.mjs
+# collect started inside Cowork stops with a pointer to Claude Code instead of reading the VM's own folders.
+if CLAUDE_CODE_ENTRYPOINT=remote_cowork HOW_I_AI_HOME_OVERRIDE="$T/cowork" node scripts/collect.mjs --dry-run > "$T/collect-cowork.txt" 2>&1; then echo 'FAIL collect ran inside Cowork'; exit 1; fi
+grep -q 'Run it from Claude Code' "$T/collect-cowork.txt" && [ ! -e "$T/cowork/how-i-ai/sessions.json" ] || { echo 'FAIL collect inside Cowork should point at Claude Code and write nothing'; exit 1; }
+echo "== cowork: collect points at Claude Code"
 # gather in a shell with no display and no Downloads (a Cowork VM): print the links and return at once.
 C="$T/cowork"; mkdir -p "$C"
 env -u DISPLAY -u WAYLAND_DISPLAY HOW_I_AI_HOME_OVERRIDE="$C" HOW_I_AI_PLATFORM_OVERRIDE=linux CLAUDE_CONFIG_DIR="$C/.claude" node scripts/how-i-ai.mjs gather --timeout 30 > "$T/gather-cowork.txt" &

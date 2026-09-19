@@ -10,6 +10,6 @@ You are running the "Claude chat" step of how-i-ai, which shows me how I actuall
 2. For every chat inside the last 30 days keep: url, updated_at, title, summary (the text the tool gave you, unedited, at most 600 characters).
 3. Create a downloadable file named claude-chat-threads.json with exactly this shape:
 {"source":"claude-chat","exported_at":"<now, ISO>","chats":[{"url":"...","updated_at":"...","title":"...","summary":"..."}]}
-4. Reply with only: how many chats are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file to the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+4. Reply with only: how many chats are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file to the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code."
 If recent_chats is not available, say so and tell me to turn on "Search and reference chats" in Settings, or to use Settings > Privacy > Export data instead.
 ```

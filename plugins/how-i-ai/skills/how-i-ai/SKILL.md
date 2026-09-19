@@ -52,7 +52,10 @@ Read the source table it prints. It looks for, in order: Claude Code transcripts
 sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud session list
 (`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
 (`claude-chat-threads.json`). Each row counts the sessions kept, so the rows add up to the
-total. Details and paths per source: `references/sources.md`.
+total. Details and paths per source: `references/sources.md`. If it stops because it is
+running inside Cowork, pass its message on and end the run: Cowork works in a separate VM
+that cannot see this machine's history, and the Claude Code run counts the Cowork sessions
+stored on it.
 
 Then fetch the two lists that are not on disk. Claude chats and Claude Code cloud sessions
 live on claude.ai; Claude in Chat mode and Claude in a claude.ai/code session can each list
@@ -68,9 +71,9 @@ node SKILL_DIR/scripts/how-i-ai.mjs gather
 ```
 
 It waits up to five minutes and prints what arrived; `--only chat` or `--only cloud` limits
-it to the one still missing. If it prints links instead of opening them (Cowork and cloud
-sessions cannot open windows on the person's screen), give the person those links and what
-it says to do with the files. Then run
+it to the one still missing. If it prints links instead of opening them (a cloud session
+cannot open windows on the person's screen), give the person those links and what it says
+to do with the files. Then run
 `collect` again. Whatever did not arrive, continue without it and mention once, at the end,
 the "Claude chats" and "Claude Code on the web" buttons on the landing page, which do the
 same by hand. If this conversation is itself a claude.ai/code session with `list_sessions`,

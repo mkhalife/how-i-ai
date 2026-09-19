@@ -32,6 +32,11 @@ export function hostHash() { return sha(hostname()); }
 export function appName() { return process.env.HOW_I_AI_APP === 'chatgpt' ? 'chatgpt' : 'claude'; }
 export function workDir() { return process.env.HOW_I_AI_DIR || join(home(), appName() === 'chatgpt' ? 'how-i-ai-chatgpt' : 'how-i-ai'); }
 
+// Claude Code sets CLAUDE_CODE_ENTRYPOINT for the commands it runs; Cowork's shell has `remote_cowork` (verified on
+// macOS, September 2026). That shell is a Linux VM whose home is not the person's, so this machine's session history is
+// out of its reach.
+export function inCowork() { return /cowork/i.test(process.env.CLAUDE_CODE_ENTRYPOINT || ''); }
+
 export function ensureDir(p) { mkdirSync(p, { recursive: true }); return p; }
 
 export function readJson(p, fallback) {

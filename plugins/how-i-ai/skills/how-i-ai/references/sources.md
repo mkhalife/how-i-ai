@@ -37,7 +37,7 @@ is present it wins over the listing for the same conversation.
 
 Two Claude surfaces hold history the local run cannot reach, and neither can run the
 scripts or post to the sheet. Each writes one JSON file that ends up in
-`~/how-i-ai/inbox`, and the normal Claude run (Claude Code or Cowork) reads it. One
+`~/how-i-ai/inbox`, and the normal Claude run (Claude Code) reads it. One
 Claude profile, one id. The run's `gather` step opens both surfaces and picks the files
 up (below); the landing page has a card for each as the manual route. Both prompts are
 carried whole, with no fetch. Both surfaces produce a real file download (`claude-chat-threads.json`
@@ -312,7 +312,19 @@ download can never reach it, so `gather` says so and exits without waiting.
 Cowork is that case (verified September 2026, macOS, no folder connected). Its shell is a
 Linux VM with `$HOME` at `/root`, no Downloads folder, no display, and an `xdg-open` that
 exits 3; nothing bridges it to the Mac's browser. Its `~/.claude/projects` is the VM's own,
-not the Mac's.
+not the Mac's. With the home folder connected, Cowork's agent declines to scan it for
+session transcripts or Cowork state files (its safety classifier blocks that as data
+scouting), so connecting the folder does not open a route either. `collect` recognises
+Cowork by `CLAUDE_CODE_ENTRYPOINT=remote_cowork` in its shell (its transcripts record
+`entrypoint` `local-agent` instead) and stops with a pointer to Claude Code (a terminal or Claude Desktop's Code
+tab), which reads Cowork sessions from disk.
+
+Cowork sessions whose shell reports `remote_cowork` (every Cowork session started on the
+test Mac in September 2026) leave no state file or transcript in
+`local-agent-mode-sessions`. The only local trace is
+`<account>/<org>/remote-session-spaces.json`, `{ entries: [ { sessionId, folders[] } ] }`:
+an id and the connected folders, no title, time or messages. Those sessions are not
+counted; `claude-cowork` covers the ones that ran locally.
 
 ## Deep links that prefill a prompt (verified on macOS, September 2026)
 

@@ -5,10 +5,14 @@
 // Prints a source table and writes sessions.json. Nothing leaves the machine.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { parseArgs, workDir, appName, appOf, ensureDir, readJson, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
+import { parseArgs, workDir, appName, appOf, inCowork, ensureDir, readJson, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
 import * as src from './lib/sources.mjs';
 
 const args = parseArgs(process.argv.slice(2));
+if (inCowork() && appName() === 'claude') {
+  console.error('how-i-ai cannot run inside Cowork: Cowork works in a separate Linux VM that cannot see this computer\'s Claude Code or Cowork history. Run it from Claude Code instead, in a terminal or in the Code tab of Claude Desktop; that run also counts the Cowork sessions stored on this computer.');
+  process.exit(2);
+}
 const days = Number(args.days || 30);
 const dir = ensureDir(workDir());
 const inbox = ensureDir(args.inbox || join(dir, 'inbox'));
