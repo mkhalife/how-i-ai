@@ -20,7 +20,6 @@ if (cmd === 'prep') {
   const size = Number(args.size || 40);
   const todo = doc.sessions.filter((s) => !s.classification);
   const total = Math.ceil(todo.length / size);
-  for (const f of readdirSync(cdir)) if (/^batch-\d+\.json$/.test(f)) { /* leave old outputs, refresh inputs */ }
   for (let i = 0; i < total; i++) {
     const items = todo.slice(i * size, (i + 1) * size).map((s) => ({
       id: s.id, source: s.source, surface: s.surface, mode: s.mode, trigger: s.trigger, title: s.title,

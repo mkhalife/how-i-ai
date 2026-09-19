@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { parseArgs, workDir, ensureDir, readJson, writeJson } from './lib/util.mjs';
 
-export const FUNCTIONS = ['Design', 'Product', 'Engineering', 'Data', 'Research', 'Marketing', 'Sales', 'Operations', 'Leadership', 'Other'];
+const FUNCTIONS = ['Design', 'Product', 'Engineering', 'Data', 'Research', 'Marketing', 'Sales', 'Operations', 'Leadership', 'Other'];
 
 export function loadConfig() {
   const p = join(workDir(), 'config.json');

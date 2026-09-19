@@ -3,7 +3,6 @@
 //   node scripts/share.mjs preview                 writes share-rows.json, share-rows.csv, share-preview.html; prints a summary
 //   node scripts/share.mjs send [--endpoint URL]   posts the same rows (never anything else)
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { parseArgs, workDir, readJson, writeJson, localDate, localHour, localWeekday, weekStart, toISO, ensureDir } from './lib/util.mjs';
 import { loadConfig } from './config.mjs';
 import { writeFileSync } from 'node:fs';

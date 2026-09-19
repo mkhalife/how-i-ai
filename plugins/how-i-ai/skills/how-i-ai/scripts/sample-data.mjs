@@ -4,6 +4,7 @@
 //   node scripts/sample-data.mjs profile   > fixtures/sample-profile.json
 //   node scripts/sample-data.mjs aggregate > fixtures/sample-aggregate.json
 import { writeFileSync } from 'node:fs';
+import { SOURCE_LABELS } from './lib/util.mjs';
 
 function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; }; }
 const r = rng(20260919);
@@ -13,10 +14,6 @@ const round = (n, d = 1) => Math.round(n * 10 ** d) / 10 ** d;
 const WINDOW = { days: 30, start: '2026-08-20', end: '2026-09-19' };
 const WEEKS = ['2026-08-17', '2026-08-24', '2026-08-31', '2026-09-07', '2026-09-14'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const SOURCE_LABEL = {
-  'claude-code': 'Claude Code', 'claude-cowork': 'Cowork', 'claude-export': 'Claude',
-  'codex': 'Codex', 'chatgpt-export': 'ChatGPT',
-};
 
 const CATS = {
   Design: [
@@ -116,7 +113,7 @@ function makeSessions(fn, n) {
 function count(list, key) { const m = new Map(); for (const s of list) { const k = key(s); if (k == null) continue; m.set(k, (m.get(k) || 0) + 1); } return m; }
 function sortedCounts(m, nameKey = 'name', valKey = 'sessions') { return [...m].sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ [nameKey]: k, [valKey]: v })); }
 
-function summarize(sessions, weeks) {
+function summarize(sessions) {
   const total = sessions.length;
   const bySrc = count(sessions, (s) => s.source);
   const byCat = new Map();
@@ -127,7 +124,7 @@ function summarize(sessions, weeks) {
   const byAT = count(sessions, (s) => s.assist_type);
   const ATL = { ask: 'Asked', make: 'Made', do: 'Did' };
   return {
-    by_source: [...bySrc].sort((a, b) => b[1] - a[1]).map(([source, n]) => ({ source, label: SOURCE_LABEL[source], sessions: n, messages: sessions.filter((s) => s.source === source).reduce((a, s) => a + s.messages_user + s.messages_assistant, 0), share: round(n / total, 3) })),
+    by_source: [...bySrc].sort((a, b) => b[1] - a[1]).map(([source, n]) => ({ source, label: SOURCE_LABELS[source], sessions: n, messages: sessions.filter((s) => s.source === source).reduce((a, s) => a + s.messages_user + s.messages_assistant, 0), share: round(n / total, 3) })),
     by_week: WEEKS.map((w) => ({ week_start: w, sessions: sessions.filter((s) => s.week_start === w).length, by_source: Object.fromEntries([...bySrc.keys()].map((src) => [src, sessions.filter((s) => s.week_start === w && s.source === src).length])) })),
     by_weekday: WEEKDAYS.map((label, weekday) => ({ weekday, label, sessions: sessions.filter((s) => s.weekday === weekday).length })),
     by_hour: Array.from({ length: 24 }, (_, hour) => ({ hour, sessions: sessions.filter((s) => s.hour === hour).length })),
