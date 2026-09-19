@@ -18,7 +18,7 @@ const cfg = loadConfig();
 const doc = readJson(args.in || join(dir, 'sessions.json'));
 const team = readJson(join(here, '..', 'team.json'), {});
 
-export const SESSION_COLUMNS = ['participant_id', 'function', 'source', 'surface', 'date', 'week_start', 'weekday', 'hour', 'mode', 'trigger', 'category', 'subcategory', 'assist_type', 'paraphrase', 'surprise', 'messages_user', 'messages_assistant', 'duration_minutes', 'tools', 'connectors', 'model', 'submitted_at', 'schema_version'];
+export const SESSION_COLUMNS = ['participant_id', 'function', 'source', 'surface', 'date', 'week_start', 'weekday', 'hour', 'mode', 'trigger', 'category', 'subcategory', 'assist_type', 'paraphrase', 'surprise', 'messages_user', 'messages_assistant', 'duration_minutes', 'tools', 'connectors', 'skills', 'agents', 'model', 'submitted_at', 'schema_version'];
 export const PARTICIPANT_COLUMNS = ['participant_id', 'function', 'title', 'window_days', 'window_start', 'window_end', 'sessions_total', 'sources', 'submitted_at', 'schema_version'];
 
 const submitted_at = toISO(new Date());
@@ -34,7 +34,7 @@ const rows = classified.map((s) => ({
   mode: s.mode, trigger: s.trigger, category: s.classification.category, subcategory: s.classification.subcategory || '',
   assist_type: s.classification.assist_type, paraphrase: s.classification.paraphrase, surprise: s.classification.surprise,
   messages_user: s.messages_user, messages_assistant: s.messages_assistant, duration_minutes: s.duration_minutes ?? '',
-  tools: (s.tools || []).join(';'), connectors: (s.connectors || []).join(';'), model: s.model || '', submitted_at, schema_version: 1,
+  tools: (s.tools || []).join(';'), connectors: (s.connectors || []).join(';'), skills: (s.skills || []).join(';'), agents: (s.agents || []).join(';'), model: s.model || '', submitted_at, schema_version: 1,
 }));
 // Belt and braces: only the declared columns can ever be in a row.
 const payload = { participant: pickCols(participant, PARTICIPANT_COLUMNS), sessions: rows.map((r) => pickCols(r, SESSION_COLUMNS)) };

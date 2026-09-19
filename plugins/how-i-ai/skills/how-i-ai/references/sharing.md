@@ -31,6 +31,7 @@ saying yes. The code only ever serializes the columns below (`SESSION_COLUMNS` a
 | surprise | `false` |
 | messages_user, messages_assistant, duration_minutes | `4`, `9`, `33.7` |
 | tools, connectors, model | `Bash;Edit;Read`, `github`, `claude-opus-4-1` |
+| skills, agents | `code-review;humanizer`, `general-purpose;evidence-researcher` (names only) |
 | submitted_at, schema_version | bookkeeping |
 
 ## Never shared

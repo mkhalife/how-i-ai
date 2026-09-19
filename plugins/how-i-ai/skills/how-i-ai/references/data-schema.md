@@ -37,6 +37,8 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
       "messages_assistant": 9,
       "tools": ["Bash", "Read", "WebSearch"],          // built-in tool names
       "connectors": ["github", "Google_Drive"],        // MCP server names (mcp__<server>__*)
+      "skills": ["code-review", "pm-storytelling:brag-to-bets"], // skills invoked (Skill tool or a /slash command that is not a built-in)
+      "agents": ["general-purpose", "evidence-researcher"],       // sub-agent types spawned (Agent tool subagent_type)
       "model": "claude-opus-4-1",
       "mode": "agentic",                               // chat | agentic | routine
       "trigger": "human",                              // human | routine | unknown
@@ -104,6 +106,8 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
   "by_mode": [ { "mode": "agentic", "sessions": 90 } ],
   "tools": [ { "name": "Bash", "sessions": 60 } ],
   "connectors": [ { "name": "Slack", "sessions": 12 } ],
+  "skills": [ { "name": "code-review", "sessions": 9 } ],
+  "agents": [ { "name": "evidence-researcher", "sessions": 4, "custom": true } ],   // custom = not one of Claude Code's built-in agent types
   "models": [ { "name": "claude-opus-4-1", "sessions": 70 } ],
   "session_length": {
     "buckets": [ { "label": "1 message", "sessions": 30 }, { "label": "2–5", "sessions": 50 }, { "label": "6–20", "sessions": 40 }, { "label": "21+", "sessions": 22 } ],
@@ -129,7 +133,7 @@ One `participant` row and one `session` row per session. `share.mjs` prints thes
 
 `participant`: `participant_id, function, title, window_days, window_start, window_end, sessions_total, sources, submitted_at, schema_version`
 
-`session`: `participant_id, function, source, surface, date, week_start, weekday, hour, mode, trigger, category, subcategory, assist_type, paraphrase, surprise, messages_user, messages_assistant, duration_minutes, tools, connectors, model, submitted_at, schema_version`
+`session`: `participant_id, function, source, surface, date, week_start, weekday, hour, mode, trigger, category, subcategory, assist_type, paraphrase, surprise, messages_user, messages_assistant, duration_minutes, tools, connectors, skills, agents, model, submitted_at, schema_version`
 
 Never shared: `first_message`, `context`, `title`, `project_hash`, `hostname_hash`, paths, file names, anything under `machine`.
 
@@ -162,6 +166,8 @@ Never shared: `first_message`, `context`, `title`, `project_hash`, `hostname_has
   "by_hour": [ { "hour": 9, "sessions": 120 } ],
   "tools": [ { "name": "Bash", "sessions": 500 } ],
   "connectors": [ { "name": "Slack", "sessions": 90 } ],
+  "skills": [ { "name": "code-review", "sessions": 60, "participants": 5 } ],
+  "agents": [ { "name": "evidence-researcher", "sessions": 22, "custom": true, "participants": 3 } ],
   "surprises": [ { "paraphrase": "...", "function": "Design", "category": "...", "source": "chatgpt-export" } ],
   "highlights": {
     "biggest_use_case": "...", "surprise_use_case": "...", "most_agentic_function": "Engineering",

@@ -14,7 +14,8 @@ for plat in darwin win32; do
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
     const c=d.sessions.find(s=>s.id.includes('cloud1')); if(!c||c.surface!=='cloud') {console.error('FAIL cloud');process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('bridge1'))) {console.error('FAIL bridge should be skipped');process.exit(1)}
-    const a1=d.sessions.find(s=>s.id.endsWith('aaaa-1')); if(!a1.connectors.includes('github')||a1.messages_user!==2||!a1.tools.includes('Edit')) {console.error('FAIL cc parse',a1);process.exit(1)}
+    const a1=d.sessions.find(s=>s.id.endsWith('aaaa-1')); if(!a1.connectors.includes('github')||a1.messages_user!==1||!a1.tools.includes('Edit')) {console.error('FAIL cc parse',a1);process.exit(1)}
+    if(!a1.skills.includes('code-review')||!a1.skills.includes('simplify')||!a1.agents.includes('evidence-researcher')) {console.error('FAIL skills/agents',a1.skills,a1.agents);process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(d2.source!=='claude-cowork'||!d2.tools.includes('Google Drive')) {console.error('FAIL cowork parse',d2);process.exit(1)}
     if(d.sessions.some(s=>s.id.endsWith('aaaa-5')||s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
@@ -27,7 +28,7 @@ for plat in darwin win32; do
   node scripts/stats.mjs | sed 's/^/   /'
   for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/profile.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
   node scripts/share.mjs preview | head -4 | sed 's/^/   /'
-  node -e "const p=require('$H/how-i-ai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
+  node -e "const p=require('$H/how-i-ai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; if(!cols.includes('skills')||!cols.includes('agents')){console.error('FAIL skills columns');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
   node scripts/aggregate.mjs --json "$H/how-i-ai/share-rows.json" --team "Test team" --out "$H/how-i-ai/aggregate.json" | sed 's/^/   /'
   for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/aggregate.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
 done

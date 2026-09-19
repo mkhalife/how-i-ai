@@ -14,9 +14,9 @@
   "totals": {
     "sessions": 96,
     "sessions_per_week": 22.4,
-    "messages": 1283,
+    "messages": 1230,
     "active_days": 22,
-    "hours_estimated": 31.5,
+    "hours_estimated": 31.3,
     "longest_streak_days": 9,
     "sources": 4
   },
@@ -24,59 +24,59 @@
     {
       "source": "claude-export",
       "label": "Claude",
-      "sessions": 44,
-      "messages": 323,
-      "share": 0.458
+      "sessions": 43,
+      "messages": 301,
+      "share": 0.448
     },
     {
       "source": "chatgpt-export",
       "label": "ChatGPT",
-      "sessions": 28,
-      "messages": 193,
-      "share": 0.292
-    },
-    {
-      "source": "claude-code",
-      "label": "Claude Code",
-      "sessions": 13,
-      "messages": 453,
-      "share": 0.135
+      "sessions": 30,
+      "messages": 226,
+      "share": 0.313
     },
     {
       "source": "claude-cowork",
       "label": "Cowork",
-      "sessions": 11,
-      "messages": 314,
-      "share": 0.115
+      "sessions": 16,
+      "messages": 463,
+      "share": 0.167
+    },
+    {
+      "source": "claude-code",
+      "label": "Claude Code",
+      "sessions": 7,
+      "messages": 240,
+      "share": 0.073
     }
   ],
   "by_week": [
     {
       "week_start": "2026-08-17",
-      "sessions": 17,
+      "sessions": 20,
       "by_source": {
-        "chatgpt-export": 3,
-        "claude-export": 8,
-        "claude-cowork": 1,
-        "claude-code": 5
+        "chatgpt-export": 4,
+        "claude-export": 11,
+        "claude-cowork": 3,
+        "claude-code": 2
       }
     },
     {
       "week_start": "2026-08-24",
-      "sessions": 15,
+      "sessions": 27,
       "by_source": {
-        "chatgpt-export": 7,
-        "claude-export": 6,
-        "claude-cowork": 1,
-        "claude-code": 1
+        "chatgpt-export": 11,
+        "claude-export": 14,
+        "claude-cowork": 2,
+        "claude-code": 0
       }
     },
     {
       "week_start": "2026-08-31",
-      "sessions": 23,
+      "sessions": 16,
       "by_source": {
-        "chatgpt-export": 6,
-        "claude-export": 13,
+        "chatgpt-export": 8,
+        "claude-export": 4,
         "claude-cowork": 2,
         "claude-code": 2
       }
@@ -87,18 +87,18 @@
       "by_source": {
         "chatgpt-export": 3,
         "claude-export": 7,
-        "claude-cowork": 5,
-        "claude-code": 4
+        "claude-cowork": 6,
+        "claude-code": 3
       }
     },
     {
       "week_start": "2026-09-14",
-      "sessions": 22,
+      "sessions": 14,
       "by_source": {
-        "chatgpt-export": 9,
-        "claude-export": 10,
-        "claude-cowork": 2,
-        "claude-code": 1
+        "chatgpt-export": 4,
+        "claude-export": 7,
+        "claude-cowork": 3,
+        "claude-code": 0
       }
     }
   ],
@@ -106,7 +106,7 @@
     {
       "weekday": 0,
       "label": "Mon",
-      "sessions": 26
+      "sessions": 25
     },
     {
       "weekday": 1,
@@ -116,27 +116,27 @@
     {
       "weekday": 2,
       "label": "Wed",
-      "sessions": 12
+      "sessions": 15
     },
     {
       "weekday": 3,
       "label": "Thu",
-      "sessions": 12
+      "sessions": 10
     },
     {
       "weekday": 4,
       "label": "Fri",
-      "sessions": 12
+      "sessions": 8
     },
     {
       "weekday": 5,
       "label": "Sat",
-      "sessions": 1
+      "sessions": 6
     },
     {
       "weekday": 6,
       "label": "Sun",
-      "sessions": 12
+      "sessions": 11
     }
   ],
   "by_hour": [
@@ -154,15 +154,15 @@
     },
     {
       "hour": 3,
-      "sessions": 1
-    },
-    {
-      "hour": 4,
       "sessions": 0
     },
     {
+      "hour": 4,
+      "sessions": 1
+    },
+    {
       "hour": 5,
-      "sessions": 2
+      "sessions": 4
     },
     {
       "hour": 6,
@@ -170,43 +170,43 @@
     },
     {
       "hour": 7,
-      "sessions": 7
+      "sessions": 3
     },
     {
       "hour": 8,
-      "sessions": 5
+      "sessions": 13
     },
     {
       "hour": 9,
-      "sessions": 9
+      "sessions": 5
     },
     {
       "hour": 10,
-      "sessions": 7
+      "sessions": 14
     },
     {
       "hour": 11,
-      "sessions": 17
+      "sessions": 18
     },
     {
       "hour": 12,
-      "sessions": 16
-    },
-    {
-      "hour": 13,
-      "sessions": 12
-    },
-    {
-      "hour": 14,
       "sessions": 8
     },
     {
-      "hour": 15,
+      "hour": 13,
       "sessions": 6
     },
     {
+      "hour": 14,
+      "sessions": 12
+    },
+    {
+      "hour": 15,
+      "sessions": 5
+    },
+    {
       "hour": 16,
-      "sessions": 3
+      "sessions": 5
     },
     {
       "hour": 17,
@@ -214,7 +214,7 @@
     },
     {
       "hour": 18,
-      "sessions": 1
+      "sessions": 0
     },
     {
       "hour": 19,
@@ -239,70 +239,46 @@
   ],
   "by_category": [
     {
-      "category": "Write & edit",
-      "sessions": 25,
-      "share": 0.26,
-      "assist_type_mix": {
-        "ask": 7,
-        "make": 18,
-        "do": 0
-      },
-      "subcategories": [
-        {
-          "name": "Design doc",
-          "sessions": 9
-        },
-        {
-          "name": "Rationale for stakeholders",
-          "sessions": 8
-        },
-        {
-          "name": "Release notes",
-          "sessions": 8
-        }
-      ]
-    },
-    {
       "category": "Design critique & feedback",
-      "sessions": 21,
-      "share": 0.219,
+      "sessions": 26,
+      "share": 0.271,
       "assist_type_mix": {
-        "ask": 16,
-        "make": 3,
-        "do": 2
+        "ask": 19,
+        "make": 6,
+        "do": 1
       },
       "subcategories": [
         {
-          "name": "Accessibility check",
-          "sessions": 8
+          "name": "Copy in the UI",
+          "sessions": 13
         },
         {
           "name": "Critique a flow",
-          "sessions": 8
+          "sessions": 10
         },
         {
-          "name": "Copy in the UI",
-          "sessions": 5
+          "name": "Accessibility check",
+          "sessions": 3
         }
       ]
     },
     {
       "category": "Research & synthesis",
-      "sessions": 15,
-      "share": 0.156,
+      "sessions": 17,
+      "share": 0.177,
       "assist_type_mix": {
-        "ask": 3,
-        "make": 9,
-        "do": 3
+        "ask": 7,
+        "make": 8,
+        "do": 2
       },
       "subcategories": [
         {
           "name": "Competitive teardown",
-          "sessions": 6
+          "sessions": 7
         },
         {
           "name": "Summarize interviews",
-          "sessions": 5
+          "sessions": 6
         },
         {
           "name": "Affinity mapping",
@@ -311,12 +287,36 @@
       ]
     },
     {
+      "category": "Write & edit",
+      "sessions": 15,
+      "share": 0.156,
+      "assist_type_mix": {
+        "ask": 2,
+        "make": 13,
+        "do": 0
+      },
+      "subcategories": [
+        {
+          "name": "Release notes",
+          "sessions": 9
+        },
+        {
+          "name": "Design doc",
+          "sessions": 4
+        },
+        {
+          "name": "Rationale for stakeholders",
+          "sessions": 2
+        }
+      ]
+    },
+    {
       "category": "Explain & learn",
       "sessions": 14,
       "share": 0.146,
       "assist_type_mix": {
-        "ask": 14,
-        "make": 0,
+        "ask": 13,
+        "make": 1,
         "do": 0
       },
       "subcategories": [
@@ -336,65 +336,61 @@
     },
     {
       "category": "Prototype & build",
-      "sessions": 9,
-      "share": 0.094,
+      "sessions": 14,
+      "share": 0.146,
       "assist_type_mix": {
         "ask": 0,
         "make": 3,
-        "do": 6
+        "do": 11
       },
       "subcategories": [
         {
           "name": "Motion spec",
-          "sessions": 6
+          "sessions": 8
+        },
+        {
+          "name": "Prototype in code",
+          "sessions": 4
         },
         {
           "name": "Design tokens",
-          "sessions": 3
+          "sessions": 2
         }
       ]
     },
     {
       "category": "Personal & life admin",
-      "sessions": 8,
-      "share": 0.083,
+      "sessions": 5,
+      "share": 0.052,
       "assist_type_mix": {
-        "ask": 7,
-        "make": 0,
-        "do": 1
+        "ask": 2,
+        "make": 1,
+        "do": 2
       },
       "subcategories": [
         {
           "name": "Health",
-          "sessions": 3
-        },
-        {
-          "name": "Money",
-          "sessions": 2
+          "sessions": 4
         },
         {
           "name": "Travel",
-          "sessions": 2
-        },
-        {
-          "name": "Family",
           "sessions": 1
         }
       ]
     },
     {
       "category": "Plan & prioritize",
-      "sessions": 4,
-      "share": 0.042,
+      "sessions": 5,
+      "share": 0.052,
       "assist_type_mix": {
-        "ask": 1,
-        "make": 3,
+        "ask": 3,
+        "make": 2,
         "do": 0
       },
       "subcategories": [
         {
           "name": "Roadmap tradeoffs",
-          "sessions": 2
+          "sessions": 3
         },
         {
           "name": "Sprint planning",
@@ -407,40 +403,40 @@
     {
       "type": "ask",
       "label": "Asked",
-      "sessions": 48,
-      "share": 0.5
+      "sessions": 46,
+      "share": 0.479
     },
     {
       "type": "make",
       "label": "Made",
-      "sessions": 36,
-      "share": 0.375
+      "sessions": 34,
+      "share": 0.354
     },
     {
       "type": "do",
       "label": "Did",
-      "sessions": 12,
-      "share": 0.125
+      "sessions": 16,
+      "share": 0.167
     }
   ],
   "by_mode": [
     {
       "mode": "chat",
-      "sessions": 72
+      "sessions": 73
     },
     {
       "mode": "agentic",
-      "sessions": 24
+      "sessions": 23
     }
   ],
   "tools": [
     {
-      "name": "Bash",
-      "sessions": 14
+      "name": "Glob",
+      "sessions": 19
     },
     {
-      "name": "Grep",
-      "sessions": 11
+      "name": "WebFetch",
+      "sessions": 13
     },
     {
       "name": "WebSearch",
@@ -448,32 +444,32 @@
     },
     {
       "name": "Agent",
-      "sessions": 11
+      "sessions": 10
     },
     {
       "name": "Read",
       "sessions": 10
     },
     {
-      "name": "Edit",
-      "sessions": 10
+      "name": "Grep",
+      "sessions": 9
+    },
+    {
+      "name": "Bash",
+      "sessions": 7
     },
     {
       "name": "Write",
-      "sessions": 8
+      "sessions": 7
     },
     {
-      "name": "Glob",
-      "sessions": 8
-    },
-    {
-      "name": "WebFetch",
+      "name": "Edit",
       "sessions": 6
     }
   ],
   "connectors": [
     {
-      "name": "Figma",
+      "name": "Gmail",
       "sessions": 6
     },
     {
@@ -482,10 +478,10 @@
     },
     {
       "name": "Linear",
-      "sessions": 4
+      "sessions": 3
     },
     {
-      "name": "Google Drive",
+      "name": "Figma",
       "sessions": 2
     },
     {
@@ -495,20 +491,54 @@
     {
       "name": "Notion",
       "sessions": 2
+    },
+    {
+      "name": "Google Drive",
+      "sessions": 1
+    }
+  ],
+  "skills": [
+    {
+      "name": "dataviz",
+      "sessions": 6
+    },
+    {
+      "name": "design-critique",
+      "sessions": 3
+    },
+    {
+      "name": "pm-storytelling:customer-hero-story",
+      "sessions": 2
+    },
+    {
+      "name": "humanizer",
+      "sessions": 2
+    }
+  ],
+  "agents": [
+    {
+      "name": "Explore",
+      "sessions": 4,
+      "custom": false
+    },
+    {
+      "name": "general-purpose",
+      "sessions": 1,
+      "custom": false
     }
   ],
   "models": [
     {
       "name": "claude-sonnet-4-5",
-      "sessions": 39
+      "sessions": 34
     },
     {
       "name": "claude-opus-4-1",
-      "sessions": 29
+      "sessions": 32
     },
     {
       "name": "gpt-5",
-      "sessions": 28
+      "sessions": 30
     }
   ],
   "session_length": {
@@ -519,22 +549,22 @@
       },
       {
         "label": "2–5",
-        "sessions": 25
+        "sessions": 24
       },
       {
         "label": "6–20",
-        "sessions": 53
+        "sessions": 56
       },
       {
         "label": "21+",
-        "sessions": 18
+        "sessions": 16
       }
     ],
     "median_messages": 8,
     "p90_messages": 32
   },
   "highlights": {
-    "biggest_use_case": "Write & edit",
+    "biggest_use_case": "Design critique & feedback",
     "surprise": {
       "paraphrase": "Plan a 6-year-old's birthday party on a budget",
       "category": "Personal & life admin",
@@ -550,28 +580,16 @@
   },
   "surprises": [
     {
-      "paraphrase": "Build a 12-week half-marathon plan",
-      "category": "Personal & life admin",
-      "source": "claude-export",
-      "date": "2026-09-08"
-    },
-    {
-      "paraphrase": "Compare two car leases",
-      "category": "Personal & life admin",
-      "source": "claude-export",
-      "date": "2026-09-05"
-    },
-    {
-      "paraphrase": "Plan a 6-year-old's birthday party on a budget",
-      "category": "Personal & life admin",
-      "source": "chatgpt-export",
-      "date": "2026-09-02"
-    },
-    {
-      "paraphrase": "Tighten microcopy on the empty-state screen",
+      "paraphrase": "Critique the new onboarding flow screens for clarity",
       "category": "Design critique & feedback",
-      "source": "claude-code",
-      "date": "2026-09-05"
+      "source": "claude-cowork",
+      "date": "2026-09-04"
+    },
+    {
+      "paraphrase": "Draft a polite note to a landlord about repairs",
+      "category": "Personal & life admin",
+      "source": "claude-cowork",
+      "date": "2026-09-07"
     }
   ],
   "sample_sessions": [
@@ -580,7 +598,7 @@
       "category": "Write & edit",
       "assist_type": "make",
       "source": "chatgpt-export",
-      "date": "2026-09-02",
+      "date": "2026-09-11",
       "messages": 6
     },
     {
@@ -588,88 +606,88 @@
       "category": "Research & synthesis",
       "assist_type": "do",
       "source": "claude-export",
-      "date": "2026-09-01",
+      "date": "2026-09-16",
       "messages": 8
     },
     {
-      "paraphrase": "Build a 12-week half-marathon plan",
+      "paraphrase": "Plan a 6-year-old's birthday party on a budget",
       "category": "Personal & life admin",
       "assist_type": "ask",
       "source": "claude-cowork",
-      "date": "2026-09-17",
+      "date": "2026-09-06",
       "messages": 32
     },
     {
       "paraphrase": "Critique the new onboarding flow screens for clarity",
       "category": "Design critique & feedback",
       "assist_type": "ask",
-      "source": "claude-export",
-      "date": "2026-09-17",
-      "messages": 8
+      "source": "chatgpt-export",
+      "date": "2026-09-09",
+      "messages": 13
     },
     {
-      "paraphrase": "Write release notes from a changelog",
-      "category": "Write & edit",
-      "assist_type": "make",
-      "source": "claude-export",
-      "date": "2026-09-08",
-      "messages": 11
+      "paraphrase": "Explain event sourcing like I am a designer",
+      "category": "Explain & learn",
+      "assist_type": "ask",
+      "source": "chatgpt-export",
+      "date": "2026-09-18",
+      "messages": 4
     },
     {
-      "paraphrase": "Rewrite an exec update to lead with the decision",
+      "paraphrase": "Draft a design rationale doc for the checkout redesign",
       "category": "Write & edit",
       "assist_type": "make",
       "source": "claude-code",
-      "date": "2026-09-14",
+      "date": "2026-09-12",
       "messages": 14
+    },
+    {
+      "paraphrase": "Explain event sourcing like I am a designer",
+      "category": "Explain & learn",
+      "assist_type": "ask",
+      "source": "chatgpt-export",
+      "date": "2026-09-18",
+      "messages": 4
     },
     {
       "paraphrase": "Tighten microcopy on the empty-state screen",
       "category": "Design critique & feedback",
       "assist_type": "ask",
-      "source": "claude-export",
-      "date": "2026-09-03",
-      "messages": 8
-    },
-    {
-      "paraphrase": "Plan a 6-year-old's birthday party on a budget",
-      "category": "Personal & life admin",
-      "assist_type": "do",
-      "source": "claude-export",
-      "date": "2026-09-09",
-      "messages": 8
-    },
-    {
-      "paraphrase": "Draft a polite note to a landlord about repairs",
-      "category": "Personal & life admin",
-      "assist_type": "ask",
       "source": "chatgpt-export",
-      "date": "2026-09-02",
-      "messages": 13
+      "date": "2026-09-14",
+      "messages": 4
     },
     {
-      "paraphrase": "Draft a design rationale doc for the checkout redesign",
+      "paraphrase": "Critique the new onboarding flow screens for clarity",
+      "category": "Design critique & feedback",
+      "assist_type": "ask",
+      "source": "claude-cowork",
+      "date": "2026-09-02",
+      "messages": 27
+    },
+    {
+      "paraphrase": "Turn rough notes into a PRD for transfer alerts",
       "category": "Write & edit",
+      "assist_type": "make",
+      "source": "chatgpt-export",
+      "date": "2026-09-01",
+      "messages": 8
+    },
+    {
+      "paraphrase": "Critique the new onboarding flow screens for clarity",
+      "category": "Design critique & feedback",
+      "assist_type": "do",
+      "source": "claude-cowork",
+      "date": "2026-09-07",
+      "messages": 27
+    },
+    {
+      "paraphrase": "What is a p95 latency and why do engineers care",
+      "category": "Explain & learn",
       "assist_type": "ask",
       "source": "claude-code",
-      "date": "2026-09-14",
-      "messages": 50
-    },
-    {
-      "paraphrase": "Draft a design rationale doc for the checkout redesign",
-      "category": "Write & edit",
-      "assist_type": "make",
-      "source": "claude-export",
-      "date": "2026-09-02",
-      "messages": 8
-    },
-    {
-      "paraphrase": "Weigh three roadmap bets against a retention goal",
-      "category": "Plan & prioritize",
-      "assist_type": "make",
-      "source": "claude-export",
-      "date": "2026-09-08",
-      "messages": 4
+      "date": "2026-09-15",
+      "messages": 54
     }
   ],
   "narrative": {

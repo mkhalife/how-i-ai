@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { parseArgs, workDir, readJson, writeJson, localDate, localHour, localWeekday, weekStart, toISO, SOURCE_LABELS } from './lib/util.mjs';
 import { loadConfig } from './config.mjs';
+import { BUILTIN_AGENTS } from './lib/sources.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const dir = workDir();
@@ -48,6 +49,8 @@ export function summarize(sessions, window) {
     by_mode: sorted(counts((s) => s.mode)).map(([mode, n]) => ({ mode, sessions: n })),
     tools: countList(sessions, (s) => s.tools),
     connectors: countList(sessions, (s) => s.connectors),
+    skills: countList(sessions, (s) => s.skills),
+    agents: countList(sessions, (s) => s.agents).map((a) => ({ ...a, custom: !BUILTIN_AGENTS.has(String(a.name).toLowerCase()) })),
     models: sorted(counts((s) => s.model)).map(([name, n]) => ({ name, sessions: n })),
     session_length: {
       buckets: [['1 message', (n) => n <= 1], ['2–5', (n) => n >= 2 && n <= 5], ['6–20', (n) => n >= 6 && n <= 20], ['21+', (n) => n > 20]].map(([label, f]) => ({ label, sessions: lens.filter(f).length })),
@@ -79,7 +82,7 @@ const profile = {
   schema_version: 1, generated_at: toISO(new Date()), window: doc.window,
   person: { participant_id: cfg.participant_id, title: cfg.title, function: cfg.function },
   totals: sum.totals, by_source: sum.by_source, by_week: sum.by_week, by_weekday: sum.by_weekday, by_hour: sum.by_hour,
-  by_category: sum.by_category, by_assist_type: sum.by_assist_type, by_mode: sum.by_mode, tools: sum.tools, connectors: sum.connectors, models: sum.models,
+  by_category: sum.by_category, by_assist_type: sum.by_assist_type, by_mode: sum.by_mode, tools: sum.tools, connectors: sum.connectors, skills: sum.skills, agents: sum.agents, models: sum.models,
   session_length: sum.session_length,
   highlights: {
     biggest_use_case: sum.by_category[0]?.category || null,

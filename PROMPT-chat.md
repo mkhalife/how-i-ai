@@ -102,10 +102,11 @@ Only if they say yes, produce two CSV files for download:
 (one row; `sources` is `;`-joined; `schema_version` is 1; `submitted_at` is now in ISO).
 
 `how-i-ai-<participant_id>-sessions.csv` with columns
-`participant_id,function,source,surface,date,week_start,weekday,hour,mode,trigger,category,subcategory,assist_type,paraphrase,surprise,messages_user,messages_assistant,duration_minutes,tools,connectors,model,submitted_at,schema_version`
+`participant_id,function,source,surface,date,week_start,weekday,hour,mode,trigger,category,subcategory,assist_type,paraphrase,surprise,messages_user,messages_assistant,duration_minutes,tools,connectors,skills,agents,model,submitted_at,schema_version`
 (one row per session; `date` is `YYYY-MM-DD`, `week_start` the Monday of that week,
 `weekday` 0 = Monday, `hour` 0 to 23, `tools` and `connectors` are `;`-joined,
-`duration_minutes` may be empty, `surprise` is `true` or `false`).
+`duration_minutes` may be empty, `surprise` is `true` or `false`, `skills` and `agents` are empty for chat
+exports).
 
 Nothing else goes in the CSVs: no message text, no titles, no file names. Tell them to
 send both files to whoever owns the team sheet (or drop them in the team's shared

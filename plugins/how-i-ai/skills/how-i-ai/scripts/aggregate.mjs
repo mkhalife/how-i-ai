@@ -8,6 +8,7 @@ import { join, dirname } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, workDir, readJson, writeJson, toISO, SOURCE_LABELS, localDate } from './lib/util.mjs';
+import { BUILTIN_AGENTS } from './lib/sources.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = parseArgs(process.argv.slice(2));
@@ -79,6 +80,8 @@ const aggregate = {
   by_hour: Array.from({ length: 24 }, (_, hour) => ({ hour, sessions: sessions.filter((s) => Number(s.hour) === hour).length })),
   tools: counts(sessions.flatMap((s) => splitList(s.tools).map((t) => ({ t }))), (x) => x.t).map(([name, n]) => ({ name, sessions: n })),
   connectors: counts(sessions.flatMap((s) => splitList(s.connectors).map((t) => ({ t }))), (x) => x.t).map(([name, n]) => ({ name, sessions: n })),
+  skills: counts(sessions.flatMap((s) => splitList(s.skills).map((t) => ({ t }))), (x) => x.t).map(([name, n]) => ({ name, sessions: n, participants: new Set(sessions.filter((s) => splitList(s.skills).includes(name)).map((s) => s.participant_id)).size })),
+  agents: counts(sessions.flatMap((s) => splitList(s.agents).map((t) => ({ t }))), (x) => x.t).map(([name, n]) => ({ name, sessions: n, custom: !BUILTIN_AGENTS.has(String(name).toLowerCase()), participants: new Set(sessions.filter((s) => splitList(s.agents).includes(name)).map((s) => s.participant_id)).size })),
   surprises: sessions.filter((s) => s.surprise === true || String(s.surprise).toLowerCase() === 'true').slice(0, 40).map((s) => ({ paraphrase: s.paraphrase, function: s.function || 'Other', category: s.category, source: s.source })),
   highlights: {}, narrative: { headline: '', summary: '', patterns: [] },
 };

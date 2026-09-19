@@ -30,6 +30,7 @@ terms and break without notice; the exports are the supported path.
 | context | second message, tools, branch | second message, audit tools | second message, tools | second message, custom GPT, tools | second message, tools |
 | counts | human turns, distinct assistant messages | user and assistant entries | user events, assistant messages | visible user and assistant nodes | human and assistant |
 | tools / connectors | `tool_use` names; `mcp__<server>__` → connector | `audit.jsonl` tool names | `function_call` names; MCP server | tool-author names, `code` parts → python | `tool_use` blocks |
+| skills / agents | `Skill` tool `input.skill`; `/slash` commands that are not built-ins; `Agent` tool `input.subagent_type` (custom = not a built-in type) | n/a | n/a | n/a | n/a |
 | model | most common `message.model` | if present | `turn_context.model` | `model_slug` | if present |
 | mode / trigger | `origin.kind` (human vs routine); tool use → agentic | scheduled flag if present | tools → agentic | chat | chat |
 | surface | `entrypoint` (cli, desktop, ide, remote → cloud) | desktop or cowork | `originator` | export or gpt | export |

@@ -12,7 +12,7 @@
  */
 
 var PARTICIPANT_COLUMNS = ['participant_id', 'function', 'title', 'window_days', 'window_start', 'window_end', 'sessions_total', 'sources', 'submitted_at', 'schema_version'];
-var SESSION_COLUMNS = ['participant_id', 'function', 'source', 'surface', 'date', 'week_start', 'weekday', 'hour', 'mode', 'trigger', 'category', 'subcategory', 'assist_type', 'paraphrase', 'surprise', 'messages_user', 'messages_assistant', 'duration_minutes', 'tools', 'connectors', 'model', 'submitted_at', 'schema_version'];
+var SESSION_COLUMNS = ['participant_id', 'function', 'source', 'surface', 'date', 'week_start', 'weekday', 'hour', 'mode', 'trigger', 'category', 'subcategory', 'assist_type', 'paraphrase', 'surprise', 'messages_user', 'messages_assistant', 'duration_minutes', 'tools', 'connectors', 'skills', 'agents', 'model', 'submitted_at', 'schema_version'];
 
 function sheet_(name, columns) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();

@@ -66,6 +66,8 @@ const PARAPHRASES = {
 
 const TOOLS = ['Bash', 'Read', 'Edit', 'Write', 'Grep', 'Glob', 'WebSearch', 'WebFetch', 'Agent'];
 const CONNECTORS = ['Slack', 'Google Drive', 'Notion', 'GitHub', 'Figma', 'Linear', 'Gmail'];
+const SKILLS = { Design: ['design-critique', 'humanizer', 'pm-storytelling:customer-hero-story', 'dataviz'], Product: ['pm-storytelling:brag-to-bets', 'pm-storytelling:customer-hero-story', 'humanizer', 'docs'], Engineering: ['code-review', 'simplify', 'security-review', 'kg-frontend:web-motion-hardening', 'init'] };
+const AGENTS = { Design: ['general-purpose', 'Explore'], Product: ['general-purpose', 'evidence-researcher'], Engineering: ['general-purpose', 'Explore', 'Plan', 'evidence-researcher', 'code-reviewer'] };
 
 function mixBySource(fn) {
   return {
@@ -98,11 +100,13 @@ function makeSessions(fn, n) {
     const duration_minutes = round(agentic ? 8 + r() * 70 : 2 + r() * 20);
     const tools = agentic ? TOOLS.filter(() => r() < 0.4) : [];
     const connectors = r() < (agentic ? 0.35 : 0.12) ? [pick(CONNECTORS)] : [];
+    const skills = agentic && r() < 0.45 ? [pick(SKILLS[fn])] : [];
+    const agents = agentic && r() < 0.3 ? [pick(AGENTS[fn]), ...(r() < 0.3 ? [pick(AGENTS[fn])] : [])] : [];
     const surprise = category === 'Personal & life admin' ? r() < 0.35 : r() < 0.03;
     out.push({
       source, week_start: WEEKS[week], weekday, hour, mode, assist_type, category,
       subcategory: pick(subs), paraphrase: pick(PARAPHRASES[category] || ['Work on something']),
-      surprise, messages_user, messages_assistant, duration_minutes, tools, connectors,
+      surprise, messages_user, messages_assistant, duration_minutes, tools, connectors, skills, agents,
       model: source.startsWith('claude') ? pick(['claude-opus-4-1', 'claude-sonnet-4-5']) : source === 'codex' ? 'gpt-5-codex' : 'gpt-5',
     });
   }
@@ -132,6 +136,8 @@ function summarize(sessions, weeks) {
     by_mode: sortedCounts(count(sessions, (s) => s.mode), 'mode'),
     tools: sortedCounts(count(sessions.flatMap((s) => s.tools.map((t) => ({ t }))), (x) => x.t)),
     connectors: sortedCounts(count(sessions.flatMap((s) => s.connectors.map((t) => ({ t }))), (x) => x.t)),
+    skills: sortedCounts(count(sessions.flatMap((s) => s.skills.map((t) => ({ t }))), (x) => x.t)),
+    agents: sortedCounts(count(sessions.flatMap((s) => s.agents.map((t) => ({ t }))), (x) => x.t)).map((a) => ({ ...a, custom: !['general-purpose', 'explore', 'plan'].includes(a.name.toLowerCase()) })),
     models: sortedCounts(count(sessions, (s) => s.model)),
   };
 }
@@ -200,6 +206,8 @@ function aggregate() {
     by_assist_type: sum.by_assist_type, by_source: sum.by_source, by_mode: sum.by_mode,
     by_week: WEEKS.map((w) => ({ week_start: w, sessions: all.filter((s) => s.week_start === w).length, active_participants: new Set(all.filter((s) => s.week_start === w).map((s) => s.participant_id)).size })),
     by_weekday: sum.by_weekday, by_hour: sum.by_hour, tools: sum.tools, connectors: sum.connectors,
+    skills: sum.skills.map((x) => ({ ...x, participants: new Set(all.filter((s) => s.skills.includes(x.name)).map((s) => s.participant_id)).size })),
+    agents: sum.agents.map((x) => ({ ...x, participants: new Set(all.filter((s) => s.agents.includes(x.name)).map((s) => s.participant_id)).size })),
     surprises: all.filter((s) => s.surprise).slice(0, 8).map((s) => ({ paraphrase: s.paraphrase, function: s.function, category: s.category, source: s.source })),
     highlights: { biggest_use_case: sum.by_category[0].category, surprise_use_case: 'Designers prototyping in code with Cowork', most_agentic_function: 'Engineering', most_curious_function: 'Product', one_liner: 'Engineers let AI do, designers ask it to look, PMs ask it to write' },
     narrative: { headline: 'Three functions, three different relationships with AI', summary: 'Engineering sessions are agentic and long. Design sessions are short critiques. Product sits in the middle, writing with AI more than anyone. The distribution is heavy-tailed: two people account for a third of all sessions.', patterns: ['Sessions per person per week range from 3 to 45', 'Every function has a personal-life use case they did not expect to share', 'Thursday is the busiest day for all three functions'] },

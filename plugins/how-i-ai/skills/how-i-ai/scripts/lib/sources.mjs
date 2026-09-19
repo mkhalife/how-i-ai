@@ -12,6 +12,26 @@ import { readZipText } from './zip.mjs';
 const FIRST_MESSAGE_CHARS = 2000;
 const CONTEXT_CHARS = 600;
 
+// Sub-agent types that ship with Claude Code. Anything else is a custom agent the person (or a plugin) defined.
+export const BUILTIN_AGENTS = new Set(['general-purpose', 'explore', 'plan', 'claude', 'fork', 'statusline-setup', 'claude-code-guide', 'output-style-setup']);
+// Slash commands that are product features, not skills.
+const BUILTIN_COMMANDS = new Set(['clear', 'compact', 'help', 'login', 'logout', 'model', 'resume', 'status', 'cost', 'config', 'doctor', 'exit', 'quit', 'mcp', 'memory', 'permissions', 'plugin', 'plugins', 'reload-plugins', 'schedule', 'web-setup', 'teleport', 'mobile', 'agents', 'bug', 'release-notes', 'terminal-setup', 'vim', 'theme', 'hooks', 'ide', 'install-github-app', 'export', 'rename', 'context', 'usage', 'stats', 'rewind', 'add-dir', 'privacy-settings', 'upgrade', 'pr-comments', 'passes', 'tasks', 'fast', 'effort', 'branch', 'chrome', 'desktop', 'remote-control', 'remote-env', 'skills', 'share', 'copy', 'insights', 'diff', 'output-style', 'sandbox', 'stop', 'voice', 'btw', 'color', 'keybindings', 'feedback', 'advisor', 'extra-usage', 'goals', 'heapdump', 'history', 'ultraplan', 'ultrareview', 'assistant', 'launch']);
+
+function skillsAndAgents(users, assistants) {
+  const skills = [], agents = [];
+  for (const r of assistants) for (const b of (Array.isArray(r.message.content) ? r.message.content : [])) {
+    if (b.type !== 'tool_use') continue;
+    if (b.name === 'Skill' && b.input && b.input.skill) skills.push(String(b.input.skill).replace(/^\//, ''));
+    if ((b.name === 'Agent' || b.name === 'Task') && b.input && b.input.subagent_type) agents.push(String(b.input.subagent_type));
+  }
+  for (const r of users) {
+    const t = typeof r.message.content === 'string' ? r.message.content : '';
+    const m = t.match(/<command-name>\s*\/?([^<\s]+)\s*<\/command-name>/);
+    if (m && !BUILTIN_COMMANDS.has(m[1].toLowerCase())) skills.push(m[1]);
+  }
+  return { skills: uniq(skills), agents: uniq(agents) };
+}
+
 function surfaceFromEntrypoint(ep) {
   const e = String(ep || '').toLowerCase();
   if (e.includes('remote')) return 'cloud';
@@ -41,6 +61,7 @@ function baseSession(o) {
     context: trim(o.context, CONTEXT_CHARS) || '',
     messages_user: o.messages_user || 0, messages_assistant: o.messages_assistant || 0,
     tools: uniq(o.tools || []).filter((t) => !/^mcp__/.test(t)), connectors: uniq([...(o.connectors || []), ...connectorsFromTools(o.tools || [])]),
+    skills: uniq(o.skills || []), agents: uniq(o.agents || []),
     model: o.model || null, mode: o.mode || 'chat', trigger: o.trigger || 'human',
     project_hash: o.project ? sha(o.project) : null, resumed: !!o.resumed, classification: null,
   };
@@ -73,17 +94,18 @@ export function parseClaudeCodeTranscript(file, overrides = {}) {
   const sessionId = first?.sessionId || recs.find((r) => r.sessionId)?.sessionId || basename(file, '.jsonl');
   const title = recs.find((r) => r.type === 'custom-title')?.customTitle || recs.find((r) => r.type === 'ai-title')?.aiTitle || recs.find((r) => r.type === 'summary')?.summary || null;
   const toolNames = assistants.flatMap((r) => (Array.isArray(r.message.content) ? r.message.content : []).filter((b) => b.type === 'tool_use').map((b) => b.name));
+  const { skills, agents } = skillsAndAgents(users, assistants);
   const originKind = first?.origin?.kind || first?.turnOrigin || 'human';
   const trigger = /human|user/i.test(originKind) ? 'human' : String(originKind);
   const assistantIds = uniq(assistants.map((r) => r.message.id || r.uuid));
   // resumed: a gap of more than 4 hours between two human turns
   let resumed = false;
   for (let i = 1; i < humanTurns.length; i++) if (new Date(humanTurns[i].timestamp) - new Date(humanTurns[i - 1].timestamp) > 4 * 3600e3) { resumed = true; break; }
-  const context = [promptTexts[1] ? 'Next: ' + trim(promptTexts[1], 300) : null, toolNames.length ? 'Tools: ' + uniq(toolNames).slice(0, 12).join(', ') : null, first?.gitBranch ? 'Branch: ' + first.gitBranch : null].filter(Boolean).join(' | ');
+  const context = [promptTexts[1] ? 'Next: ' + trim(promptTexts[1], 300) : null, toolNames.length ? 'Tools: ' + uniq(toolNames).slice(0, 12).join(', ') : null, skills.length ? 'Skills: ' + skills.join(', ') : null, agents.length ? 'Agents: ' + agents.join(', ') : null, first?.gitBranch ? 'Branch: ' + first.gitBranch : null].filter(Boolean).join(' | ');
   return baseSession({
     id: 's_claude-code_' + sessionId, source: overrides.source || 'claude-code', surface: overrides.surface || surfaceFromEntrypoint(first?.entrypoint),
     started_at: toISO(times[0]), ended_at: toISO(times[times.length - 1]), title, first_message: promptTexts[0], context,
-    messages_user: promptTexts.length, messages_assistant: assistantIds.length, tools: toolNames,
+    messages_user: promptTexts.length, messages_assistant: assistantIds.length, tools: toolNames, skills, agents,
     model: mostCommon(assistants.map((r) => r.message.model)), mode: trigger !== 'human' ? 'routine' : (toolNames.length ? 'agentic' : 'chat'),
     trigger, project: first?.cwd || null, resumed,
   });

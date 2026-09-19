@@ -22,7 +22,8 @@ function ccSession(id, start, prompt, tools, opts = {}) {
   lines.push({ parentUuid: null, isSidechain: false, type: 'user', message: { role: 'user', content: prompt }, uuid: id + '-1', timestamp: iso(new Date(t0)), origin: { kind: opts.origin || 'human' }, entrypoint: opts.entrypoint || 'cli', cwd: '/Users/me/work/app', sessionId: id, version: '2.1.270', gitBranch: 'main' });
   let i = 2;
   for (const tool of tools) {
-    lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + i, role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'tool_use', id: 'tu' + i, name: tool, input: {} }] }, uuid: id + '-' + i, timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
+    const input = tool === 'Skill' ? { skill: opts.skill || 'code-review' } : tool === 'Agent' ? { subagent_type: opts.agent || 'general-purpose', prompt: 'x' } : {};
+    lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + i, role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'tool_use', id: 'tu' + i, name: tool, input }] }, uuid: id + '-' + i, timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
     lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu' + i, content: 'ok' }] }, uuid: id + '-' + (i + 1), timestamp: iso(new Date(t0 + i * 60e3 + 5e3)), cwd: '/Users/me/work/app', sessionId: id });
     i += 2;
   }
@@ -30,7 +31,7 @@ function ccSession(id, start, prompt, tools, opts = {}) {
   if (opts.second) lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: opts.second }, uuid: id + '-s', timestamp: iso(new Date(t0 + (i + 1) * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
   writeFileSync(join(projects, id + '.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
-ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: 'now run the full test suite' });
+ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'Skill', 'Agent', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: '<command-name>/simplify</command-name>\n<command-message>simplify</command-message>', skill: 'code-review', agent: 'evidence-researcher' });
 ccSession('aaaa-2', daysAgo(5, 14), '<command-name>/clear</command-name>', [], {});
 ccSession('aaaa-3', daysAgo(5, 15), 'Why does this test pass locally but fail in CI? Here is the log: ...', ['Bash', 'Grep'], { entrypoint: 'desktop' });
 ccSession('aaaa-4', daysAgo(1, 7), 'Nightly: review open PRs and summarize', ['Bash', 'mcp__github__list_pull_requests'], { origin: 'routine', entrypoint: 'remote_web' });

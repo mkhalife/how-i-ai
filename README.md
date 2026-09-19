@@ -45,6 +45,7 @@ the landing page, which open the app with the prompt pre-filled:
 3. `classify`: Claude judges each session (category, subcategory, ask/make/do, a safe
    one-line paraphrase, surprise flag); the script validates and merges.
 4. `stats` + a short narrative → `profile.json`.
+   Top skills and top custom sub-agents (from Claude Code transcripts) are counted too.
 5. `render`: one of three self-contained HTML profiles (`wrapped`, `editorial`,
    `terminal`). Works offline.
 6. `share preview` shows the exact rows; `share send` posts them only on an explicit yes.
@@ -70,7 +71,7 @@ macOS, Windows, and Linux paths are handled. No cookies, no tokens, no scraping.
 
 Everything stays in `~/how-i-ai`. The only thing that can leave is the row set shown in
 `share preview`: id, function, title (optional), and per-session category, paraphrase,
-timing, counts, tool names. Never the prompts. Details: `references/sharing.md`.
+timing, counts, tool, skill and agent names. Never the prompts. Details: `references/sharing.md`.
 
 ## Develop
 
