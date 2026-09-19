@@ -10,17 +10,14 @@ with plain Node scripts; the only judgment calls (what a session was for, a safe
 one-line paraphrase) are yours. Nothing leaves the machine unless the person says yes to
 a preview of the exact rows.
 
-`SKILL_DIR` below means the folder this file is in. Working files go in `~/how-i-ai`
-(override with `HOW_I_AI_DIR`). Every command is `node SKILL_DIR/scripts/how-i-ai.mjs <cmd>`
-and works the same on macOS, Windows, and Linux.
+`SKILL_DIR` below means the folder this file is in. Working files go in `~/how-i-ai`.
+Every command is `node SKILL_DIR/scripts/how-i-ai.mjs <cmd>` and works the same on macOS,
+Windows, and Linux.
 
-There are two independent entry points. The Claude one is the default and is what the
-commands below show: it reads Claude sessions only. The ChatGPT one is run from inside
-the ChatGPT desktop app (`PROMPT-chatgpt-app.md`): put `--app chatgpt` right after
-`how-i-ai.mjs` in every command (`node SKILL_DIR/scripts/how-i-ai.mjs --app chatgpt <cmd>`)
-and read `~/how-i-ai-chatgpt` wherever this file says `~/how-i-ai`. It reads Codex and
-ChatGPT sources only. Each entry point keeps its own working folder and its own
-`participant_id`, and both post to the same team sheet.
+Steps 0 to 7 are the Claude entry point, which reads Claude sessions only. A run started
+from inside the ChatGPT desktop app is the other entry point; everything it does
+differently is in **The ChatGPT entry point** below, and nothing else in this file
+changes.
 
 ## 0. Setup
 
@@ -51,14 +48,11 @@ the person's name or email is stored.
 node SKILL_DIR/scripts/how-i-ai.mjs collect --days 30
 ```
 
-Read the source table it prints. It looks for, in order: Claude Code transcripts,
-Cowork sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud
-session list (`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
-(`claude-chat-threads.json`), see below. With `--app chatgpt` it looks instead
-for Codex sessions (and cloud tasks if a signed-in `codex` binary is on PATH or inside
-the ChatGPT desktop app), a ChatGPT export zip and `chatgpt-app-threads.json` in
-`~/how-i-ai-chatgpt/inbox`, and whether the ChatGPT desktop app is installed. Details
-and paths per source: `references/sources.md`.
+Read the source table it prints. It looks for, in order: Claude Code transcripts, Cowork
+sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud session list
+(`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
+(`claude-chat-threads.json`). Each row counts the sessions kept, so the rows add up to the
+total. Details and paths per source: `references/sources.md`.
 
 Then handle what is missing:
 
@@ -82,24 +76,14 @@ Then handle what is missing:
   When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
   missing, mention the two cards once and continue; do not block on them. Cowork and
   local Claude Code do not have either tool.
-- **ChatGPT chats are not readable on disk** (`--app chatgpt`). ChatGPT's desktop app
-  encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the
-  Windows app keeps only a volatile partial cache; the collector reports the app as a
-  signal (installed, how many cached conversations, last used) and nothing more. Content
-  comes from the agent inside the ChatGPT desktop app, which writes
-  `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`. chatgpt.com on the web has no
-  tool that lists conversations, so there is no web route to that file.
-- **The data exports are an optional top-up.** Do not ask for one by default. Offer it
-  when the person wants real first messages and message counts for Claude chats (the
-  chat listing has only Claude's summaries), when a ChatGPT user has more than ~50
-  conversations in the window or conversations longer than ~50 turns (the in-app listing
-  stops there), or when they have no surface that can list (no ChatGPT desktop app, or
-  `recent_chats` is unavailable). claude.ai: Settings → Privacy → Export data, zip into
-  `~/how-i-ai/inbox`. ChatGPT: Settings → Data controls → Export data, zip into
-  `~/how-i-ai-chatgpt/inbox`. It is emailed, usually within the hour, sometimes longer.
-  Do not wait: continue with what is on the machine and re-run collect when the zip
-  lands (re-running is safe: everything dedupes by session id and judgments already
-  merged are kept). An export wins over a listing file for the same conversation.
+- **The claude.ai export is an optional top-up.** Do not ask for one by default. Offer it
+  when the person wants real first messages and message counts for their chats (the chat
+  listing has only Claude's summaries), or when `recent_chats` is unavailable to them.
+  Settings → Privacy → Export data, zip into `~/how-i-ai/inbox`. It is emailed, usually
+  within the hour, sometimes longer. Do not wait: continue with what is on the machine and
+  re-run collect when the zip lands (re-running is safe: everything dedupes by session id
+  and judgments already merged are kept). An export wins over a listing file for the same
+  conversation.
 - **A source shows found but 0 sessions**: run
   `node SKILL_DIR/scripts/how-i-ai.mjs inspect "<one file from that folder>"` to see its
   key structure (no values are printed), then adapt the matching parser in
@@ -190,8 +174,7 @@ deciding:
    ```
    Say in one line what it answers: biggest use case, surprise use case, sessions per
    week and their distribution, ask/make/do by function, top skills and custom agents.
-   (The same page is hosted at
-   the project's landing page under `examples/`.)
+   The same page is on the landing page under `examples/`.
 2. **Exactly what leaves the machine.**
    ```
    node SKILL_DIR/scripts/how-i-ai.mjs share preview
@@ -224,6 +207,30 @@ Read `~/how-i-ai/aggregate.json`, write `~/how-i-ai/aggregate-narrative.json` (`
 `summary`, `patterns`, `one_liner`, optional `surprise_use_case`), re-run aggregate, then
 render `templates/aggregate-boardroom.html` (leadership readout) or
 `templates/aggregate-exhibit.html` (poster for the team meeting) the same way as step 5.
+
+## The ChatGPT entry point
+
+A run started from inside the ChatGPT desktop app (`PROMPT-chatgpt-app.md`) reads Codex and
+ChatGPT sources only. Follow steps 0 to 7 with four changes, and nothing else:
+
+1. Put `--app chatgpt` right after `how-i-ai.mjs` in every command:
+   `node SKILL_DIR/scripts/how-i-ai.mjs --app chatgpt <cmd>`.
+2. Read `~/how-i-ai-chatgpt` wherever this file says `~/how-i-ai`. It is a separate working
+   folder with its own `config.json`, so this run has its own `participant_id` on the team
+   sheet and is withdrawn separately.
+3. In step 2, collect looks for Codex sessions, Codex cloud tasks (when a signed-in `codex`
+   binary is on PATH or inside the ChatGPT desktop app), `chatgpt-app-threads.json` and a
+   ChatGPT export zip in `~/how-i-ai-chatgpt/inbox`, and whether the ChatGPT desktop app is
+   installed.
+4. ChatGPT conversations are not readable on disk: the app encrypts its cache with a
+   Keychain key only OpenAI-signed apps can read, and the Windows app keeps only a volatile
+   partial cache, so the collector reports the app as a signal (installed, how many cached
+   conversations, last used) and nothing more. The content comes from the agent inside the
+   app, which writes `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`; chatgpt.com has
+   no tool that lists conversations, so there is no web route to that file. The ChatGPT
+   export (Settings → Data controls → Export data, zip into `~/how-i-ai-chatgpt/inbox`) is
+   the optional top-up, worth offering above ~50 conversations in the window, above ~50
+   turns in a conversation, or without the desktop app.
 
 ## Rules
 

@@ -27,6 +27,8 @@ export function hostHash() { return sha(hostname()); }
 // Two entry points, each on its own: `claude` (the default) reads Claude sessions and works in ~/how-i-ai;
 // `chatgpt` (run from inside the ChatGPT desktop app with `--app chatgpt`) reads Codex and ChatGPT sessions and works
 // in ~/how-i-ai-chatgpt. Separate folders mean separate config.json, so each gets its own id on the team sheet.
+// HOW_I_AI_DIR is a test override: it points both entry points at one folder, which would give them one id. Never
+// set it for a real run.
 export function appName() { return process.env.HOW_I_AI_APP === 'chatgpt' ? 'chatgpt' : 'claude'; }
 export function workDir() { return process.env.HOW_I_AI_DIR || join(home(), appName() === 'chatgpt' ? 'how-i-ai-chatgpt' : 'how-i-ai'); }
 
