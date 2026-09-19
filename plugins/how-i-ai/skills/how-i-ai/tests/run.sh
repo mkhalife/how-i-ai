@@ -2,13 +2,13 @@
 # End-to-end test on synthetic data, macOS and Windows layouts. Usage: bash tests/run.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-T="${TMPDIR:-/tmp}/howiai-test-$$"; mkdir -p "$T"
+T="${TMPDIR:-/tmp}/how-i-ai-test-$$"; mkdir -p "$T"
 for plat in darwin win32; do
   H="$T/$plat"; node tests/make-fake-home.mjs "$H" "$plat" >/dev/null
-  export HOWIAI_HOME_OVERRIDE="$H" HOWIAI_PLATFORM_OVERRIDE="$plat" HOWIAI_DIR="$H/howiai" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
+  export HOW_I_AI_HOME_OVERRIDE="$H" HOW_I_AI_PLATFORM_OVERRIDE="$plat" HOW_I_AI_DIR="$H/how-i-ai" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
   echo "== $plat: collect"; node scripts/collect.mjs --no-codex-cloud --days 30 | sed 's/^/   /'
   node -e "
-    const d=require('$H/howiai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
+    const d=require('$H/how-i-ai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
     const want={'claude-code':5,'claude-desktop':2,'claude-cowork':1,'codex':2,'chatgpt-export':3,'claude-export':2};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
@@ -21,14 +21,14 @@ for plat in darwin win32; do
     console.log('   sources ok:',JSON.stringify(by));"
   node scripts/config.mjs --title "Senior Product Designer" --function Design >/dev/null
   node scripts/classify.mjs prep --size 6 | sed 's/^/   /'
-  node tests/fake-classify.mjs "$H/howiai/classify" >/dev/null
+  node tests/fake-classify.mjs "$H/how-i-ai/classify" >/dev/null
   node scripts/classify.mjs merge | sed 's/^/   /'
-  echo '{"headline":"Test headline","summary":"Test summary.","patterns":["p1","p2"],"one_liner":"one liner","signature_move":"move","surprise_why":"because"}' > "$H/howiai/narrative.json"
+  echo '{"headline":"Test headline","summary":"Test summary.","patterns":["p1","p2"],"one_liner":"one liner","signature_move":"move","surprise_why":"because"}' > "$H/how-i-ai/narrative.json"
   node scripts/stats.mjs | sed 's/^/   /'
-  for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/howiai/profile.json" --out "$H/howiai/$t.html" | sed 's/^/   /' || true; done
+  for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/profile.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
   node scripts/share.mjs preview | head -4 | sed 's/^/   /'
-  node -e "const p=require('$H/howiai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
-  node scripts/aggregate.mjs --json "$H/howiai/share-rows.json" --team "Test team" --out "$H/howiai/aggregate.json" | sed 's/^/   /'
-  for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/howiai/aggregate.json" --out "$H/howiai/$t.html" | sed 's/^/   /' || true; done
+  node -e "const p=require('$H/how-i-ai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
+  node scripts/aggregate.mjs --json "$H/how-i-ai/share-rows.json" --team "Test team" --out "$H/how-i-ai/aggregate.json" | sed 's/^/   /'
+  for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/aggregate.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
 done
 echo "ALL OK ($T)"

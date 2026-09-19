@@ -1,8 +1,8 @@
 {
-  "name": "howiai",
+  "name": "how-i-ai",
   "description": "Show how you actually use AI: inventory your Claude, Claude Code, Codex, and ChatGPT sessions, classify them, render a profile, and optionally share anonymized rows with your team.",
   "version": "0.1.0",
   "author": { "name": "Mohamed Khalife" },
-  "repository": "https://github.com/mkhalife/howiai",
+  "repository": "https://github.com/mkhalife/how-i-ai",
   "license": "MIT"
 }

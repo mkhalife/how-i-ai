@@ -1,10 +1,10 @@
 # Templates
 
 Each template is one self-contained HTML file. `scripts/render.mjs` replaces the
-`__HOWIAI_DATA__` placeholder inside
+`__HOW_I_AI_DATA__` placeholder inside
 
 ```html
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 ```
 
 with the JSON document and writes the finished page. Pages must work offline: no

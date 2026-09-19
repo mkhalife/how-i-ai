@@ -19,12 +19,12 @@ export function parseArgs(argv) {
 
 export function sha(s, n = 12) { return 'h_' + createHash('sha256').update(String(s)).digest('hex').slice(0, n); }
 
-export function home() { return process.env.HOWIAI_HOME_OVERRIDE || homedir(); }
-export function os() { return process.env.HOWIAI_PLATFORM_OVERRIDE || platform(); }
+export function home() { return process.env.HOW_I_AI_HOME_OVERRIDE || homedir(); }
+export function os() { return process.env.HOW_I_AI_PLATFORM_OVERRIDE || platform(); }
 export function hostHash() { return sha(hostname()); }
 
-// Directory the user's howiai working files live in. Never inside the repo.
-export function workDir() { return process.env.HOWIAI_DIR || join(home(), 'howiai'); }
+// Directory the user's how-i-ai working files live in. Never inside the repo.
+export function workDir() { return process.env.HOW_I_AI_DIR || join(home(), 'how-i-ai'); }
 
 export function ensureDir(p) { mkdirSync(p, { recursive: true }); return p; }
 

@@ -4,14 +4,14 @@ One Google Sheet, fronted by a tiny Apps Script web app, is where everyone's ano
 rows land. Setting it up takes about five minutes and is done once by whoever owns the
 sheet.
 
-1. Create a new Google Sheet. Name it something like `howiai · Product team`.
+1. Create a new Google Sheet. Name it something like `how-i-ai · Product team`.
 2. Extensions → Apps Script. Delete the sample code, paste `Code.gs`, save.
 3. Optional but recommended: Project settings → Script properties → add `SHARE_KEY` with
    a random string. Only requests carrying that key can write or dump.
 4. Deploy → New deployment → type **Web app**. Execute as **Me**. Who has access:
    **Anyone**. Deploy, authorize, copy the URL ending in `/exec`.
 5. Put the URL (and the key, if you set one) in
-   `plugins/howiai/skills/howiai/team.json` and commit:
+   `plugins/how-i-ai/skills/how-i-ai/team.json` and commit:
 
    ```json
    { "team": "Product team", "share_url": "https://script.google.com/macros/s/…/exec", "share_key": "…", "window_days": 30 }
@@ -31,7 +31,7 @@ rows.
 ## Building the report
 
 ```
-node plugins/howiai/skills/howiai/scripts/howiai.mjs aggregate --url "<share_url>"
+node plugins/how-i-ai/skills/how-i-ai/scripts/how-i-ai.mjs aggregate --url "<share_url>"
 ```
 
 then follow step 7 of `SKILL.md`. Without the endpoint, download both tabs as CSV and

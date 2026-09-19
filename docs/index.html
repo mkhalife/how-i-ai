@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>howiai · How I AI</title>
+<title>how-i-ai · How I AI</title>
 <meta name="description" content="See how you actually use AI, from your own session history. One click opens Claude with the prompt ready.">
 <style>
   :root { --bg:#fbfaf7; --ink:#181818; --mute:#5f5f5f; --line:#e6e2da; --card:#ffffff; --acc:#2b59c3; --acc-ink:#ffffff; --warn:#8a5a00; --warn-bg:#fff5dd; }
@@ -66,9 +66,9 @@
   <p class="note" style="margin-top:12px">If a button does nothing, the app has not registered its link handler yet: open the app once (for Claude Code, start <code>claude</code> and send any message), then try again. Or copy the prompt and paste it.</p>
 
   <h2>Or install the skill</h2>
-  <pre><code>claude plugin marketplace add mkhalife/howiai
-claude plugin install howiai@howiai</code></pre>
-  <p class="mute">Then ask Claude Code: <em>"show me how I use AI"</em>, or run <code>/howiai:howiai</code>.</p>
+  <pre><code>claude plugin marketplace add mkhalife/how-i-ai
+claude plugin install how-i-ai@how-i-ai</code></pre>
+  <p class="mute">Then ask Claude Code: <em>"show me how I use AI"</em>, or run <code>/how-i-ai:how-i-ai</code>.</p>
 
   <h2>What you get</h2>
   <p>A profile page in one of three designs, rendered from your last 30 days: sessions per week, which tools, what for, whether AI informs you or does the work (ask, make, do), your biggest use case, and the surprising one.</p>
@@ -93,13 +93,13 @@ claude plugin install howiai@howiai</code></pre>
   </table>
   <p class="mute" style="margin-top:8px">You see the full table before anything is sent. Re-sharing replaces your earlier rows. To withdraw, send your participant id to the sheet owner.</p>
 
-  <footer>howiai · <a href="https://github.com/mkhalife/howiai" style="color:inherit">github.com/mkhalife/howiai</a> · MIT</footer>
+  <footer>how-i-ai · <a href="https://github.com/mkhalife/how-i-ai" style="color:inherit">github.com/mkhalife/how-i-ai</a> · MIT</footer>
 </main>
 <div class="toast" id="toast">Copied</div>
 <script>
-  const REPO_RAW = 'https://raw.githubusercontent.com/mkhalife/howiai/main/';
-  const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs howiai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
-  const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs howiai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
+  const REPO_RAW = 'https://raw.githubusercontent.com/mkhalife/how-i-ai/main/';
+  const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs how-i-ai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
+  const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs how-i-ai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
   const enc = encodeURIComponent;
   document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
   document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);

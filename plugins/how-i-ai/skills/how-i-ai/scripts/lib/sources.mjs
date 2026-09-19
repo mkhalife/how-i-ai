@@ -117,7 +117,7 @@ export function claudeDesktop() {
       const s = parseClaudeCodeTranscript(file, { source: 'claude-cowork', surface: 'cowork' });
       if (s && !seen.has(s.id)) { seen.add(s.id); out.sessions.push(s); }
     }
-    if (!out.sessions.length) out.notes.push(`Found ${dir} but could not parse any session. Run: node scripts/howiai.mjs inspect "<one local_*.json file>" and adapt lib/sources.mjs parseDesktopStateFile.`);
+    if (!out.sessions.length) out.notes.push(`Found ${dir} but could not parse any session. Run: node scripts/how-i-ai.mjs inspect "<one local_*.json file>" and adapt lib/sources.mjs parseDesktopStateFile.`);
   }
   return out;
 }

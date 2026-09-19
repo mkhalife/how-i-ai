@@ -8,11 +8,11 @@ that is `%USERPROFILE%`. All parsers are in `scripts/lib/sources.mjs`.
 | `claude-code` | cli, ide, desktop, cloud (teleported) | `~/.claude/projects/<encoded-cwd>/<session>.jsonl` (or `$CLAUDE_CONFIG_DIR/projects`) | on disk, parsed |
 | `claude-desktop` | desktop chat | macOS `~/Library/Application Support/Claude/local-agent-mode-sessions/`; Windows `%LOCALAPPDATA%\Claude\local-agent-mode-sessions\` (older builds `%APPDATA%`); Linux `~/.config/Claude/`. Also `Claude-3p` for managed installs | on disk, tolerant parser |
 | `claude-cowork` | cowork | same folder; `local_<id>.json` state files plus per-session working dirs with `audit.jsonl` and transcripts | on disk, tolerant parser |
-| `claude-code` cloud | cloud | not on disk. From inside a claude.ai/code session, the Claude Code Remote `list_sessions` tool lists them; save the output to `~/howiai/cloud-sessions.json` | title and timestamps only |
+| `claude-code` cloud | cloud | not on disk. From inside a claude.ai/code session, the Claude Code Remote `list_sessions` tool lists them; save the output to `~/how-i-ai/cloud-sessions.json` | title and timestamps only |
 | `codex` | cli, ide, desktop | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` and `~/.codex/archived_sessions/` (or `$CODEX_HOME`) | on disk, parsed |
 | `codex` cloud | cloud | `codex cloud list --json` when the CLI is installed and signed in | title and summary only |
-| `chatgpt-export` | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/howiai/inbox` | parsed from `conversations.json` |
-| `claude-export` | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/howiai/inbox` | parsed from `conversations.json` |
+| `chatgpt-export` | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
+| `claude-export` | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
 | `gemini-cli` | cli | `~/.gemini/tmp/<project>/chats/` | optional, tolerant |
 
 Not covered, on purpose: the ChatGPT desktop app cache (encrypted), Cursor and Copilot
@@ -44,7 +44,7 @@ These files are internal to their products and change without notice. When a sou
 found but yields 0 sessions, or numbers look wrong:
 
 ```
-node scripts/howiai.mjs inspect "<one file>"
+node scripts/how-i-ai.mjs inspect "<one file>"
 ```
 
 prints the key structure with no values. Adapt the matching function in

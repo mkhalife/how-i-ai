@@ -59,7 +59,7 @@ if (cmd === 'preview') {
 }
 
 if (cmd === 'send') {
-  const endpoint = args.endpoint || process.env.HOWIAI_SHARE_URL || cfg.share_url || team.share_url;
+  const endpoint = args.endpoint || process.env.HOW_I_AI_SHARE_URL || cfg.share_url || team.share_url;
   if (!endpoint) { console.error('No endpoint. Pass --endpoint, or set share_url in team.json next to the skill, or: node scripts/config.mjs --share-url URL'); process.exit(2); }
   const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...payload, key: team.share_key || cfg.share_key || '' }), redirect: 'follow' });
   const text = await res.text();
@@ -75,7 +75,7 @@ console.error('usage: share.mjs preview|send'); process.exit(2);
 function previewHtml(p) {
   const esc = (v) => String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const table = (list, cols) => `<table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${list.map((r) => `<tr>${cols.map((c) => `<td>${esc(r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>What howiai would share</title><meta name="viewport" content="width=device-width,initial-scale=1">
+  return `<!doctype html><html><head><meta charset="utf-8"><title>What how-i-ai would share</title><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>:root{--bg:#fff;--ink:#1a1a1a;--mute:#666;--line:#e5e5e5;--acc:#2b59c3}@media(prefers-color-scheme:dark){:root{--bg:#111;--ink:#eee;--mute:#aaa;--line:#333;--acc:#8ab4ff}}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,sans-serif;padding:24px 16px;max-width:1200px;margin:auto}h1{font-size:22px}h2{font-size:16px;margin-top:32px}p{color:var(--mute)}
 .wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}table{border-collapse:collapse;font-size:12px;white-space:nowrap}th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left}th{position:sticky;top:0;background:var(--bg);font-weight:600}

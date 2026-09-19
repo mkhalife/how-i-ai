@@ -71,7 +71,7 @@ codexSession('c1', daysAgo(9, 10), 'Migrate the users endpoint from REST to gRPC
 codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell']);
 
 // ---- exports in the inbox ----
-const inbox = D(join(dir, 'howiai', 'inbox'));
+const inbox = D(join(dir, 'how-i-ai', 'inbox'));
 const chatgpt = [
   conv('g1', daysAgo(3, 12), 'Draft PRD for transfer alerts', ['Turn these rough notes into a PRD for transfer bonus alerts: ...', 'Shorter, and lead with the customer problem'], 'gpt-5'),
   conv('g2', daysAgo(8, 20), 'Half marathon plan', ['Build me a 12 week half marathon plan, I run 3x a week now'], 'gpt-5'),
@@ -98,7 +98,7 @@ writeFileSync(join(inbox, 'chatgpt-export.zip'), zip([['conversations.json', JSO
 writeFileSync(join(inbox, 'claude-export.zip'), zip([['data-2026/conversations.json', JSON.stringify(claude)], ['data-2026/projects.json', '[]']], false));
 
 // ---- cloud sessions list (as exported from inside a claude.ai/code session) ----
-writeFileSync(join(dir, 'howiai', 'cloud-sessions.json'), JSON.stringify({ ccr: { data: [
+writeFileSync(join(dir, 'how-i-ai', 'cloud-sessions.json'), JSON.stringify({ ccr: { data: [
   { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'web', environment_kind: 'anthropic_cloud', session_context: { model: 'claude-opus-4-1' } },
   { id: 'session_bridge1', title: 'mirror of a local session', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'claude_code_cli', environment_kind: 'bridge' },
 ] } }));

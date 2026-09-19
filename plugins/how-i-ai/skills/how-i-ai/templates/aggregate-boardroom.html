@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>howiai · team report</title>
+<title>how-i-ai · team report</title>
 <style>
 /* ---------- tokens ---------- */
 :root{
@@ -276,7 +276,7 @@ footer{
 </style>
 </head>
 <body>
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 
 <div class="wrap" id="app"></div>
 <div id="tip" role="tooltip" aria-hidden="true"></div>
@@ -287,7 +287,7 @@ footer{
 
 /* ================= data ================= */
 var D = {};
-try { D = JSON.parse(document.getElementById('howiai-data').textContent) || {}; }
+try { D = JSON.parse(document.getElementById('how-i-ai-data').textContent) || {}; }
 catch (e) { D = {}; }
 
 var arr = function(v){ return Array.isArray(v) ? v : []; };
@@ -1461,7 +1461,7 @@ function assistLabel(k){
     genTxt = isNaN(d) ? gen : d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
   }
   app.appendChild(h('footer', {}, [
-    h('span', { text:'Made with howiai · anonymized team data' }),
+    h('span', { text:'Made with how-i-ai · anonymized team data' }),
     h('span', { text: [ genTxt ? 'Generated ' + genTxt : '', str(TEAM.name) ].filter(Boolean).join(' · ') })
   ]));
 })();

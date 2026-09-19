@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How we use AI — an exhibit</title>
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 <style>
 /* ---------------------------------------------------------------
    Tokens. Risograph: 2–3 inks on off-white paper.
@@ -322,7 +322,7 @@ footer {
   /* ============================ data ============================ */
   var DATA = {};
   try {
-    DATA = JSON.parse(document.getElementById('howiai-data').textContent) || {};
+    DATA = JSON.parse(document.getElementById('how-i-ai-data').textContent) || {};
   } catch (e) { DATA = {}; }
 
   var arr = function (v) { return Array.isArray(v) ? v : []; };
@@ -1145,7 +1145,7 @@ footer {
 
   /* =========================== footer =========================== */
   app.appendChild(h('footer', { class: 'mono' }, [
-    h('span', { text: "Made with howiai · anonymized team data · nobody's prompts were shared" }),
+    h('span', { text: "Made with how-i-ai · anonymized team data · nobody's prompts were shared" }),
     str(DATA.generated_at) ? h('span', { text: fmtDate(DATA.generated_at) }) : null
   ]));
 

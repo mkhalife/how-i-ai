@@ -3,7 +3,7 @@
 //   node scripts/aggregate.mjs --url <apps script url>          fetches {participants, sessions} from the endpoint
 //   node scripts/aggregate.mjs --json dump.json                   same shape from a file
 //   node scripts/aggregate.mjs --csv sessions.csv --participants participants.csv   from Sheet downloads
-//   options: [--team "Product team"] [--out ~/howiai/aggregate.json] [--narrative ~/howiai/aggregate-narrative.json] [--days 30]
+//   options: [--team "Product team"] [--out ~/how-i-ai/aggregate.json] [--narrative ~/how-i-ai/aggregate-narrative.json] [--days 30]
 import { join, dirname } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +22,7 @@ if (args.url || (!args.json && !args.csv && team.share_url)) {
 } else if (args.json) data = readJson(args.json);
 else if (args.csv) data = { sessions: parseCsv(readFileSync(args.csv, 'utf8')), participants: args.participants ? parseCsv(readFileSync(args.participants, 'utf8')) : [] };
 else if (args['csv-dir']) {
-  // A folder of per-person CSVs (the chat-only path): howiai-*-sessions.csv and howiai-*-participant.csv
+  // A folder of per-person CSVs (the chat-only path): how-i-ai-*-sessions.csv and how-i-ai-*-participant.csv
   const { readdirSync } = await import('node:fs');
   data = { sessions: [], participants: [] };
   for (const f of readdirSync(args['csv-dir'])) {

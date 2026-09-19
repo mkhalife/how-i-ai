@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>howiai — Wrapped</title>
+<title>how-i-ai — Wrapped</title>
 <style>
 /* ---------------------------------------------------------------- tokens */
 :root{
@@ -302,14 +302,14 @@ ul,ol{ padding: 0; list-style: none; }
 <div id="counter" aria-hidden="true"></div>
 <main id="app"></main>
 
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 <script>
 (function () {
   "use strict";
 
   /* ------------------------------------------------------------ the data */
   var DATA = {};
-  try { DATA = JSON.parse(document.getElementById("howiai-data").textContent) || {}; }
+  try { DATA = JSON.parse(document.getElementById("how-i-ai-data").textContent) || {}; }
   catch (e) { DATA = {}; }
 
   var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -666,7 +666,7 @@ ul,ol{ padding: 0; list-style: none; }
   (function () {
     var c = card("intro", "ink", "Intro");
     var b = c.body;
-    add(b, eyebrow("howiai · personal wrapped"));
+    add(b, eyebrow("how-i-ai · personal wrapped"));
     var h = el("h1", "h1");
     h.appendChild(document.createTextNode("How I actually "));
     var span = el("span", "accent", "used AI");
@@ -1174,7 +1174,7 @@ ul,ol{ padding: 0; list-style: none; }
     var poster = el("div", "share");
     var head = el("div", "share-head");
     add(head, el("div", "chart-title", "my ai, " + (daysLabel || "30 days")));
-    add(head, el("div", "chart-title", str(PERSON.function) || str(PERSON.title) || "howiai"));
+    add(head, el("div", "chart-title", str(PERSON.function) || str(PERSON.title) || "how-i-ai"));
     add(poster, head);
 
     var line = el("p", "quote");
@@ -1248,7 +1248,7 @@ ul,ol{ padding: 0; list-style: none; }
 
     var foot = el("div", "share-foot");
     add(foot, el("span", "", windowLabel || daysLabel));
-    add(foot, el("span", "", "Made with howiai · data stays on your machine"));
+    add(foot, el("span", "", "Made with how-i-ai · data stays on your machine"));
     add(poster, el("hr", "rule"), foot);
 
     add(b, anim(poster));

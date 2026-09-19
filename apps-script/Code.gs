@@ -1,5 +1,5 @@
 /**
- * howiai team sheet endpoint.
+ * how-i-ai team sheet endpoint.
  *
  * POST  {participant:{...}, sessions:[{...}], key?}  → upserts that participant (deletes their old rows, appends new)
  * GET   ?action=dump[&key=…]                          → {participants:[...], sessions:[...]} as JSON

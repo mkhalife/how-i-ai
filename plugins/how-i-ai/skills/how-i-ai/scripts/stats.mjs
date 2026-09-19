@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Turns classified sessions.json into profile.json (numbers only; the words come from --narrative).
-//   node scripts/stats.mjs [--in ~/howiai/sessions.json] [--out ~/howiai/profile.json] [--narrative ~/howiai/narrative.json]
+//   node scripts/stats.mjs [--in ~/how-i-ai/sessions.json] [--out ~/how-i-ai/profile.json] [--narrative ~/how-i-ai/narrative.json]
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { parseArgs, workDir, readJson, writeJson, localDate, localHour, localWeekday, weekStart, toISO, SOURCE_LABELS } from './lib/util.mjs';
@@ -94,4 +94,4 @@ const profile = {
 const out = args.out || join(dir, 'profile.json');
 writeJson(out, profile);
 console.log(`wrote ${out}: ${profile.totals.sessions} sessions, ${profile.totals.sessions_per_week}/week, top: ${profile.highlights.biggest_use_case}, ask/make/do = ${profile.by_assist_type.map((a) => a.sessions).join('/')}`);
-if (!narrative.headline) console.log('narrative is empty: write ~/howiai/narrative.json {headline, summary, patterns[], one_liner, signature_move, surprise_why} and re-run stats');
+if (!narrative.headline) console.log('narrative is empty: write ~/how-i-ai/narrative.json {headline, summary, patterns[], one_liner, signature_move, surprise_why} and re-run stats');

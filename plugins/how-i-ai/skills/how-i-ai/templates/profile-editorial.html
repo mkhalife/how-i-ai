@@ -324,7 +324,7 @@ svg .hit:hover ~ .colbar{opacity:.8}
 </style>
 </head>
 <body>
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 <div class="page" id="page"></div>
 <div id="tip" role="status" aria-live="off"></div>
 <script>
@@ -333,7 +333,7 @@ svg .hit:hover ~ .colbar{opacity:.8}
 
 /* ------------------------------------------------------------------ data */
 var D = {};
-try { D = JSON.parse(document.getElementById('howiai-data').textContent) || {}; }
+try { D = JSON.parse(document.getElementById('how-i-ai-data').textContent) || {}; }
 catch (e) { D = {}; }
 
 var arr = function(v){ return Array.isArray(v) ? v : []; };
@@ -938,7 +938,7 @@ function sectionHead(title, stand){
   if (P.participant_id) right.push('ID ' + esc(P.participant_id));
   if (isNum(D.schema_version)) right.push('schema v' + esc(D.schema_version));
   if (D.generated_at) right.push(esc(stampDate(D.generated_at)));
-  out.push('<footer class="colophon"><span class="made">Made with howiai · data stays on your machine</span>' +
+  out.push('<footer class="colophon"><span class="made">Made with how-i-ai · data stays on your machine</span>' +
     (right.length ? '<span>' + right.join('<span aria-hidden="true"> · </span>') + '</span>' : '') + '</footer>');
 })();
 

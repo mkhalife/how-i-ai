@@ -1,4 +1,4 @@
-# howiai data schema
+# how-i-ai data schema
 
 Every script reads and writes plain JSON. Three documents matter:
 
@@ -19,7 +19,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
   "sources": [
     // one entry per source the collector looked for
     { "source": "claude-code", "found": true, "path": "/Users/x/.claude/projects", "sessions": 81 },
-    { "source": "chatgpt-export", "found": false, "path": null, "sessions": 0, "hint": "Drop the ChatGPT export zip in ~/howiai/inbox" }
+    { "source": "chatgpt-export", "found": false, "path": null, "sessions": 0, "hint": "Drop the ChatGPT export zip in ~/how-i-ai/inbox" }
   ],
   "sessions": [
     {

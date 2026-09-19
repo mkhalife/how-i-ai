@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>howiai · profile</title>
+<title>how-i-ai · profile</title>
 <style>
   :root {
     color-scheme: dark;
@@ -231,13 +231,13 @@
 </div>
 <div id="tip" role="status" aria-live="polite"></div>
 
-<script id="howiai-data" type="application/json">__HOWIAI_DATA__</script>
+<script id="how-i-ai-data" type="application/json">__HOW_I_AI_DATA__</script>
 <script>
 (function () {
   "use strict";
 
   var data;
-  try { data = JSON.parse(document.getElementById("howiai-data").textContent); }
+  try { data = JSON.parse(document.getElementById("how-i-ai-data").textContent); }
   catch (e) {
     document.getElementById("app").innerHTML = '<div class="noscript">No profile data.</div>';
     return;
@@ -410,7 +410,7 @@
 
     var pr = el("div", "prompt");
     pr.appendChild(el("span", "u", "~"));
-    pr.appendChild(el("span", null, " $ howiai profile --days " + (win.days !== undefined ? win.days : "30")));
+    pr.appendChild(el("span", null, " $ how-i-ai profile --days " + (win.days !== undefined ? win.days : "30")));
     left.appendChild(pr);
 
     var typed = el("div", "typed");
@@ -1145,7 +1145,7 @@
     var bar = document.getElementById("status");
     var left = el("div");
     left.appendChild(el("span", "led"));
-    left.appendChild(el("span", null, "made with howiai · data stays on your machine"));
+    left.appendChild(el("span", null, "made with how-i-ai · data stays on your machine"));
     bar.appendChild(left);
 
     var right = el("div");

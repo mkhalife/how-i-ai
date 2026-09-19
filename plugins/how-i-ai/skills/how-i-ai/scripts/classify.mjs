@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Two halves of classification. The model does the judging; this script does the bookkeeping.
-//   node scripts/classify.mjs prep  [--in ~/howiai/sessions.json] [--dir ~/howiai/classify] [--size 40]
+//   node scripts/classify.mjs prep  [--in ~/how-i-ai/sessions.json] [--dir ~/how-i-ai/classify] [--size 40]
 //       writes batch-001.json … for Claude to read, and expects batch-001.out.json … back
-//   node scripts/classify.mjs merge [--in ~/howiai/sessions.json] [--dir ~/howiai/classify]
+//   node scripts/classify.mjs merge [--in ~/how-i-ai/sessions.json] [--dir ~/how-i-ai/classify]
 //       validates every .out.json, writes classifications into sessions.json, exits 1 if any session is still unclassified
 import { join } from 'node:path';
 import { readdirSync, existsSync } from 'node:fs';

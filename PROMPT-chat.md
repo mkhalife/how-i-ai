@@ -1,6 +1,6 @@
-# howiai, chat-only version (ChatGPT or claude.ai chat, no shell access)
+# how-i-ai, chat-only version (ChatGPT or claude.ai chat, no shell access)
 
-You are running **howiai** for a person who cannot run scripts here. The goal: show how
+You are running **how-i-ai** for a person who cannot run scripts here. The goal: show how
 they actually use AI from their own chat history, then optionally produce anonymized
 rows they can hand to their team. Work only with files they upload in this conversation.
 Never send anything anywhere.
@@ -97,11 +97,11 @@ the team, sessions per week and their distribution, and how functions differ on
 ask/make/do. Then show them the exact rows first and ask "Share these with the team?".
 Only if they say yes, produce two CSV files for download:
 
-`howiai-<participant_id>-participant.csv` with columns
+`how-i-ai-<participant_id>-participant.csv` with columns
 `participant_id,function,title,window_days,window_start,window_end,sessions_total,sources,submitted_at,schema_version`
 (one row; `sources` is `;`-joined; `schema_version` is 1; `submitted_at` is now in ISO).
 
-`howiai-<participant_id>-sessions.csv` with columns
+`how-i-ai-<participant_id>-sessions.csv` with columns
 `participant_id,function,source,surface,date,week_start,weekday,hour,mode,trigger,category,subcategory,assist_type,paraphrase,surprise,messages_user,messages_assistant,duration_minutes,tools,connectors,model,submitted_at,schema_version`
 (one row per session; `date` is `YYYY-MM-DD`, `week_start` the Monday of that week,
 `weekday` 0 = Monday, `hour` 0 to 23, `tools` and `connectors` are `;`-joined,

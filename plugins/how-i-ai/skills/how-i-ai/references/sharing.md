@@ -1,8 +1,8 @@
 # What sharing sends, and what it never sends
 
 Sharing is a POST of one JSON document to the team's Apps Script endpoint (`share_url`
-in `team.json`). `share preview` writes the same document to `~/howiai/share-rows.json`
-and a readable table to `~/howiai/share-preview.html` so the person can check it before
+in `team.json`). `share preview` writes the same document to `~/how-i-ai/share-rows.json`
+and a readable table to `~/how-i-ai/share-preview.html` so the person can check it before
 saying yes. The code only ever serializes the columns below (`SESSION_COLUMNS` and
 `PARTICIPANT_COLUMNS` in `scripts/share.mjs`); there is no other field.
 
@@ -50,7 +50,7 @@ skim in the preview: it is the one free-text column.
 
 - Sending again with the same `participant_id` deletes that participant's earlier rows
   in both sheets before appending, so the sheet always holds one snapshot per person.
-- To withdraw, send the `participant_id` from `~/howiai/config.json` to whoever owns the
+- To withdraw, send the `participant_id` from `~/how-i-ai/config.json` to whoever owns the
   sheet; they delete the rows. Nothing in the sheet links the id to a person.
 
 ## Where it goes

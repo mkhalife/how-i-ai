@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Inventory every AI session on this machine for the last N days.
-//   node scripts/collect.mjs [--days 30] [--out ~/howiai/sessions.json] [--inbox ~/howiai/inbox]
+//   node scripts/collect.mjs [--days 30] [--out ~/how-i-ai/sessions.json] [--inbox ~/how-i-ai/inbox]
 //                            [--cloud-sessions file.json] [--no-codex-cloud] [--dry-run]
 // Prints a source table and writes sessions.json. Nothing leaves the machine.
 import { join } from 'node:path';
@@ -62,7 +62,7 @@ const doc = {
   sources: table, sessions,
 };
 
-console.log(`howiai collect · last ${days} days (${doc.window.start} → ${doc.window.end})\n`);
+console.log(`how-i-ai collect · last ${days} days (${doc.window.start} → ${doc.window.end})\n`);
 const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(pad('source', 16) + pad('found', 7) + pad('in window', 11) + pad('all time', 10) + 'path / hint');
 for (const t of table) console.log(pad(t.source, 16) + pad(t.found ? 'yes' : 'no', 7) + pad(t.sessions_in_window, 11) + pad(t.sessions_total, 10) + (t.found && t.sessions_in_window ? t.path : (t.hint || '')));
