@@ -304,13 +304,15 @@ Verified on macOS (September 2026): both links open from `open` with the full pr
 filled in (prompts of about 1.2 KB and 1.7 KB, links of about 1.8 KB and 2.5 KB), and both
 downloads were picked up from `~/Downloads` and read by `collect`.
 
-A shell that cannot reach the person's screen cannot open the links: on Linux with no
-`DISPLAY` or `WAYLAND_DISPLAY`, or when the opener fails, `gather` prints them instead and
-keeps watching Downloads and the inbox. Cowork is that case. Its shell runs in a Linux VM
-whose home is not the Mac's (connected folders appear under `$HOME/mnt/<folder>`), and the
-desktop app has no bridge from that shell to the Mac's browser, so in Cowork `gather`
-prints the links and a downloaded file reaches the run only through a connected folder.
-This comes from the desktop app's bundle; it has not been run inside a Cowork session.
+A shell that cannot reach the person's screen cannot open the links. On Linux with no
+`DISPLAY` or `WAYLAND_DISPLAY`, or when the opener fails, `gather` prints them instead. If
+it also finds no Downloads folder, the shell is not on the person's computer and a
+download can never reach it, so `gather` says so and exits without waiting.
+
+Cowork is that case (verified September 2026, macOS, no folder connected). Its shell is a
+Linux VM with `$HOME` at `/root`, no Downloads folder, no display, and an `xdg-open` that
+exits 3; nothing bridges it to the Mac's browser. Its `~/.claude/projects` is the VM's own,
+not the Mac's.
 
 ## Deep links that prefill a prompt (verified on macOS, September 2026)
 

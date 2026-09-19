@@ -69,7 +69,8 @@ node SKILL_DIR/scripts/how-i-ai.mjs gather
 
 It waits up to five minutes and prints what arrived; `--only chat` or `--only cloud` limits
 it to the one still missing. If it prints links instead of opening them (Cowork and cloud
-sessions cannot open windows on the person's screen), give the person those links. Then run
+sessions cannot open windows on the person's screen), give the person those links and what
+it says to do with the files. Then run
 `collect` again. Whatever did not arrive, continue without it and mention once, at the end,
 the "Claude chats" and "Claude Code on the web" buttons on the landing page, which do the
 same by hand. If this conversation is itself a claude.ai/code session with `list_sessions`,

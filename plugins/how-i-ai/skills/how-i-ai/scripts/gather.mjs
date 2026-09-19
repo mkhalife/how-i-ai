@@ -103,7 +103,14 @@ if (isMain) {
     if (openLink(url)) opened.push(t); else manual.push([t, url]);
   }
   for (const t of opened) console.log(t.step);
-  for (const [t, url] of manual) console.log(`Could not open a window from here. Open this link on your computer, press send, and save ${t.file} into ${inbox}:\n${url}`);
+  for (const [t, url] of manual) console.log(`Could not open a window from here. Open this link on your computer, press send, and download ${t.file}:\n${url}`);
+
+  // No window opened and no Downloads folder: this shell is not on the person's computer (a Cowork VM, a cloud
+  // container), so a file they download can never reach it. Say so instead of waiting.
+  if (manual.length && !opened.length && !existsSync(downloads)) {
+    console.log(`\nThis shell runs apart from your computer and cannot see your Downloads folder, so nothing is picked up here. After downloading, save the files into the how-i-ai/inbox folder in your home folder and run how-i-ai from Claude Code.`);
+    process.exit(0);
+  }
 
   // The inbox is watched too, for a file the person saved there directly.
   const dirs = [existsSync(downloads) ? downloads : null, inbox].filter(Boolean);

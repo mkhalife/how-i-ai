@@ -90,8 +90,8 @@ classification rules, and the sharing contract.
 | ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app (chatgpt.com has no listing tool); optionally the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 
 macOS, Windows, and Linux paths are handled; the Windows ones are still unverified, and so
-is how `gather` opens links on Windows and inside Cowork (a VM that cannot open windows on
-the Mac; there it prints the links instead). No cookies, no tokens, no scraping.
+is how `gather` opens links on Windows. Inside Cowork (a VM that cannot open windows on
+the Mac or see its Downloads) it prints the links instead of waiting. No cookies, no tokens, no scraping.
 
 ## Privacy
 

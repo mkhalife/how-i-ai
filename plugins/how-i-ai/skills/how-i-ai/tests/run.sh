@@ -110,6 +110,12 @@ for plat in darwin win32; do
     console.log('   gathered listing collected')"
 done
 node tests/check-prompts.mjs
+# gather in a shell with no display and no Downloads (a Cowork VM): print the links and return at once.
+C="$T/cowork"; mkdir -p "$C"
+env -u DISPLAY -u WAYLAND_DISPLAY HOW_I_AI_HOME_OVERRIDE="$C" HOW_I_AI_PLATFORM_OVERRIDE=linux CLAUDE_CONFIG_DIR="$C/.claude" node scripts/how-i-ai.mjs gather --timeout 30 > "$T/gather-cowork.txt" &
+GP=$!; sleep 5; if kill -0 $GP 2>/dev/null; then kill $GP; echo 'FAIL gather waited in a shell that cannot see Downloads'; exit 1; fi
+[ "$(grep -c '^claude://claude.ai/new?q=\|^https://claude.ai/code?q=' "$T/gather-cowork.txt")" = 2 ] && grep -q 'cannot see your Downloads' "$T/gather-cowork.txt" || { echo 'FAIL gather should print both links and say why it is not waiting'; cat "$T/gather-cowork.txt"; exit 1; }
+echo "== linux, no display: gather printed both links and did not wait"
 # Merged ChatGPT/Codex macOS app (bundle com.openai.codex): Chromium profile only, no conversation cache.
 M="$T/darwin-merged"; mkdir -p "$M/Library/Application Support/Codex/Default"; echo '{}' > "$M/Library/Application Support/Codex/Local State"
 # Its thread catalog (sqlite) lists ChatGPT conversations by title; only the count and last update may be read.
