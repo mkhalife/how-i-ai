@@ -19,7 +19,7 @@ parsers are in `scripts/lib/sources.mjs`.
 | `chatgpt-app` | chatgpt | desktop | `~/how-i-ai-chatgpt/inbox/chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app from its `list_threads` / `read_thread` tools (`PROMPT-chatgpt-app.md`). The only surface that can list ChatGPT conversations: chatgpt.com has no listing tool. Same ids as the export; when both exist the export wins | normal route: first message, counts, title |
 | `claude-chat` | claude | chat | `~/how-i-ai/inbox/claude-chat-threads.json`, written by Claude in claude.ai Chat mode (web or desktop) from its `recent_chats` tool (`PROMPT-claude-chat.md`) and saved there by the person. Same ids as the claude.ai export; when both exist the export wins | normal route: title, Claude's summary, one timestamp |
 | `claude-export` | claude | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | optional top-up, parsed from `conversations.json` |
-| `chatgpt-desktop` | chatgpt | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*` (classic app), or `~/Library/Application Support/Codex/` (merged app, Chromium profile only: no cached count, last activity from file times); Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\` | installed, cached conversation count, last activity. No message bodies |
+| `chatgpt-desktop` | chatgpt | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*` (classic app), or `~/Library/Application Support/Codex/` (merged app, Chromium profile only: no cached count, last activity from file times); Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\`, `%APPDATA%\OpenAI\ChatGPT\`, `%LOCALAPPDATA%\OpenAI\ChatGPT\` (all unverified) | installed, cached conversation count, last activity. No message bodies |
 
 Not covered, on purpose: Cursor and Copilot (different product category), and any route
 that scrapes a logged-in web session with cookies or tokens. Those unofficial routes
@@ -51,9 +51,7 @@ from its deep link.
   pages: pass `before` = the earliest `updated_at` seen. Cowork and Code mode do not have
   these tools. File shape: `{ source: "claude-chat", exported_at, chats: [ { url,
   updated_at, title, summary } ] }` (a bare array is accepted). The id is the last path
-  segment of `url` (`https://claude.ai/chat/<uuid>`), in the export's id space
-  (`s_claude-export_<uuid>`). `started_at` and `ended_at` are both `updated_at`, the
-  summary stands in for the first message, counts, duration and model are null.
+  segment of `url` (`https://claude.ai/chat/<uuid>`), in the export's id space.
 - **Claude Code cloud sessions** (`PROMPT-claude-cloud.md` → `cloud-sessions.json`). A
   claude.ai/code session has the Claude Code Remote `list_sessions` tool (args `limit` up
   to 100, `after_id`, `before_id`, `mine`, `tags`). Response: `data[]`, `has_more`,
@@ -65,11 +63,10 @@ from its deep link.
   `status_detail`, `recent_action`, `needs_action`), `external_metadata`. No message
   text. Local Claude Code, Cowork, and Chat do not have this tool. File shape:
   `{ source: "claude-cloud", exported_at, data: [...] }` with the fields the prompt keeps
-  (a bare array and the `{ ccr: { data } }` wrapper are accepted). The title stands in
-  for the first message; `post_turn_summary.status_detail` and `recent_action` go into
-  `context`; `environment_kind` containing `bridge` is a Remote Control mirror of a local
-  session and is skipped. In a real file most listed sessions were `bridge` and the rest
-  `anthropic_cloud`, so the collector keeps far fewer sessions than the file lists.
+  (a bare array and the `{ ccr: { data } }` wrapper are accepted). `environment_kind`
+  containing `bridge` is a Remote Control mirror of a local session and is skipped. In a
+  real file most listed sessions were `bridge` and the rest `anthropic_cloud`, so the
+  collector keeps far fewer sessions than the file lists.
 
 ## Claude Desktop on disk (verified on macOS, September 2026)
 
@@ -167,9 +164,11 @@ so the collector runs it in a throwaway temp dir and deletes that afterwards.
 
 ## What is extracted per session
 
-| Field | Claude Code | Claude Desktop | Codex | ChatGPT export | Claude export |
+Sources with a transcript on disk or a full conversation in an export:
+
+| Field | Claude Code | Cowork | Codex | ChatGPT export | Claude export |
 |---|---|---|---|---|---|
-| id | `sessionId` | file name | `session_meta.payload.id` | `id` | `uuid` |
+| id | `sessionId` | state file name | `session_meta.payload.id` | `id` | `uuid` |
 | started / ended | first and last `timestamp` | `createdAt`/`lastActivityAt` or file times | line timestamps | `create_time`/`update_time` | `created_at`/`updated_at` |
 | first message | first `type:user` with human text, harness tags stripped | transcript's first human turn, else `audit.jsonl`, else `initialMessage` | first `user_message` event or `item_completed` `UserMessage` item (falls back to `response_item` items of kind `user.text`) | first visible `author.role=user` node | first `sender=human` |
 | duration | active time (below) | active time from the transcript, else from `audit.jsonl`; null for an inline-`messages` state file | active time from line timestamps | null | null |
@@ -180,6 +179,20 @@ so the collector runs it in a throwaway temp dir and deletes that afterwards.
 | model | most common `message.model` | if present | `turn_context.model` | `model_slug` | if present |
 | mode / trigger | `origin.kind` (human vs routine), `<scheduled-task>` wrapper or desktop `scheduledTaskId` → scheduled; tool use → agentic | `scheduledTaskId` | automation thread → scheduled / routine (below); tools → agentic | chat | chat |
 | surface | `entrypoint` (`cli`, `claude-desktop` → desktop, `sdk-cli` → sdk, `local-agent` → cowork, ide, remote → cloud) | cowork | `originator` | export or gpt | export |
+
+Listing sources, which hand over one entry per conversation and no transcript. Duration is
+null for all four, and so are the counts except where the in-app agent supplied them:
+
+| Field | `claude-chat` | `claude-code` cloud | `chatgpt-app` | `codex` cloud |
+|---|---|---|---|---|
+| id | last path segment of `url`, in the claude.ai export's id space | `id` | `id`, in the ChatGPT export's id space | `id` |
+| started / ended | `updated_at` for both | `created_at` / `updated_at` | `created_at` / `updated_at` | `created_at` / `updated_at` |
+| first message | Claude's summary | `title` | `first_message`, else `title` | `title`, else `summary` |
+| context | a line saying only a summary is available | `post_turn_summary.status_detail` and `recent_action` | `second_message`, tools | `summary` |
+| counts | null | null | `messages_user` / `messages_assistant`, null when the opening was never reached | null |
+| tools / model | none | `session_context.model`, else `configured_model` | `tools[]`, `model` | none |
+| mode / trigger | chat / human | agentic / human, or routine when `origin` or a tag says so | chat / human | agentic; `review` when `is_review` |
+| surface | chat | cloud | desktop | cloud |
 
 Harness noise is removed before anything is counted: `<system-reminder>`, slash
 commands, pasted-content wrappers, tool results, compaction summaries, sub-agent
@@ -198,13 +211,10 @@ More things real transcripts do (verified on macOS, September 2026):
   short word (`entrypoint: sdk-cli`, one prompt under 12 characters, no tools). Dropped.
 - **Duration** is active time: gaps between consecutive records, ignoring any gap over
   15 minutes. Desktop sessions stay open for days, so first-to-last is not time spent.
-  Sources without per-record timestamps (both exports, `chatgpt-app`, `claude-chat`, the
-  Claude cloud list, Codex cloud) get `duration_minutes: null` rather than the created-to-updated
-  span. `profile.json` sums hours over the sessions that have a duration
-  (`totals.sessions_timed`).
-- **Listing-only sources have no message counts.** The Claude cloud list, `claude-chat`
-  and `codex cloud list` give a title, a summary at most, and timestamps, so
-  `messages_user` and `messages_assistant` are null (shared as blank), not a placeholder.
+  A source without per-record timestamps gets `duration_minutes: null` rather than the
+  created-to-updated span, and `profile.json` sums hours only over the sessions that have
+  one (`totals.sessions_timed`). A count nobody supplied stays null too, and is shared as
+  blank rather than as a placeholder number.
 
 ## Codex rollouts: skills, plugins, scheduled tasks (desktop build 0.155, macOS, September 2026)
 

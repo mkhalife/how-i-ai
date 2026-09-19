@@ -15,17 +15,22 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
   "schema_version": 1,
   "collected_at": "2026-09-19T14:02:11-04:00",
   "window": { "days": 30, "start": "2026-08-20", "end": "2026-09-19" },
-  "machine": { "platform": "darwin", "hostname_hash": "h_9f3a..." },
+  "machine": { "platform": "darwin", "hostname_hash": "h_9f3a...", "node": "v22.14.0" },
   "sources": [
-    // one entry per source the collector looked for
-    { "source": "claude-code", "found": true, "path": "/Users/x/.claude/projects", "sessions": 81 },
-    { "source": "chatgpt-export", "found": false, "path": null, "sessions": 0, "hint": "Drop the ChatGPT export zip in ~/how-i-ai/inbox" }
+    // one row per source the collector looked for; sessions_in_window counts the sessions kept
+    { "source": "claude-code", "found": true, "sessions_in_window": 81, "sessions_total": 240, "path": "/Users/x/.claude/projects", "hint": null },
+    { "source": "claude-export", "found": false, "sessions_in_window": 0, "sessions_total": 0, "path": null, "hint": "Optional: the claude.ai export adds…" }
+  ],
+  "signals": [
+    // an app that is in use but holds no readable sessions. Only the ChatGPT entry point reports one today
+    { "source": "chatgpt-desktop", "path": "/Users/x/Library/Application Support/Codex", "installed": true,
+      "layout": "chromium-profile", "cached_conversations": 42, "last_activity": "2026-09-19T11:20:00.000Z" }
   ],
   "sessions": [
     {
       "id": "s_claude-code_ff558e1b",       // stable: source + native id
       "source": "claude-code",                // see Sources
-      "surface": "cli",                        // cli | desktop | web | cloud | cowork | app | chat | export
+      "surface": "cli",                        // cli | ide | sdk | desktop | cowork | cloud | chat | export | gpt
       "started_at": "2026-09-19T01:37:01.378Z",
       "ended_at": "2026-09-19T02:10:44.102Z",
       "duration_minutes": 33.7,                // active minutes from per-record timestamps (gaps over 15 min dropped); null when the source only knows created/updated times
@@ -41,7 +46,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
       "agents": ["general-purpose", "evidence-researcher"],       // sub-agent types spawned (Agent tool subagent_type)
       "model": "claude-opus-4-1",
       "mode": "agentic",                               // chat | agentic | routine
-      "trigger": "human",                              // human | scheduled | routine | review | unknown
+      "trigger": "human",                              // human | scheduled | routine | review (see below)
       "project_hash": "h_1c2d...",                     // sha256 of cwd/repo, never the path
       "resumed": false,
       "classification": null                           // filled by classify step, see below
@@ -54,8 +59,9 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
 
 | `source` | Where it comes from |
 |---|---|
-| `claude-code` | `~/.claude/projects/**/*.jsonl` (local CLI, IDE, desktop "Code" tab) |
+| `claude-code` | `~/.claude/projects/**/*.jsonl` (local CLI, IDE, desktop "Code" tab), and cloud sessions from `cloud-sessions.json` (surface `cloud`) |
 | `claude-cowork` | Claude Desktop Cowork session store |
+| `claude-desktop` | a Claude Desktop state file that carries its messages inline; real builds keep Chat server-side, so this is a fallback |
 | `claude-export` | claude.ai data export zip (`conversations.json`) |
 | `claude-chat` | `claude-chat-threads.json`, written by Claude in claude.ai Chat mode (`PROMPT-claude-chat.md`) |
 | `codex` | `~/.codex/sessions/**/*.jsonl`, and cloud tasks from `codex cloud list --json` |
@@ -65,6 +71,14 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
 The `claude-*` sources belong to the Claude entry point (`~/how-i-ai`), `codex` and
 `chatgpt-*` to the ChatGPT entry point (`~/how-i-ai-chatgpt`); one `sessions.json` holds
 one entry point's sources.
+
+### `trigger`
+
+`human` is someone typing. `scheduled` is a desktop scheduled task or a Codex automation.
+`routine` is a cloud routine, from a transcript's `origin.kind` or from the cloud list's
+`origin` and tags. `review` is a Codex cloud review task. Any other `origin.kind` a
+transcript carries is passed through as written. `scheduled` and `routine` also set
+`mode: "routine"`; a Codex cloud review stays `agentic`.
 
 ### `classification` (written by Claude, validated by `validate.mjs`)
 
