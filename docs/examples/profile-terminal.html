@@ -384,8 +384,9 @@
   }
 
   var SOURCE_LABEL = {
-    "claude-code": "Claude Code", "claude-export": "Claude", "claude-cowork": "Cowork",
-    "chatgpt-export": "ChatGPT", "codex": "Codex", "gemini-cli": "Gemini CLI", "copilot-cli": "Copilot CLI"
+    "claude-code": "Claude Code", "claude-desktop": "Claude Desktop", "claude-cowork": "Cowork",
+    "claude-export": "Claude", "claude-chat": "Claude",
+    "codex": "Codex", "chatgpt-export": "ChatGPT", "chatgpt-app": "ChatGPT"
   };
   function sourceLabel(s) {
     for (var i = 0; i < sources.length; i++) if (sources[i].source === s && sources[i].label) return sources[i].label;
@@ -467,7 +468,7 @@
       win.days ? "of " + win.days : null);
     add("Longest streak", totals.longest_streak_days !== undefined ? num(totals.longest_streak_days) : null, "days");
     add("Hours (est)", totals.hours_estimated !== undefined ? dec(totals.hours_estimated) : null, "h",
-      totals.hours_estimated && totals.sessions ? dec((totals.hours_estimated * 60) / totals.sessions, 0) + " min / session" : null);
+      totals.hours_estimated && (totals.sessions_timed || totals.sessions) ? dec((totals.hours_estimated * 60) / (totals.sessions_timed || totals.sessions), 0) + " min / session" : null);
     add("Busiest day", high.busiest_day ? num(high.busiest_day.sessions) : null, "sessions",
       high.busiest_day ? shortDate(high.busiest_day.date) : null);
     add("Peak hour", high.peak_hour !== undefined && high.peak_hour !== null ? hourLabel(high.peak_hour) : null, null,

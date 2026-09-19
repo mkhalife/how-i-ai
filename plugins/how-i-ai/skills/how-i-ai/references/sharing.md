@@ -31,7 +31,7 @@ saying yes. The code only ever serializes the columns below (`SESSION_COLUMNS` a
 | surprise | `false` |
 | messages_user, messages_assistant, duration_minutes | `4`, `9`, `33.7` |
 | tools, connectors, model | `Bash;Edit;Read`, `github`, `claude-opus-4-1` |
-| skills, agents | `code-review;humanizer`, `general-purpose;evidence-researcher` (names only) |
+| skills, agents | `code-review;humanizer`, `general-purpose;evidence-researcher` (names only; see the note below) |
 | submitted_at, schema_version | bookkeeping |
 
 ## Never shared
@@ -50,9 +50,13 @@ skim in the preview: it is the one free-text column.
 ## Re-runs and withdrawal
 
 - Sending again with the same `participant_id` deletes that participant's earlier rows
-  in both sheets before appending, so the sheet always holds one snapshot per person.
-- To withdraw, send the `participant_id` from `~/how-i-ai/config.json` to whoever owns the
-  sheet; they delete the rows. Nothing in the sheet links the id to a person.
+  in both sheets before appending, so the sheet always holds one snapshot per id.
+- Each entry point has its own working folder (`~/how-i-ai` for Claude,
+  `~/how-i-ai-chatgpt` for ChatGPT) and so its own `participant_id`; a person who runs
+  both appears as two ids on the sheet, and each id's rows are replaced independently.
+- To withdraw, send the `participant_id` from that folder's `config.json` (both, if both
+  entry points were shared) to whoever owns the sheet; they delete the rows. Nothing in
+  the sheet links the id to a person.
 
 ## Where it goes
 
@@ -60,3 +64,12 @@ A Google Sheet owned by the team, fronted by an Apps Script web app (`apps-scrip
 Anyone with the sheet link can read it, which is the point: the data is meant to be
 looked at together. Do not put anything in a paraphrase you would not want a teammate
 to read.
+
+## Skill, agent, and connector names
+
+These are shared as written. Built-in names say nothing, but a custom skill or a plugin
+prefix (`acme-delivery:client-decks`) can name an employer, a client, or a product, and a
+self-hosted connector is named whatever the person called it. When you walk the person
+through the preview, read the distinct skill, agent, and connector names out loud and ask
+whether any of them identify something they would rather not share. There is no
+per-name redaction yet; the choice today is share or do not share.

@@ -9,3 +9,4 @@ share-*.csv
 inbox/
 classify/
 *.zip
+error.log

@@ -1,6 +1,6 @@
 ---
 name: how-i-ai
-description: Show how a person actually uses AI, from their own session history. Reads Claude Code, Claude Desktop (Chat and Cowork), Codex, and the claude.ai and ChatGPT data exports on this machine for the last 30 days, grabs the first message of each session plus a little context, classifies every session (what for, and whether AI informed them or did the work), and renders a personal profile page in one of three designs. Optionally shares anonymized rows to a team sheet after showing exactly what would leave the machine. Use whenever someone asks "how do I use AI", wants an AI usage profile, "AI wrapped", "how-i-ai", a breakdown of their Claude or ChatGPT sessions, sessions per week, their biggest or most surprising AI use case, or wants to contribute to the team's AI usage aggregate.
+description: Show how a person actually uses AI, from their own session history of the last 30 days. Reads Claude Code and Cowork sessions on this machine, plus the Claude chat and cloud session lists and a claude.ai export when they are in the inbox (a separate ChatGPT entry point reads Codex and ChatGPT), grabs the first message of each session plus a little context, classifies every session (what for, and whether AI informed them or did the work), and renders a personal profile page. Optionally shares anonymized rows to a team sheet after showing exactly what would leave the machine. Use whenever someone asks "how do I use AI", wants an AI usage profile, "AI wrapped", "how-i-ai", a breakdown of their Claude or ChatGPT sessions, sessions per week, their biggest or most surprising AI use case, or wants to contribute to the team's AI usage aggregate.
 ---
 
 # how-i-ai
@@ -10,9 +10,14 @@ with plain Node scripts; the only judgment calls (what a session was for, a safe
 one-line paraphrase) are yours. Nothing leaves the machine unless the person says yes to
 a preview of the exact rows.
 
-`SKILL_DIR` below means the folder this file is in. Working files go in `~/how-i-ai`
-(override with `HOW_I_AI_DIR`). Every command is `node SKILL_DIR/scripts/how-i-ai.mjs <cmd>`
-and works the same on macOS, Windows, and Linux.
+`SKILL_DIR` below means the folder this file is in. Working files go in `~/how-i-ai`.
+Every command is `node SKILL_DIR/scripts/how-i-ai.mjs <cmd>` and works the same on macOS,
+Windows, and Linux.
+
+Steps 0 to 7 are the Claude entry point, which reads Claude sessions only. A run started
+from inside the ChatGPT desktop app is the other entry point; everything it does
+differently is in **The ChatGPT entry point** below, and nothing else in this file
+changes.
 
 ## 0. Setup
 
@@ -43,31 +48,42 @@ the person's name or email is stored.
 node SKILL_DIR/scripts/how-i-ai.mjs collect --days 30
 ```
 
-Read the source table it prints. It looks for, in order: Claude Code transcripts,
-Claude Desktop Chat and Cowork sessions, Codex sessions (and cloud tasks if the
-`codex` CLI is signed in), a cloud session list (see below), any export zips in
-`~/how-i-ai/inbox`, and whether the ChatGPT desktop app is installed. Details and paths
-per source: `references/sources.md`.
+Read the source table it prints. It looks for, in order: Claude Code transcripts, Cowork
+sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud session list
+(`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
+(`claude-chat-threads.json`). Each row counts the sessions kept, so the rows add up to the
+total. Details and paths per source: `references/sources.md`.
 
 Then handle what is missing:
 
-- **claude.ai chats and ChatGPT chats are not readable on disk.** ChatGPT's desktop app
-  encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the
-  Windows app keeps only a volatile partial cache; the collector reports the app as a
-  signal (installed, how many cached conversations, last used) and nothing more. Both
-  products need the official export:
-  claude.ai Settings → Privacy → Export data; ChatGPT Settings → Data controls → Export
-  data. Each emails a zip, usually within the hour, sometimes longer. Ask the person to
-  request both now, drop the zips into `~/how-i-ai/inbox` when they arrive, and tell you.
-  Do not wait: continue with what is on the machine and re-run collect when the zips
-  land (re-running is safe, everything dedupes by session id).
-- **Claude Code cloud sessions** (claude.ai/code) are not on disk either. If this
-  conversation is itself running in a cloud session and the `list_sessions` tool from
-  the Claude Code Remote server is available, page through it (`limit` 100, follow
-  `last_id`), collect the raw results into one JSON file at `~/how-i-ai/cloud-sessions.json`
-  (the array of session objects, or the `{"ccr":{"data":[...]}}` wrapper as returned),
-  and re-run collect. Only titles and timestamps are available for those, and that is
-  fine. If the tool is not available, say so once and move on.
+- **Claude chats and Claude Code cloud sessions are not on disk, and the surfaces that
+  hold them cannot run these scripts.** Each of those surfaces lists its own history and
+  hands the person one JSON file to download; they save it into `~/how-i-ai/inbox` and
+  collect picks it up. This is the normal route for both, and both are optional:
+  - `claude-chat-threads.json`: the "Claude chats" card on the landing page (or
+    `PROMPT-claude-chat.md` pasted into claude.ai Chat, web or desktop). Claude in Chat
+    mode lists the last 30 days with its `recent_chats` tool. Per chat it holds the url,
+    `updated_at`, the title, and a summary written by Claude; no first message, no
+    counts, no model. These become `claude-chat` sessions.
+  - `cloud-sessions.json`: the "Claude Code on the web" card (or `PROMPT-claude-cloud.md`
+    pasted into a claude.ai/code session). Claude there lists cloud sessions with the
+    Claude Code Remote `list_sessions` tool. Per session it holds the id, title, two
+    timestamps, environment, origin, tags, model, and a short status summary; no message
+    text. Remote Control mirrors of local sessions (`environment_kind` `bridge`) are in
+    the list too and are skipped. If this conversation is itself a cloud session and you
+    have `list_sessions`, follow `PROMPT-claude-cloud.md` and write the file into the
+    inbox yourself.
+  When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
+  missing, mention the two cards once and continue; do not block on them. Cowork and
+  local Claude Code do not have either tool.
+- **The claude.ai export is an optional top-up.** Do not ask for one by default. Offer it
+  when the person wants real first messages and message counts for their chats (the chat
+  listing has only Claude's summaries), or when `recent_chats` is unavailable to them.
+  Settings → Privacy → Export data, zip into `~/how-i-ai/inbox`. It is emailed, usually
+  within the hour, sometimes longer. Do not wait: continue with what is on the machine and
+  re-run collect when the zip lands (re-running is safe: everything dedupes by session id
+  and judgments already merged are kept). An export wins over a listing file for the same
+  conversation.
 - **A source shows found but 0 sessions**: run
   `node SKILL_DIR/scripts/how-i-ai.mjs inspect "<one file from that folder>"` to see its
   key structure (no values are printed), then adapt the matching parser in
@@ -133,22 +149,18 @@ Run `stats` again so the words land in `profile.json`.
 
 ## 5. Render the profile
 
-Three designs live in `SKILL_DIR/templates`. Ask which one they want, or render all
-three; they are cheap:
-
 ```
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-wrapped.html   --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-wrapped.html
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-editorial.html --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-editorial.html
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-terminal.html  --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-terminal.html
+node SKILL_DIR/scripts/how-i-ai.mjs render
 ```
 
-- `wrapped`: year-in-review story cards with a final share card
-- `editorial`: annual-report typography, prints well
-- `terminal`: dark monospace dashboard
+writes `~/how-i-ai/how-i-ai.html`: the wrapped design, year-in-review story cards with a
+final share card. Open it (`open <file>` on macOS, `start "" <file>` on Windows,
+`xdg-open` on Linux). The page is self-contained and works offline. If you can publish
+an Artifact, offer that too; it is the same HTML.
 
-Open the result (`open <file>` on macOS, `start "" <file>` on Windows, `xdg-open` on
-Linux). Pages are self-contained and work offline. If you can publish an Artifact, offer
-that too; it is the same HTML.
+Two other designs sit in `SKILL_DIR/templates` (`profile-editorial.html`,
+`profile-terminal.html`). Render one only if the person asks:
+`render --template <file> --out ~/how-i-ai/how-i-ai-editorial.html`.
 
 ## 6. Share, only with a yes
 
@@ -162,8 +174,7 @@ deciding:
    ```
    Say in one line what it answers: biggest use case, surprise use case, sessions per
    week and their distribution, ask/make/do by function, top skills and custom agents.
-   (The same page is hosted at
-   the project's landing page under `examples/`.)
+   The same page is on the landing page under `examples/`.
 2. **Exactly what leaves the machine.**
    ```
    node SKILL_DIR/scripts/how-i-ai.mjs share preview
@@ -183,7 +194,8 @@ node SKILL_DIR/scripts/how-i-ai.mjs share send
 The endpoint comes from `SKILL_DIR/team.json` (`share_url`). If it is empty the command
 refuses; the team owner sets it up per `apps-script/README.md`. Re-running replaces that
 participant's earlier rows, so re-sharing after new exports arrive is fine. To withdraw,
-the person sends their `participant_id` (in `~/how-i-ai/config.json`) to the sheet owner.
+the person sends the `participant_id` from this folder's `~/how-i-ai/config.json` to the
+sheet owner; the other entry point has its own id and is withdrawn separately.
 
 ## 7. The team report (whoever owns the sheet)
 
@@ -196,6 +208,30 @@ Read `~/how-i-ai/aggregate.json`, write `~/how-i-ai/aggregate-narrative.json` (`
 render `templates/aggregate-boardroom.html` (leadership readout) or
 `templates/aggregate-exhibit.html` (poster for the team meeting) the same way as step 5.
 
+## The ChatGPT entry point
+
+A run started from inside the ChatGPT desktop app (`PROMPT-chatgpt-app.md`) reads Codex and
+ChatGPT sources only. Follow steps 0 to 7 with four changes, and nothing else:
+
+1. Put `--app chatgpt` right after `how-i-ai.mjs` in every command:
+   `node SKILL_DIR/scripts/how-i-ai.mjs --app chatgpt <cmd>`.
+2. Read `~/how-i-ai-chatgpt` wherever this file says `~/how-i-ai`. It is a separate working
+   folder with its own `config.json`, so this run has its own `participant_id` on the team
+   sheet and is withdrawn separately.
+3. In step 2, collect looks for Codex sessions, Codex cloud tasks (when a signed-in `codex`
+   binary is on PATH or inside the ChatGPT desktop app), `chatgpt-app-threads.json` and a
+   ChatGPT export zip in `~/how-i-ai-chatgpt/inbox`, and whether the ChatGPT desktop app is
+   installed.
+4. ChatGPT conversations are not readable on disk: the app encrypts its cache with a
+   Keychain key only OpenAI-signed apps can read, and the Windows app keeps only a volatile
+   partial cache, so the collector reports the app as a signal (installed, how many cached
+   conversations, last used) and nothing more. The content comes from the agent inside the
+   app, which writes `chatgpt-app-threads.json` per `PROMPT-chatgpt-app.md`; chatgpt.com has
+   no tool that lists conversations, so there is no web route to that file. The ChatGPT
+   export (Settings → Data controls → Export data, zip into `~/how-i-ai-chatgpt/inbox`) is
+   the optional top-up, worth offering above ~50 conversations in the window, above ~50
+   turns in a conversation, or without the desktop app.
+
 ## Rules
 
 - Never print or paste a person's raw prompts into anything that leaves the machine:
@@ -206,3 +242,7 @@ render `templates/aggregate-boardroom.html` (leadership readout) or
   upload them, or attach them anywhere.
 - If a parser needed adapting, say what changed. If a source could not be read, say
   which one and why in the final summary, next to the numbers that did work.
+- If the person also uses the other product (ChatGPT and Codex from the Claude entry
+  point, Claude from the ChatGPT one), tell them once, at the end, to run the other entry
+  point from that tool: `PROMPT-chatgpt-app.md` inside the ChatGPT desktop app, `PROMPT.md`
+  in Claude.

@@ -16,60 +16,171 @@ const iso = (d) => d.toISOString();
 // ---- Claude Code ----
 const projects = D(join(dir, '.claude', 'projects', '-Users-me-work-app'));
 function ccSession(id, start, prompt, tools, opts = {}) {
-  const lines = [];
+  const lines = [...(opts.parentLines || [])]; // a forked session starts with its parent's records, parent sessionId and all
   const t0 = start.getTime();
+  const dir = opts.dir || projects;
   lines.push({ type: 'ai-title', aiTitle: opts.title || 'Session ' + id, sessionId: id });
   lines.push({ parentUuid: null, isSidechain: false, type: 'user', message: { role: 'user', content: prompt }, uuid: id + '-1', timestamp: iso(new Date(t0)), origin: { kind: opts.origin || 'human' }, entrypoint: opts.entrypoint || 'cli', cwd: '/Users/me/work/app', sessionId: id, version: '2.1.270', gitBranch: 'main' });
   let i = 2;
   for (const tool of tools) {
-    const input = tool === 'Skill' ? { skill: opts.skill || 'code-review' } : tool === 'Agent' ? { subagent_type: opts.agent || 'general-purpose', prompt: 'x' } : {};
+    // subagent_type is optional on the real Agent tool (omitted = general-purpose)
+    const input = tool === 'Skill' ? { skill: opts.skill || 'code-review' } : tool === 'Agent' ? { ...(opts.agent ? { subagent_type: opts.agent } : {}), description: 'x', prompt: 'x' } : {};
     lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + i, role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'tool_use', id: 'tu' + i, name: tool, input }] }, uuid: id + '-' + i, timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
     lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu' + i, content: 'ok' }] }, uuid: id + '-' + (i + 1), timestamp: iso(new Date(t0 + i * 60e3 + 5e3)), cwd: '/Users/me/work/app', sessionId: id });
     i += 2;
   }
   lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + 'z', role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'text', text: 'Done.' }] }, uuid: id + '-z', timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
   if (opts.second) lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: opts.second }, uuid: id + '-s', timestamp: iso(new Date(t0 + (i + 1) * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
-  writeFileSync(join(projects, id + '.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  // Background-task notifications are user-role records with origin.kind "task-notification"; not a human turn.
+  if (opts.notification) lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: '<task-notification>\n<task-id>t1</task-id>\n<status>completed</status>\n<summary>Agent finished</summary>\n</task-notification>' }, origin: { kind: 'task-notification' }, promptSource: 'system', uuid: id + '-n', timestamp: iso(new Date(t0 + (i + 2) * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
+  writeFileSync(join(dir, id + '.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  return lines;
 }
-ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'Skill', 'Agent', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: '<command-name>/simplify</command-name>\n<command-message>simplify</command-message>', skill: 'code-review', agent: 'evidence-researcher' });
+// slash command as text blocks (seen on real data next to the plain-string shape)
+ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'Skill', 'Agent', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: [{ type: 'text', text: '<command-name>/simplify</command-name>\n<command-message>simplify</command-message>' }], skill: 'code-review', agent: 'evidence-researcher', notification: true });
 ccSession('aaaa-2', daysAgo(5, 14), '<command-name>/clear</command-name>', [], {});
 ccSession('aaaa-3', daysAgo(5, 15), 'Why does this test pass locally but fail in CI? Here is the log: ...', ['Bash', 'Grep'], { entrypoint: 'desktop' });
 ccSession('aaaa-4', daysAgo(1, 7), 'Nightly: review open PRs and summarize', ['Bash', 'mcp__github__list_pull_requests'], { origin: 'routine', entrypoint: 'remote_web' });
 ccSession('aaaa-5', daysAgo(45, 11), 'Old session outside the window', ['Read'], {});
 ccSession('aaaa-6', daysAgo(3, 22), 'Explain how OAuth refresh tokens work, I am a designer', [], { title: 'OAuth explained' });
+// Desktop scheduled task: origin.kind is "human"; the <scheduled-task> wrapper and the state file's scheduledTaskId are the tell.
+ccSession('aaaa-7', daysAgo(1, 6), '<scheduled-task name="morning-brief" file="/Users/me/.claude/scheduled-tasks/morning-brief/SKILL.md">\nSummarize what changed in the repo since yesterday\n</scheduled-task>', ['Bash', 'Agent'], { entrypoint: 'claude-desktop' });
+// Fork: the file is named for the new session and replays the parent's records first.
+const parentLines = ccSession('aaaa-8', daysAgo(4, 9), 'Sketch two approaches for the billing migration', ['Read']);
+ccSession('aaaa-9', daysAgo(4, 10), 'Go with the second approach and draft the plan', ['Write'], { parentLines });
+// Resume copy: same conversation re-stamped with a new sessionId, message uuids unchanged; the longer copy wins.
+{
+  const orig = ccSession('aaaa-11', daysAgo(6, 9), 'Draft the quarterly investor update from these notes', ['Read', 'Write']);
+  const copy = orig.map((l) => ({ ...l, sessionId: 'aaaa-12' }));
+  copy.push({ isSidechain: false, type: 'user', message: { role: 'user', content: 'Tighten the intro' }, uuid: 'aaaa-12-more', timestamp: iso(daysAgo(5, 9)), cwd: '/Users/me/work/app', sessionId: 'aaaa-12' });
+  writeFileSync(join(projects, 'aaaa-12.jsonl'), copy.map((l) => JSON.stringify(l)).join('\n') + '\n');
+}
+// headless connectivity ping (entrypoint sdk-cli, one word, no tools): not a session
+ccSession('aaaa-10', daysAgo(3, 8), 'Hello', [], { entrypoint: 'sdk-cli' });
 // sidechain file must be ignored
 writeFileSync(join(projects, 'agent-xyz.jsonl'), JSON.stringify({ isSidechain: true, type: 'user', message: { role: 'user', content: 'subagent prompt' }, timestamp: iso(daysAgo(2)), sessionId: 'aaaa-1' }) + '\n');
 
 // ---- Claude Desktop (Chat + Cowork) ----
 const appData = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Claude') : join(dir, 'Library', 'Application Support', 'Claude');
 const lam = D(join(appData, 'local-agent-mode-sessions', 'acct_123', 'org_456'));
-function desktopSession(id, start, kind, title, prompts, tools = []) {
+// Unverified guess at a Chat state file (messages inline). Real machines so far hold only Cowork sessions here;
+// kept so the tolerant fallback stays covered.
+function legacyDesktopSession(id, start, kind, title, prompts) {
   const state = { id, title, createdAt: iso(start), updatedAt: iso(new Date(start.getTime() + 20 * 60e3)), sessionType: kind, messages: prompts.flatMap((p, i) => [{ role: 'user', content: p, createdAt: iso(new Date(start.getTime() + i * 120e3)) }, { role: 'assistant', content: [{ type: 'text', text: 'Sure.' }] }]) };
   writeFileSync(join(lam, `local_${id}.json`), JSON.stringify(state, null, 1));
-  const wd = D(join(lam, id));
-  writeFileSync(join(wd, 'audit.jsonl'), tools.map((t, i) => JSON.stringify({ seq: i, event: 'tool_invocation', tool: t, ts: iso(start), hmac: 'x' })).join('\n') + '\n');
 }
-desktopSession('d1', daysAgo(4, 11), 'chat', 'Critique onboarding screens', ['Critique these onboarding screens for clarity and hierarchy', 'Now check contrast against WCAG AA']);
-desktopSession('d2', daysAgo(6, 16), 'cowork', 'Interview synthesis', ['Read the 12 interview transcripts in this folder and cluster them into themes'], ['Read', 'Write', 'Google Drive']);
-desktopSession('d3', daysAgo(0, 8), 'chat', 'Birthday party', ["Help me plan my 6 year old's birthday party for 12 kids on a $300 budget"]);
+// Real Cowork shape (macOS, September 2026): metadata-only state file; transcript in the working dir's own
+// .claude/projects as Claude Code JSONL named <cliSessionId>.jsonl; audit.jsonl is the SDK message stream.
+function coworkSession(id, start, title, prompt, tools, { transcript = true, skill = null } = {}) {
+  const sessionId = `local_${id}`, cli = `cli-${id}`, wd = D(join(lam, sessionId)), cwd = join(wd, 'outputs');
+  const t0 = start.getTime();
+  const state = { sessionId, processName: 'brave-tender-newton', cliSessionId: cli, cwd, userSelectedFolders: [], createdAt: t0, lastActivityAt: t0 + 20 * 60e3, model: 'claude-sonnet-4-6', isArchived: false, title, vmProcessName: 'brave-tender-newton', hostLoopMode: true, initialMessage: prompt, slashCommands: [], enabledMcpTools: {}, remoteMcpServersConfig: [{ uuid: '11111111-2222-4333-8444-555555555555', name: 'Google Drive', tools: [] }], egressAllowedDomains: [], memoryEnabled: true, skillsEnabled: true, pluginsEnabled: true, systemPrompt: 'never read this', accountName: 'Test Person', emailAddress: 'test.person@example.com' };
+  writeFileSync(join(lam, `${sessionId}.json`), JSON.stringify(state, null, 1));
+  D(join(wd, 'outputs')); D(join(wd, 'uploads'));
+  const stamp = (r, ms) => ({ ...r, session_id: cli, timestamp: iso(new Date(t0 + ms)), _audit_timestamp: iso(new Date(t0 + ms)), _audit_hmac: 'x'.repeat(64) });
+  const audit = [
+    stamp({ type: 'user', uuid: 'u0', parent_tool_use_id: null, client_platform: 'desktop_app', message: { role: 'user', content: prompt } }, 0),
+    stamp({ type: 'user', uuid: 'u0', parent_tool_use_id: null, isReplay: true, message: { role: 'user', content: prompt } }, 1),
+    stamp({ type: 'system', subtype: 'init', cwd, tools: tools, mcp_servers: [], model: 'claude-sonnet-4-6', permissionMode: 'default', slash_commands: [], agents: [], skills: [], plugins: [], uuid: 's0' }, 2),
+    ...tools.flatMap((t, i) => [
+      stamp({ type: 'assistant', uuid: 'a' + i, parent_tool_use_id: null, request_id: 'req', message: { model: 'claude-sonnet-4-6', id: 'msg_' + id + i, type: 'message', role: 'assistant', content: [{ type: 'tool_use', id: 'tu' + i, name: t, input: t === 'Skill' ? { skill } : {}, caller: { type: 'direct' } }] } }, (i + 1) * 60e3),
+      stamp({ type: 'user', uuid: 'r' + i, parent_tool_use_id: null, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu' + i, content: 'ok' }] } }, (i + 1) * 60e3 + 5e3),
+    ]),
+    ...(skill ? [stamp({ type: 'user', uuid: 'syn', parent_tool_use_id: null, isSynthetic: true, message: { role: 'user', content: [{ type: 'text', text: 'Base directory for this skill: ...' }] } }, 30e3)] : []),
+    stamp({ type: 'assistant', uuid: 'sub', parent_tool_use_id: 'tu0', message: { model: 'claude-haiku-4-5', id: 'msg_sub', role: 'assistant', content: [{ type: 'tool_use', id: 'tus', name: 'SubagentOnlyTool', input: {} }] } }, 90e3),
+    stamp({ type: 'result', subtype: 'success', is_error: false, num_turns: tools.length + 1, result: 'Done.', origin: { kind: 'human' }, uuid: 'res' }, 19 * 60e3),
+  ];
+  writeFileSync(join(wd, 'audit.jsonl'), audit.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  if (transcript) {
+    const enc = D(join(wd, '.claude', 'projects', '-sessions-' + id + '-outputs'));
+    ccSession(cli, start, prompt, tools, { dir: enc, entrypoint: 'local-agent', skill, title: 'ai title, state title wins' });
+    D(join(enc, cli, 'subagents')); writeFileSync(join(enc, cli, 'subagents', 'agent-a1.jsonl'), JSON.stringify({ isSidechain: true, type: 'user', message: { role: 'user', content: 'subagent prompt' }, timestamp: iso(start), sessionId: cli }) + '\n');
+  }
+}
+legacyDesktopSession('d1', daysAgo(4, 11), 'chat', 'Critique onboarding screens', ['Critique these onboarding screens for clarity and hierarchy', 'Now check contrast against WCAG AA']);
+// claude.ai connectors are mcp__<uuid>__tool in transcripts; remoteMcpServersConfig in the state file maps uuid → name
+coworkSession('d2', daysAgo(6, 16), 'Interview synthesis', 'Read the 12 interview transcripts in this folder and cluster them into themes', ['Read', 'Write', 'Skill', 'mcp__11111111-2222-4333-8444-555555555555__search_files'], { skill: 'research-synthesis' });
+// transcript already cleaned up: state file + audit.jsonl only
+coworkSession('d3', daysAgo(0, 8), 'Birthday party', "Help me plan my 6 year old's birthday party for 12 kids on a $300 budget", ['WebSearch', 'Write'], { transcript: false });
+writeFileSync(join(lam, 'scheduled-tasks.json'), JSON.stringify({ scheduledTasks: [], recordedSkips: {} }));
+
+// Desktop "Code" tab: state files only; transcripts are the ~/.claude/projects files above, so nothing here may be counted twice.
+const ccs = D(join(appData, 'claude-code-sessions', 'acct_123', 'org_456'));
+writeFileSync(join(ccs, 'local_code3.json'), JSON.stringify({ sessionId: 'local_code3', cliSessionId: 'aaaa-3', cwd: '/Users/me/work/app', originCwd: '/Users/me/work/app', createdAt: daysAgo(5, 15).getTime(), lastActivityAt: daysAgo(5, 16).getTime(), model: 'claude-opus-4-1', isArchived: false, title: 'CI failure', titleSource: 'auto', permissionMode: 'default' }));
+writeFileSync(join(ccs, 'local_code7.json'), JSON.stringify({ sessionId: 'local_code7', cliSessionId: 'aaaa-7', cwd: '/Users/me/work/app', originCwd: '/Users/me/work/app', createdAt: daysAgo(1, 6).getTime(), lastActivityAt: daysAgo(1, 6).getTime(), model: 'claude-opus-4-1', isArchived: false, title: 'Morning brief', scheduledTaskId: 'morning-brief', permissionMode: 'auto' }));
 
 // ---- Codex ----
 const codexDir = D(join(dir, '.codex', 'sessions', '2026', '09', '10'));
-function codexSession(id, start, prompt, tools) {
+function codexSession(id, start, prompt, tools, { args = '{}', threadSource = null } = {}) {
   const t0 = start.getTime();
   const lines = [
-    { timestamp: iso(start), type: 'session_meta', payload: { id, timestamp: iso(start), cwd: '/Users/me/work/api', originator: 'codex_cli_rs', cli_version: '0.140.0', instructions: null } },
+    { timestamp: iso(start), type: 'session_meta', payload: { id, timestamp: iso(start), cwd: '/Users/me/work/api', originator: 'codex_cli_rs', cli_version: '0.140.0', instructions: null, ...(threadSource ? { thread_source: threadSource } : {}) } },
     { timestamp: iso(start), type: 'turn_context', payload: { cwd: '/Users/me/work/api', model: 'gpt-5-codex', approval_policy: 'on-request' } },
     { timestamp: iso(start), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: '<environment_context>cwd=/x</environment_context>' }] } },
     { timestamp: iso(start), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: prompt }] } },
     { timestamp: iso(start), type: 'event_msg', payload: { type: 'user_message', message: prompt } },
-    ...tools.map((t, i) => ({ timestamp: iso(new Date(t0 + (i + 1) * 30e3)), type: 'response_item', payload: { type: 'function_call', name: t, arguments: '{}', call_id: 'c' + i } })),
+    ...tools.map((t, i) => ({ timestamp: iso(new Date(t0 + (i + 1) * 30e3)), type: 'response_item', payload: { type: 'function_call', name: t, arguments: args, call_id: 'c' + i } })),
     { timestamp: iso(new Date(t0 + 300e3)), type: 'event_msg', payload: { type: 'agent_message', message: 'Done.' } },
   ];
   writeFileSync(join(codexDir, `rollout-2026-09-10T10-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
+// Desktop app build (0.155, September 2026): no user_message event; prompt is an item_completed UserMessage, injected
+// context shares the user role, shell, MCP and web search go through custom_tool_call "exec"; what ran is on the
+// item_completed items. A skill is used by reading its SKILL.md from a skills root (CommandExecution parsed_cmd
+// { type: 'read', name: 'SKILL.md', path }); a plugin shows as McpToolCall.pluginId "<plugin>@<marketplace>".
+function codexDesktopSession(id, start, prompt, threadName) {
+  const t0 = start.getTime(); const at = (ms) => iso(new Date(t0 + ms)); let n = 0;
+  const rec = (ms, type, payload) => ({ timestamp: at(ms), ordinal: n++, type, payload });
+  const meta = (kinds) => ({ turn_id: 't1', content_item_kinds: kinds });
+  const cmd = (ms, itemId, command, parsed_cmd) => rec(ms, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'CommandExecution', id: itemId, process_id: 'p1', command, cwd: '/Users/me/Documents/Codex/x', parsed_cmd, source: 'unified_exec_startup', status: 'completed', stdout: '', stderr: '', aggregated_output: 'ok', exit_code: 0, duration: { secs: 0, nanos: 1 }, formatted_output: 'ok' } });
+  const lines = [
+    rec(0, 'session_meta', { session_id: id, id, timestamp: at(0), cwd: '/Users/me/Documents/Codex/x', originator: 'Codex Desktop', cli_version: '0.155.0-alpha.9.2', source: 'vscode', thread_source: 'user', model_provider: 'openai', base_instructions: { text: '...' } }),
+    rec(0, 'event_msg', { type: 'task_started', turn_id: 't1', started_at: t0 / 1000 }),
+    rec(1, 'response_item', { type: 'message', role: 'developer', content: [{ type: 'input_text', text: '<app-context>...</app-context>' }], internal_chat_message_metadata_passthrough: meta(['generic.developer_instructions']) }),
+    rec(2, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: '<recommended_plugins>...</recommended_plugins>' }, { type: 'input_text', text: '<environment_context>cwd=/x</environment_context>' }], internal_chat_message_metadata_passthrough: meta(['plugins.recommendations', 'environments.environment_context']) }),
+    rec(3, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: prompt }], internal_chat_message_metadata_passthrough: meta(['user.text']) }),
+    rec(3, 'world_state', { full: true, state: { model: 'gpt-6' } }),
+    rec(3, 'turn_context', { turn_id: 't1', cwd: '/Users/me/Documents/Codex/x', model: 'gpt-6', effort: 'medium' }),
+    rec(4, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'UserMessage', id: 'i1', client_id: 'c1', content: [{ type: 'text', text: prompt, text_elements: [] }] } }),
+    rec(30e3, 'response_item', { type: 'custom_tool_call', id: 'ctc1', status: 'completed', call_id: 'call1', name: 'exec', input: '...' }),
+    rec(31e3, 'response_item', { type: 'custom_tool_call_output', call_id: 'call1', output: 'ok' }),
+    rec(32e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'McpToolCall', id: 'i2', server: 'notion', tool: 'search', arguments: {}, pluginId: 'notes-kit@example-market', status: 'completed', result: {}, duration: { secs: 1, nanos: 0 } } }),
+    cmd(40e3, 'i4', "sed -n '1,200p' /Users/me/.codex/skills/.system/meeting-notes/SKILL.md", [{ type: 'read', cmd: 'sed ...', name: 'SKILL.md', path: '/Users/me/.codex/skills/.system/meeting-notes/SKILL.md' }]),
+    cmd(42e3, 'i5', 'cat /Users/me/.codex/plugins/cache/example-market/notes-kit/1.2.3/skills/action-items/SKILL.md && ls', [{ type: 'unknown', cmd: 'cat ... && ls' }]),
+    // a SKILL.md inside the person's project is a file being worked on, not a skill in use
+    cmd(44e3, 'i6', 'cat /Users/me/work/secret-project/skills/not-a-skill/SKILL.md', [{ type: 'read', cmd: 'cat ...', name: 'SKILL.md', path: '/Users/me/work/secret-project/skills/not-a-skill/SKILL.md' }]),
+    rec(46e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'Extension', kind: 'web.search', id: 'i7', query: 'q', action: { type: 'search', query: 'q' }, results: [] } }),
+    rec(60e3, 'response_item', { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'Done.' }] }),
+    rec(60e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'AgentMessage', id: 'i3', content: [{ type: 'Text', text: 'Done.' }], phase: 'final' } }),
+    rec(61e3, 'event_msg', { type: 'task_complete', turn_id: 't1' }),
+  ];
+  writeFileSync(join(codexDir, `rollout-2026-09-10T11-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  writeFileSync(join(dir, '.codex', 'session_index.jsonl'), JSON.stringify({ id, thread_name: threadName, updated_at: at(61e3) }) + '\n');
+}
+// sub-agent rollout (automatic review of the parent thread): must be ignored
+writeFileSync(join(codexDir, 'rollout-2026-09-10T11-05-00-c3-review.jsonl'), [
+  { timestamp: iso(daysAgo(1, 12)), type: 'session_meta', payload: { id: 'c3-review', parent_thread_id: 'c3', timestamp: iso(daysAgo(1, 12)), cwd: '/x', originator: 'Codex Desktop', source: { subagent: { kind: 'review' } }, thread_source: 'guardian_review' } },
+  { timestamp: iso(daysAgo(1, 12)), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Review the following transcript ...' }] } },
+].map((l) => JSON.stringify(l)).join('\n') + '\n');
+codexDesktopSession('c3', daysAgo(1, 12), 'Find the meeting notes from last week and list the open action items', 'Open action items');
 codexSession('c1', daysAgo(9, 10), 'Migrate the users endpoint from REST to gRPC and keep the tests green', ['shell', 'apply_patch']);
-codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell']);
+// CLI build: the skill read is only visible in the shell call's arguments
+codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell'], { args: JSON.stringify({ command: ['bash', '-lc', 'cat ~/.agents/skills/pr-labels/SKILL.md'] }) });
+// Scheduled tasks (automations). Two signals, neither seen on a real machine yet: session_meta.thread_source, and the
+// thread id listed in the desktop app's sqlite/codex-dev.db (automation_runs.thread_id, automations.target_thread_id).
+codexSession('c4', daysAgo(2, 6), 'Summarize new issues filed since yesterday', ['shell'], { threadSource: 'automation' });
+codexSession('c5', daysAgo(3, 6), 'Check the nightly build and report failures', ['shell']);
+{
+  const sqlite = typeof process.getBuiltinModule === 'function' ? process.getBuiltinModule('node:sqlite') : null;
+  if (sqlite) {
+    const db = new sqlite.DatabaseSync(join(D(join(dir, '.codex', 'sqlite')), 'codex-dev.db'));
+    db.exec("CREATE TABLE automations (id TEXT PRIMARY KEY, name TEXT, prompt TEXT, status TEXT, target_thread_id TEXT)");
+    db.exec("CREATE TABLE automation_runs (thread_id TEXT PRIMARY KEY, automation_id TEXT, status TEXT, thread_title TEXT, created_at INTEGER)");
+    db.prepare('INSERT INTO automations VALUES (?,?,?,?,?)').run('auto1', 'SECRET AUTOMATION NAME', 'SECRET AUTOMATION PROMPT', 'ACTIVE', null);
+    db.prepare('INSERT INTO automation_runs VALUES (?,?,?,?,?)').run('c5', 'auto1', 'DONE', 'SECRET RUN TITLE', Math.floor(now / 1000));
+    db.close();
+  }
+}
 
 // ---- exports in the inbox ----
 const inbox = D(join(dir, 'how-i-ai', 'inbox'));
@@ -95,18 +206,42 @@ const claude = [
   { uuid: 'k1', name: 'Roadmap tradeoffs', created_at: iso(daysAgo(7, 15)), updated_at: iso(daysAgo(7, 16)), chat_messages: [{ uuid: 'm1', sender: 'human', text: 'Weigh these three roadmap bets against our retention goal', created_at: iso(daysAgo(7, 15)), content: [{ type: 'text', text: 'Weigh these three roadmap bets against our retention goal' }] }, { uuid: 'm2', sender: 'assistant', text: 'Bet one...', created_at: iso(daysAgo(7, 15)), content: [{ type: 'text', text: 'Bet one...' }] }] },
   { uuid: 'k2', name: 'Landlord note', created_at: iso(daysAgo(11, 21)), updated_at: iso(daysAgo(11, 21)), chat_messages: [{ uuid: 'm3', sender: 'human', text: 'Draft a polite note to my landlord about the broken heater', created_at: iso(daysAgo(11, 21)) }, { uuid: 'm4', sender: 'assistant', text: 'Dear...', created_at: iso(daysAgo(11, 21)), content: [{ type: 'tool_use', name: 'artifacts' }] }] },
 ];
-writeFileSync(join(inbox, 'chatgpt-export.zip'), zip([['conversations.json', JSON.stringify(chatgpt)], ['user.json', '{}']], true));
+const gptInbox = D(join(dir, 'how-i-ai-chatgpt', 'inbox'));
+writeFileSync(join(gptInbox, 'chatgpt-export.zip'), zip([['conversations.json', JSON.stringify(chatgpt)], ['user.json', '{}']], true));
 writeFileSync(join(inbox, 'claude-export.zip'), zip([['data-2026/conversations.json', JSON.stringify(claude)], ['data-2026/projects.json', '[]']], false));
+
+// ---- ChatGPT conversations as written by the agent inside the ChatGPT desktop app (PROMPT-chatgpt-app.md)
+writeFileSync(join(gptInbox, 'chatgpt-app-threads.json'), JSON.stringify({ source: 'chatgpt-app', exported_at: iso(new Date()), threads: [
+  { id: 'app1', kind: 'chatgpt', title: 'Offsite agenda', created_at: iso(daysAgo(2, 15)), updated_at: iso(daysAgo(2, 16)), first_message: 'Draft an agenda for a two day team offsite focused on planning', second_message: 'Make day two lighter', messages_user: 2, messages_assistant: 2, model: 'gpt-6', tools: [] },
+  { id: 'g1', kind: 'chatgpt', title: 'Draft PRD for transfer alerts', created_at: daysAgo(3, 12).getTime() / 1000, updated_at: daysAgo(3, 12).getTime() / 1000 + 900, first_message: 'same conversation as the export, must not be counted twice' },
+  { id: 'app2', kind: 'chatgpt', title: 'Long thread, opening not reached', created_at: daysAgo(5, 9).getTime() / 1000, updated_at: daysAgo(1, 9).getTime() / 1000, first_message: '', second_message: '', messages_user: null, messages_assistant: null, model: null, tools: [] },
+  { id: 'c3', kind: 'codex', title: 'a local codex thread, already read from its rollout', created_at: iso(daysAgo(1, 12)), first_message: 'skip me' },
+] }));
+// A codex binary that is not on PATH, where the ChatGPT app keeps it (Windows path is a guess at the same layout).
+{
+  const bin = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Programs', 'ChatGPT', 'resources', 'codex.exe') : join(dir, 'Applications', 'ChatGPT.app', 'Contents', 'Resources', 'codex');
+  D(join(bin, '..'));
+  writeFileSync(bin, `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "codex-cli 0.0.0-test"; exit 0; fi\necho '${JSON.stringify({ tasks: [{ id: 'task_cloud1', title: 'Bump dependencies and fix the lockfile', summary: 'Opened a PR', created_at: iso(daysAgo(2, 10)), updated_at: iso(daysAgo(2, 11)), environment_label: 'org/repo', is_review: false }], cursor: null })}'\n`, { mode: 0o755 });
+}
 
 // ---- ChatGPT desktop app cache (encrypted on macOS, so only counted)
 const gptRoot = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Packages', 'OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0', 'LocalCache', 'Roaming', 'ChatGPT', 'IndexedDB', 'https_chatgpt.com_0.indexeddb.leveldb') : join(dir, 'Library', 'Application Support', 'com.openai.chat', 'conversations-v3-1111');
 D(gptRoot); writeFileSync(join(gptRoot, plat === 'win32' ? '000003.log' : 'abc.data'), Buffer.from([1, 2, 3, 4]));
 
-// ---- cloud sessions list (as exported from inside a claude.ai/code session) ----
-writeFileSync(join(dir, 'how-i-ai', 'cloud-sessions.json'), JSON.stringify({ ccr: { data: [
-  { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'web', environment_kind: 'anthropic_cloud', session_context: { model: 'claude-opus-4-1' } },
-  { id: 'session_bridge1', title: 'mirror of a local session', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), origin: 'claude_code_cli', environment_kind: 'bridge' },
-] } }));
+// ---- cloud sessions list, as handed over by Claude inside a claude.ai/code session (PROMPT-claude-cloud.md) ----
+writeFileSync(join(inbox, 'cloud-sessions.json'), JSON.stringify({ source: 'claude-cloud', exported_at: iso(new Date()), data: [
+  { id: 'session_cloud1', title: 'Fix flaky CI on the api repo', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), environment_kind: 'anthropic_cloud', origin: 'web', tags: [], configured_model: 'claude-opus-4-1', session_context: { model: 'claude-opus-4-1' }, post_turn_summary: { status_detail: 'Retry added to the integration suite; all checks green', recent_action: 'Opened a pull request' } },
+  { id: 'session_bridge1', title: 'mirror of a local session', created_at: iso(daysAgo(2, 13)), updated_at: iso(daysAgo(2, 14)), environment_kind: 'bridge', origin: 'claude_code_cli', tags: [], configured_model: null },
+] }));
+
+// ---- Claude chats as listed by Claude in Chat mode (PROMPT-claude-chat.md): summaries, one timestamp, no counts ----
+const claudeChats = { source: 'claude-chat', exported_at: iso(new Date()), chats: [
+  { url: 'https://claude.ai/chat/k1', updated_at: iso(daysAgo(7, 16)), title: 'Roadmap tradeoffs', summary: 'same chat as the export, must not be counted twice' },
+  { url: 'https://claude.ai/chat/0b5f7c1e-3d2a-4e61-9a77-5c1d2e3f4a5b', updated_at: iso(daysAgo(4, 11)), title: 'Pricing page critique', summary: 'The person asked for a critique of a pricing page layout and Claude suggested a clearer plan comparison.' },
+  { url: 'https://claude.ai/chat/9e8d7c6b-5a49-4382-b716-0f1e2d3c4b5a', updated_at: iso(daysAgo(45, 11)), title: 'Old chat', summary: 'too old to count' },
+] };
+writeFileSync(join(inbox, 'claude-chat-threads.json'), JSON.stringify(claudeChats));
+writeFileSync(join(gptInbox, 'claude-chat-threads.json'), JSON.stringify(claudeChats)); // wrong inbox: the ChatGPT entry point must not read it
 
 console.log(`fake ${plat} home at ${dir}`);
 

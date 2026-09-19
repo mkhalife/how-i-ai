@@ -38,7 +38,24 @@ Edge cases:
   real ask: classify from the context.
 - Scheduled or routine sessions: classify the job the routine does (a nightly PR review
   is Review & explain code).
-- Only a title is available (cloud sessions): classify from the title, lower confidence.
+- Only a title and a short status summary are available (Claude and Codex cloud sessions,
+  and a ChatGPT thread whose opening the in-app agent could not reach): classify from
+  those, lower confidence.
+- `claude-chat` sessions: the text is Claude's summary of the conversation, not the
+  person's words. Classify from it at confidence 0.6 to 0.7, and still write your own
+  paraphrase.
+- Desktop scheduled tasks (`trigger: scheduled`): the first message opens with the same
+  harness preamble on every run ("This is an automated run of a scheduled task…"). Skip
+  it; the title and the tools say what the task does. Every run of one task gets the
+  same category, subcategory, and paraphrase.
+- Continuations: forked or resumed sessions often open mid-thought ("done", "make a PR
+  for both", "anything to commit?"). The title and the `Next:` context carry the job;
+  classify from those at 0.6 to 0.7.
+- Prompts written by a tool, not the person (an app asking for a branch name or a
+  commit message): classify the job it does, `make`, never `surprise`.
+- A first message that pastes an email, a notice, or a file path: paraphrase the job
+  ("work out what a city notice requires and fill in the form"), never the sender,
+  place, or file name.
 
 ## subcategory (free text, optional)
 

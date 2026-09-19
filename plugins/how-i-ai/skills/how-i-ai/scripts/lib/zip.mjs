@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 
-export function listZip(path) {
+function listZip(path) {
   const buf = readFileSync(path);
   const entries = [];
   // Find end of central directory record.
@@ -54,7 +54,7 @@ export function listZip(path) {
   return { buf, entries };
 }
 
-export function readZipEntry(zip, entry) {
+function readZipEntry(zip, entry) {
   const { buf } = zip;
   const p = entry.localOffset;
   if (buf.readUInt32LE(p) !== 0x04034b50) throw new Error('bad local header for ' + entry.name);

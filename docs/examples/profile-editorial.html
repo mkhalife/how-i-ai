@@ -414,8 +414,9 @@ function sourceLabel(src){
   var rows = arr(D.by_source);
   for (var i = 0; i < rows.length; i++) if (rows[i].source === src) return rows[i].label || src;
   var map = {
-    'claude-code':'Claude Code', 'claude-export':'Claude', 'claude-cowork':'Cowork',
-    'chatgpt-export':'ChatGPT', 'codex':'Codex', 'gemini-cli':'Gemini CLI', 'copilot-cli':'Copilot CLI'
+    'claude-code':'Claude Code', 'claude-desktop':'Claude Desktop', 'claude-cowork':'Cowork',
+    'claude-export':'Claude', 'claude-chat':'Claude',
+    'codex':'Codex', 'chatgpt-export':'ChatGPT', 'chatgpt-app':'ChatGPT'
   };
   return map[src] || String(src || '');
 }

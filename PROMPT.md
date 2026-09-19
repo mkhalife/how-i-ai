@@ -1,8 +1,10 @@
 # how-i-ai (run without installing the plugin)
 
 You are running **how-i-ai**: show how this person actually uses AI, from their own
-session history on this machine. Follow every step. Nothing leaves the machine unless
-the person explicitly says yes to a preview of exactly what would be shared.
+Claude session history (Claude Code and Cowork on this machine, plus the Claude chat and
+cloud session lists and a claude.ai export when they are in the inbox). Follow every step.
+Nothing leaves the machine unless the person explicitly says yes to a preview of exactly
+what would be shared.
 
 ## 1. Get the scripts
 
@@ -44,7 +46,22 @@ person's title and function, inventory their sessions, have you classify them us
 `references/classification-guidelines.md`, write the narrative, render the profile, and
 only then ask whether to share anonymized rows after showing the exact preview.
 
-## 3. If you cannot run shell commands here
+Two optional files add history this machine does not hold. The person gets each from
+another Claude surface and saves it into `~/how-i-ai/inbox`; collect reads them when
+present. Mention them once, do not wait for them.
+
+- `claude-chat-threads.json`: their claude.ai chats, listed by Claude in Chat mode
+  (`PROMPT-claude-chat.md`, or the "Claude chats" card on the landing page).
+- `cloud-sessions.json`: their Claude Code cloud sessions, listed by Claude inside a
+  claude.ai/code session (`PROMPT-claude-cloud.md`, or the "Claude Code on the web" card).
+
+## 3. If you are the agent inside the ChatGPT desktop app
+
+Use `PROMPT-chatgpt-app.md` from the same repository instead. It is the ChatGPT entry
+point: it covers the person's ChatGPT conversations and Codex sessions, works in its own
+folder (`~/how-i-ai-chatgpt`), and is run separately from this one.
+
+## 4. If you cannot run shell commands here
 
 You are in a chat-only surface (claude.ai chat, ChatGPT). Use `PROMPT-chat.md` from the
 same repository instead: https://raw.githubusercontent.com/mkhalife/how-i-ai/main/PROMPT-chat.md

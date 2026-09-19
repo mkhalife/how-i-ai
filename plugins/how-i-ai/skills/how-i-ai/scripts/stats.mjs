@@ -30,7 +30,8 @@ export function summarize(sessions, window) {
   const at = counts((s) => s.classification.assist_type);
   const ATL = { ask: 'Asked', make: 'Made', do: 'Did' };
   const days = counts((s) => localDate(s.started_at));
-  const lens = sessions.map((s) => s.messages_user + s.messages_assistant).sort((a, b) => a - b);
+  const timed = sessions.filter((s) => Number.isFinite(s.duration_minutes));
+  const lens = sessions.filter((s) => s.messages_user != null && s.messages_assistant != null).map((s) => s.messages_user + s.messages_assistant).sort((a, b) => a - b);
   let streak = 0, best = 0; { const ds = [...days.keys()].sort(); for (let i = 0; i < ds.length; i++) { if (i && (new Date(ds[i]) - new Date(ds[i - 1])) === 86400e3) streak++; else streak = 1; best = Math.max(best, streak); } }
   const busiest = sorted(days)[0];
   const hours = Array.from({ length: 24 }, (_, hour) => ({ hour, sessions: sessions.filter((s) => localHour(s.started_at) === hour).length }));
@@ -38,7 +39,8 @@ export function summarize(sessions, window) {
     totals: {
       sessions: total, sessions_per_week: Math.round((total / (window.days / 7)) * 10) / 10,
       messages: sessions.reduce((a, s) => a + s.messages_user + s.messages_assistant, 0), active_days: days.size,
-      hours_estimated: Math.round(sessions.reduce((a, s) => a + (s.duration_minutes || 0), 0) / 6) / 10, longest_streak_days: best, sources: bySrc.length,
+      // Only sessions with a measured duration count; sources that know just created/updated times leave it null.
+      hours_estimated: timed.length ? Math.round(timed.reduce((a, s) => a + s.duration_minutes, 0) / 6) / 10 : null, sessions_timed: timed.length, longest_streak_days: best, sources: bySrc.length,
     },
     by_source: bySrc.map(([source, n]) => ({ source, label: SOURCE_LABELS[source] || source, sessions: n, messages: sessions.filter((s) => s.source === source).reduce((a, s) => a + s.messages_user + s.messages_assistant, 0), share: r3(n / total) })),
     by_week: weeks.map((w) => ({ week_start: w, sessions: sessions.filter((s) => weekStart(s.started_at) === w).length, by_source: Object.fromEntries(bySrc.map(([src]) => [src, sessions.filter((s) => weekStart(s.started_at) === w && s.source === src).length])) })),
