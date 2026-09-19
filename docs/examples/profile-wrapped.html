@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>howiai — Wrapped</title>
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root{
+  --gutter: 16px;
+  --maxw: 980px;
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --ui-ink: #fafaf7;
+  --ui-bg: #0a0a0c;
+}
+*, *::before, *::after{ box-sizing: border-box; }
+html{
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  background: var(--ui-bg);
+}
+body{
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+  font-family: var(--sans);
+  font-synthesis-weight: auto;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  line-height: 1.45;
+}
+h1,h2,h3,p,ul,ol,figure,blockquote{ margin: 0; }
+ul,ol{ padding: 0; list-style: none; }
+
+/* ----------------------------------------------------------------- cards */
+.card{
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(72px, 10vh, 104px) var(--gutter) clamp(72px, 10vh, 104px);
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+@media (min-width: 720px){ :root{ --gutter: 48px; } }
+@media (min-width: 1100px){ :root{ --gutter: 72px; } }
+
+.card::before{
+  content: "";
+  position: absolute; inset: -20% -10% auto -10%;
+  height: 90%;
+  background: radial-gradient(60% 70% at 70% 10%, color-mix(in srgb, var(--ink) 13%, transparent), transparent 70%);
+  pointer-events: none; z-index: -1;
+}
+.card::after{
+  content: "";
+  position: absolute; inset: auto -20% -25% -20%;
+  height: 70%;
+  background: radial-gradient(50% 60% at 20% 90%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+  pointer-events: none; z-index: -1;
+}
+.wrap{ width: 100%; max-width: var(--maxw); margin: 0 auto; }
+
+/* ------------------------------------------------------------- typography */
+.eyebrow{
+  font-size: clamp(11px, 1.5vw, 13px);
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  opacity: .72;
+  margin-bottom: clamp(14px, 2.6vh, 26px);
+}
+.h1{
+  font-size: clamp(38px, 9.5vw, 92px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.h2{
+  font-size: clamp(28px, 6.2vw, 58px);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.h3{
+  font-size: clamp(19px, 3vw, 26px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.015em;
+  overflow-wrap: break-word;
+}
+.lede{
+  font-size: clamp(16px, 2.3vw, 21px);
+  line-height: 1.5;
+  opacity: .86;
+  max-width: 46ch;
+}
+.small{ font-size: clamp(13px, 1.7vw, 15px); opacity: .74; line-height: 1.5; }
+.mono-num{ font-variant-numeric: tabular-nums; }
+.hero{
+  font-size: clamp(92px, 27vw, 230px);
+  font-weight: 800;
+  line-height: .82;
+  letter-spacing: -.055em;
+  display: block;
+}
+.hero-sm{ font-size: clamp(56px, 15vw, 128px); font-weight: 800; line-height: .86; letter-spacing: -.05em; }
+.accent{ color: var(--accent); }
+.stack > * + *{ margin-top: clamp(14px, 2.4vh, 24px); }
+.tight > * + *{ margin-top: 10px; }
+
+/* ------------------------------------------------------------------ bits */
+.chip{
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
+  font-size: clamp(12px, 1.6vw, 14px); font-weight: 600;
+  line-height: 1.2;
+}
+.chip--solid{ background: color-mix(in srgb, var(--ink) 12%, transparent); border-color: transparent; }
+.chips{ display: flex; flex-wrap: wrap; gap: 8px; }
+.dot{ width: 10px; height: 10px; border-radius: 3px; background: currentColor; flex: none; }
+.rule{ height: 1px; background: color-mix(in srgb, var(--ink) 22%, transparent); border: 0; }
+
+.statgrid{ display: grid; gap: clamp(12px, 2vw, 20px); grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (min-width: 720px){ .statgrid{ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
+.statgrid--3{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (min-width: 720px){ .statgrid--3{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.stat{
+  padding: clamp(12px, 1.8vw, 18px) clamp(12px, 1.8vw, 18px);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  min-width: 0;
+}
+.stat b{
+  display: block;
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 800; line-height: 1.05; letter-spacing: -.03em;
+  overflow-wrap: break-word;
+}
+.stat span{ display: block; margin-top: 6px; font-size: clamp(11px, 1.5vw, 13px); opacity: .74;
+  letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+
+.cols{ display: grid; gap: clamp(22px, 4vw, 44px); grid-template-columns: minmax(0,1fr); }
+.panes{ display: grid; gap: clamp(12px, 1.8vw, 18px); grid-template-columns: minmax(0,1fr); }
+@media (min-width: 760px){ .panes{ grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); } }
+@media (min-width: 860px){ .cols--2{ grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); align-items: start; } }
+@media (min-width: 860px){ .cols--even{ grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; } }
+
+.chart{ width: 100%; }
+.chart svg{ display: block; width: 100%; height: auto; overflow: visible; }
+.chart-title{ font-size: clamp(12px, 1.6vw, 13px); font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; opacity: .66; margin-bottom: 12px; }
+
+.legend{ display: grid; gap: 2px; margin-top: 18px; }
+.legend li{
+  display: grid; grid-template-columns: 16px minmax(0,1fr) auto auto;
+  gap: 10px; align-items: baseline; padding: 9px 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+  font-size: clamp(14px, 1.9vw, 16px);
+}
+.legend li .sw{ width: 12px; height: 12px; border-radius: 4px; background: var(--ink); align-self: center; }
+.legend li .nm{ font-weight: 650; overflow-wrap: break-word; min-width: 0; }
+.legend li .v{ font-variant-numeric: tabular-nums; opacity: .8; }
+.legend li .p{ font-variant-numeric: tabular-nums; font-weight: 700; min-width: 3.5em; text-align: right; }
+
+.rows{ display: grid; gap: 2px; }
+.row{
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: baseline;
+  padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+}
+.row .nm{ font-weight: 600; overflow-wrap: break-word; }
+.row .v{ font-variant-numeric: tabular-nums; opacity: .78; font-size: .9em; white-space: nowrap; }
+
+.moment{
+  display: grid; gap: 4px;
+  padding: clamp(11px, 1.7vh, 15px) 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.moment .q{ font-size: clamp(16px, 2.5vw, 22px); font-weight: 650; line-height: 1.28;
+  letter-spacing: -.01em; overflow-wrap: break-word; }
+.moment .m{ font-size: clamp(11.5px, 1.5vw, 13px); opacity: .7; letter-spacing: .04em; }
+
+.panel{
+  border-radius: 20px;
+  padding: clamp(18px, 3vw, 28px);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.quote{
+  font-size: clamp(26px, 5.6vw, 54px); font-weight: 800; line-height: 1.08;
+  letter-spacing: -.03em; text-wrap: balance; overflow-wrap: break-word;
+}
+.patterns{ counter-reset: p; display: grid; gap: clamp(10px, 1.8vh, 16px); }
+.patterns li{
+  counter-increment: p; position: relative; padding-left: 44px;
+  font-size: clamp(15px, 2.1vw, 19px); line-height: 1.4; overflow-wrap: break-word;
+}
+.patterns li::before{
+  content: counter(p, decimal-leading-zero);
+  position: absolute; left: 0; top: .05em;
+  font-size: clamp(12px, 1.6vw, 14px); font-weight: 800; letter-spacing: .04em;
+  opacity: .6; font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- share card */
+.share{
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--ink) 26%, transparent);
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 60%),
+    radial-gradient(80% 100% at 0% 100%, color-mix(in srgb, var(--pop) 26%, transparent), transparent 62%),
+    color-mix(in srgb, var(--ink) 6%, transparent);
+  padding: clamp(22px, 4.2vw, 40px);
+  display: grid; gap: clamp(18px, 3vh, 28px);
+}
+.share-head{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.share-grid{ display: grid; gap: clamp(16px, 3vw, 26px); grid-template-columns: minmax(0,1fr); }
+@media (min-width: 720px){ .share-grid{ grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); } }
+.share-foot{
+  display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  font-size: clamp(11.5px, 1.5vw, 13px); opacity: .7; letter-spacing: .04em;
+}
+.mini{ display: grid; gap: 8px; }
+.mini li{ display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: baseline; }
+.mini .nm{ font-weight: 650; font-size: clamp(14px, 1.9vw, 17px); overflow-wrap: break-word; }
+.mini .v{ font-variant-numeric: tabular-nums; opacity: .8; font-size: clamp(13px, 1.7vw, 15px); }
+.mini .track{ grid-column: 1 / -1; height: 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 18%, transparent); overflow: hidden; }
+.mini .fill{ display: block; height: 100%; border-radius: 999px; background: var(--ink); }
+
+/* ------------------------------------------------------------------- chrome */
+#progress{
+  position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+  z-index: 40; pointer-events: none;
+  background: color-mix(in srgb, var(--ui-ink) 18%, transparent);
+}
+#progress i{ display: block; height: 100%; width: 0; background: var(--ui-ink); transition: width .35s ease, background .5s ease; }
+#rail{
+  position: fixed; right: 18px; top: 50%; transform: translateY(-50%);
+  display: grid; gap: 10px; z-index: 40;
+}
+#rail button{
+  width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ui-ink); opacity: .3; transition: opacity .35s ease, height .35s ease, background .5s ease;
+}
+#rail button[aria-current="true"]{ opacity: 1; height: 20px; }
+#counter{
+  position: fixed; left: var(--gutter); bottom: 18px; z-index: 40;
+  font-size: 12px; font-weight: 700; letter-spacing: .16em;
+  color: var(--ui-ink); opacity: .6; font-variant-numeric: tabular-nums;
+  transition: color .5s ease; pointer-events: none;
+}
+@media (max-width: 640px){ #rail{ display: none; } }
+.scrollcue{
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+  font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+  opacity: .55; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.scrollcue i{ display: block; width: 1px; height: 26px; background: currentColor; animation: cue 1.8s ease-in-out infinite; }
+@keyframes cue{ 0%,100%{ transform: scaleY(.35); opacity: .4; } 50%{ transform: scaleY(1); opacity: 1; } }
+
+/* --------------------------------------------------------------- animation */
+[data-anim]{ opacity: 0; transform: translateY(20px); }
+.is-in [data-anim]{
+  opacity: 1; transform: none;
+  transition: opacity .7s cubic-bezier(.2,.7,.25,1), transform .7s cubic-bezier(.2,.7,.25,1);
+  transition-delay: var(--d, 0ms);
+}
+.grow{ transform-origin: var(--o, 50% 100%); transform: scaleY(0); }
+.is-in .grow{ transform: none; transition: transform .8s cubic-bezier(.2,.75,.25,1); transition-delay: var(--d, 0ms); }
+.grow-x{ transform-box: fill-box; transform-origin: 0 50%; transform: scaleX(0); }
+.is-in .grow-x{ transform: none; transition: transform .8s cubic-bezier(.2,.75,.25,1); transition-delay: var(--d, 0ms); }
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+  [data-anim], .grow, .grow-x{ opacity: 1 !important; transform: none !important; transition: none !important; }
+  .scrollcue i{ animation: none; }
+  #progress i, #rail button{ transition: none; }
+}
+@media print{
+  html{ scroll-snap-type: none; }
+  .card{ min-height: auto; page-break-after: always; }
+  #rail, #progress, #counter, .scrollcue{ display: none; }
+}
+</style>
+</head>
+<body>
+<div id="progress" aria-hidden="true"><i></i></div>
+<nav id="rail" aria-label="Sections"></nav>
+<div id="counter" aria-hidden="true"></div>
+<main id="app"></main>
+
+<script id="howiai-data" type="application/json">{"schema_version":1,"generated_at":"2026-09-19T14:05:00-04:00","window":{"days":30,"start":"2026-08-20","end":"2026-09-19"},"person":{"participant_id":"p_ab12cd34","title":"Senior Product Designer","function":"Design"},"totals":{"sessions":96,"sessions_per_week":22.4,"messages":1283,"active_days":22,"hours_estimated":31.5,"longest_streak_days":9,"sources":4},"by_source":[{"source":"claude-export","label":"Claude","sessions":44,"messages":323,"share":0.458},{"source":"chatgpt-export","label":"ChatGPT","sessions":28,"messages":193,"share":0.292},{"source":"claude-code","label":"Claude Code","sessions":13,"messages":453,"share":0.135},{"source":"claude-cowork","label":"Cowork","sessions":11,"messages":314,"share":0.115}],"by_week":[{"week_start":"2026-08-17","sessions":17,"by_source":{"chatgpt-export":3,"claude-export":8,"claude-cowork":1,"claude-code":5}},{"week_start":"2026-08-24","sessions":15,"by_source":{"chatgpt-export":7,"claude-export":6,"claude-cowork":1,"claude-code":1}},{"week_start":"2026-08-31","sessions":23,"by_source":{"chatgpt-export":6,"claude-export":13,"claude-cowork":2,"claude-code":2}},{"week_start":"2026-09-07","sessions":19,"by_source":{"chatgpt-export":3,"claude-export":7,"claude-cowork":5,"claude-code":4}},{"week_start":"2026-09-14","sessions":22,"by_source":{"chatgpt-export":9,"claude-export":10,"claude-cowork":2,"claude-code":1}}],"by_weekday":[{"weekday":0,"label":"Mon","sessions":26},{"weekday":1,"label":"Tue","sessions":21},{"weekday":2,"label":"Wed","sessions":12},{"weekday":3,"label":"Thu","sessions":12},{"weekday":4,"label":"Fri","sessions":12},{"weekday":5,"label":"Sat","sessions":1},{"weekday":6,"label":"Sun","sessions":12}],"by_hour":[{"hour":0,"sessions":0},{"hour":1,"sessions":0},{"hour":2,"sessions":0},{"hour":3,"sessions":1},{"hour":4,"sessions":0},{"hour":5,"sessions":2},{"hour":6,"sessions":1},{"hour":7,"sessions":7},{"hour":8,"sessions":5},{"hour":9,"sessions":9},{"hour":10,"sessions":7},{"hour":11,"sessions":17},{"hour":12,"sessions":16},{"hour":13,"sessions":12},{"hour":14,"sessions":8},{"hour":15,"sessions":6},{"hour":16,"sessions":3},{"hour":17,"sessions":1},{"hour":18,"sessions":1},{"hour":19,"sessions":0},{"hour":20,"sessions":0},{"hour":21,"sessions":0},{"hour":22,"sessions":0},{"hour":23,"sessions":0}],"by_category":[{"category":"Write & edit","sessions":25,"share":0.26,"assist_type_mix":{"ask":7,"make":18,"do":0},"subcategories":[{"name":"Design doc","sessions":9},{"name":"Rationale for stakeholders","sessions":8},{"name":"Release notes","sessions":8}]},{"category":"Design critique & feedback","sessions":21,"share":0.219,"assist_type_mix":{"ask":16,"make":3,"do":2},"subcategories":[{"name":"Accessibility check","sessions":8},{"name":"Critique a flow","sessions":8},{"name":"Copy in the UI","sessions":5}]},{"category":"Research & synthesis","sessions":15,"share":0.156,"assist_type_mix":{"ask":3,"make":9,"do":3},"subcategories":[{"name":"Competitive teardown","sessions":6},{"name":"Summarize interviews","sessions":5},{"name":"Affinity mapping","sessions":4}]},{"category":"Explain & learn","sessions":14,"share":0.146,"assist_type_mix":{"ask":14,"make":0,"do":0},"subcategories":[{"name":"How does X work","sessions":6},{"name":"Engineering concepts","sessions":5},{"name":"Terminology","sessions":3}]},{"category":"Prototype & build","sessions":9,"share":0.094,"assist_type_mix":{"ask":0,"make":3,"do":6},"subcategories":[{"name":"Motion spec","sessions":6},{"name":"Design tokens","sessions":3}]},{"category":"Personal & life admin","sessions":8,"share":0.083,"assist_type_mix":{"ask":7,"make":0,"do":1},"subcategories":[{"name":"Health","sessions":3},{"name":"Money","sessions":2},{"name":"Travel","sessions":2},{"name":"Family","sessions":1}]},{"category":"Plan & prioritize","sessions":4,"share":0.042,"assist_type_mix":{"ask":1,"make":3,"do":0},"subcategories":[{"name":"Roadmap tradeoffs","sessions":2},{"name":"Sprint planning","sessions":2}]}],"by_assist_type":[{"type":"ask","label":"Asked","sessions":48,"share":0.5},{"type":"make","label":"Made","sessions":36,"share":0.375},{"type":"do","label":"Did","sessions":12,"share":0.125}],"by_mode":[{"mode":"chat","sessions":72},{"mode":"agentic","sessions":24}],"tools":[{"name":"Bash","sessions":14},{"name":"Grep","sessions":11},{"name":"WebSearch","sessions":11},{"name":"Agent","sessions":11},{"name":"Read","sessions":10},{"name":"Edit","sessions":10},{"name":"Write","sessions":8},{"name":"Glob","sessions":8},{"name":"WebFetch","sessions":6}],"connectors":[{"name":"Figma","sessions":6},{"name":"GitHub","sessions":4},{"name":"Linear","sessions":4},{"name":"Google Drive","sessions":2},{"name":"Slack","sessions":2},{"name":"Notion","sessions":2}],"models":[{"name":"claude-sonnet-4-5","sessions":39},{"name":"claude-opus-4-1","sessions":29},{"name":"gpt-5","sessions":28}],"session_length":{"buckets":[{"label":"1 message","sessions":0},{"label":"2–5","sessions":25},{"label":"6–20","sessions":53},{"label":"21+","sessions":18}],"median_messages":8,"p90_messages":32},"highlights":{"biggest_use_case":"Write & edit","surprise":{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","why":"One of only a handful of non-work sessions, and the longest chat of the month"},"busiest_day":{"date":"2026-09-04","sessions":9},"peak_hour":11,"signature_move":"Pastes a screenshot and asks for a critique before asking for a fix","one_liner":"Critiques with Claude by day, learns engineering vocabulary at night"},"surprises":[{"paraphrase":"Build a 12-week half-marathon plan","category":"Personal & life admin","source":"claude-export","date":"2026-09-08"},{"paraphrase":"Compare two car leases","category":"Personal & life admin","source":"claude-export","date":"2026-09-05"},{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","source":"chatgpt-export","date":"2026-09-02"},{"paraphrase":"Tighten microcopy on the empty-state screen","category":"Design critique & feedback","source":"claude-code","date":"2026-09-05"}],"sample_sessions":[{"paraphrase":"Write release notes from a changelog","category":"Write & edit","assist_type":"make","source":"chatgpt-export","date":"2026-09-02","messages":6},{"paraphrase":"Summarize twelve interview transcripts into themes","category":"Research & synthesis","assist_type":"do","source":"claude-export","date":"2026-09-01","messages":8},{"paraphrase":"Build a 12-week half-marathon plan","category":"Personal & life admin","assist_type":"ask","source":"claude-cowork","date":"2026-09-17","messages":32},{"paraphrase":"Critique the new onboarding flow screens for clarity","category":"Design critique & feedback","assist_type":"ask","source":"claude-export","date":"2026-09-17","messages":8},{"paraphrase":"Write release notes from a changelog","category":"Write & edit","assist_type":"make","source":"claude-export","date":"2026-09-08","messages":11},{"paraphrase":"Rewrite an exec update to lead with the decision","category":"Write & edit","assist_type":"make","source":"claude-code","date":"2026-09-14","messages":14},{"paraphrase":"Tighten microcopy on the empty-state screen","category":"Design critique & feedback","assist_type":"ask","source":"claude-export","date":"2026-09-03","messages":8},{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","assist_type":"do","source":"claude-export","date":"2026-09-09","messages":8},{"paraphrase":"Draft a polite note to a landlord about repairs","category":"Personal & life admin","assist_type":"ask","source":"chatgpt-export","date":"2026-09-02","messages":13},{"paraphrase":"Draft a design rationale doc for the checkout redesign","category":"Write & edit","assist_type":"ask","source":"claude-code","date":"2026-09-14","messages":50},{"paraphrase":"Draft a design rationale doc for the checkout redesign","category":"Write & edit","assist_type":"make","source":"claude-export","date":"2026-09-02","messages":8},{"paraphrase":"Weigh three roadmap bets against a retention goal","category":"Plan & prioritize","assist_type":"make","source":"claude-export","date":"2026-09-08","messages":4}],"narrative":{"headline":"A critic first, a builder second","summary":"Most sessions ask for a second pair of eyes on work that already exists: flows, copy, accessibility. Making things comes next, mostly docs and rationale for stakeholders. Agentic sessions are rare but long, and they cluster on Thursdays before design review.","patterns":["Sessions spike the day before design review","ChatGPT is for quick questions, Claude is for long critiques","Almost nothing on weekends, except one very long personal chat"]}}</script>
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------ the data */
+  var DATA = {};
+  try { DATA = JSON.parse(document.getElementById("howiai-data").textContent) || {}; }
+  catch (e) { DATA = {}; }
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ------------------------------------------------------------- helpers */
+  function arr(v) { return Array.isArray(v) ? v : []; }
+  function obj(v) { return (v && typeof v === "object" && !Array.isArray(v)) ? v : {}; }
+  function str(v) { return (typeof v === "string" && v.trim()) ? v.trim() : ""; }
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+  function n(v) { return isNum(v) ? v : 0; }
+
+  function fmt(v) {
+    if (!isNum(v)) return "—";
+    var r = Math.round(v * 10) / 10;
+    var whole = Math.abs(r - Math.round(r)) < 0.05;
+    return (whole ? Math.round(r) : r).toLocaleString("en-US");
+  }
+  function pct(share, total, part) {
+    var p = isNum(share) ? share * 100
+          : (isNum(total) && total > 0 && isNum(part)) ? (part / total) * 100 : null;
+    if (p === null) return "";
+    return (p >= 9.5 ? Math.round(p) : Math.round(p * 10) / 10) + "%";
+  }
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function parseDay(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ""));
+    return m ? { y: +m[1], m: +m[2] - 1, d: +m[3] } : null;
+  }
+  function shortDate(s) { var p = parseDay(s); return p ? MONTHS[p.m] + " " + p.d : String(s || ""); }
+  function longDate(s) { var p = parseDay(s); return p ? MONTHS[p.m] + " " + p.d + ", " + p.y : String(s || ""); }
+  function hourLabel(h) {
+    if (!isNum(h)) return "—";
+    h = ((Math.round(h) % 24) + 24) % 24;
+    var ap = h < 12 ? "am" : "pm", hh = h % 12; if (hh === 0) hh = 12;
+    return hh + ap;
+  }
+  function plural(v, one, many) { return Math.round(n(v)) === 1 ? one : many; }
+  function titleCase(s) { s = str(s); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function add(parent) {
+    for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]);
+    return parent;
+  }
+  var NS = "http://www.w3.org/2000/svg";
+  function s(tag, a) {
+    var e = document.createElementNS(NS, tag);
+    if (a) for (var k in a) if (a[k] != null) e.setAttribute(k, a[k]);
+    return e;
+  }
+  function stagger(root, step) {
+    var items = root.querySelectorAll("[data-anim]"), i;
+    for (i = 0; i < items.length; i++) {
+      if (!items[i].style.getPropertyValue("--d")) items[i].style.setProperty("--d", (i * (step || 70)) + "ms");
+    }
+    return root;
+  }
+
+  /* --------------------------------------------------------- chart engine */
+  var charts = [];
+  function chart(drawFn, ratio) {
+    var host = el("div", "chart");
+    var svgEl = s("svg");
+    host.appendChild(svgEl);
+    var entry = {
+      host: host, svg: svgEl,
+      draw: function () {
+        var w = Math.max(220, Math.round(host.clientWidth || host.getBoundingClientRect().width || 600));
+        while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+        var h = drawFn(svgEl, w) || 200;
+        svgEl.setAttribute("viewBox", "0 0 " + w + " " + h);
+        svgEl.setAttribute("width", w);
+        svgEl.setAttribute("height", h);
+        svgEl.style.height = "auto";
+      }
+    };
+    charts.push(entry);
+    return host;
+  }
+  function redrawAll() { for (var i = 0; i < charts.length; i++) charts[i].draw(); }
+
+  function topRoundedPath(x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h));
+    return "M" + x + "," + (y + h) +
+           "L" + x + "," + (y + r) +
+           "Q" + x + "," + y + " " + (x + r) + "," + y +
+           "L" + (x + w - r) + "," + y +
+           "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) +
+           "L" + (x + w) + "," + (y + h) + "Z";
+  }
+  function endRoundedPath(x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w, h / 2));
+    return "M" + x + "," + y +
+           "L" + (x + w - r) + "," + y +
+           "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) +
+           "L" + (x + w) + "," + (y + h - r) +
+           "Q" + (x + w) + "," + (y + h) + " " + (x + w - r) + "," + (y + h) +
+           "L" + x + "," + (y + h) + "Z";
+  }
+  function txt(parent, x, y, text, opt) {
+    opt = opt || {};
+    var t = s("text", {
+      x: x, y: y,
+      "text-anchor": opt.anchor || "middle",
+      "font-size": opt.size || 12,
+      "font-weight": opt.weight || 600,
+      fill: "currentColor",
+      "fill-opacity": opt.op == null ? 0.72 : opt.op,
+      "font-variant-numeric": "tabular-nums",
+      "letter-spacing": opt.ls || 0
+    });
+    t.textContent = text;
+    parent.appendChild(t);
+    return t;
+  }
+  /* rough advance-width estimate for a system sans at a given size */
+  function textW(text, size, weight) {
+    return String(text).length * size * (weight >= 700 ? 0.6 : 0.55);
+  }
+  /* SVG text cannot wrap: shrink a little, then ellipsis, so a long name never
+     spills outside its chart. The full value always stays in the prose above. */
+  function fitText(t, maxW, minSize) {
+    if (!t.getComputedTextLength || !(maxW > 0)) return t;
+    var size = parseFloat(t.getAttribute("font-size")) || 12;
+    var len;
+    try { len = t.getComputedTextLength(); } catch (e) { return t; }
+    if (!len || len <= maxW) return t;
+    var floor = minSize || Math.max(10.5, size - 3);
+    while (size > floor && len > maxW) {
+      size = Math.max(floor, size - 0.5);
+      t.setAttribute("font-size", size);
+      len = t.getComputedTextLength();
+    }
+    if (len <= maxW) return t;
+    var full = t.textContent, lo = 0, hi = full.length;
+    while (lo < hi) {
+      var mid = Math.ceil((lo + hi) / 2);
+      t.textContent = full.slice(0, mid) + "\u2026";
+      if (t.getComputedTextLength() <= maxW) lo = mid; else hi = mid - 1;
+    }
+    t.textContent = lo > 0 ? full.slice(0, lo).replace(/[\s,;:·\-]+$/, "") + "\u2026" : "\u2026";
+    return t;
+  }
+
+  /*  Columns: single-hue (magnitude) with one emphasised mark.  */
+  function columnChart(items, opt) {
+    opt = opt || {};
+    return chart(function (svgEl, w) {
+      var data = items;
+      if (!data.length) return 60;
+      var compact = w < 520;
+      var padTop = opt.capLabels === false ? 8 : (compact ? 18 : 22);
+      var padBottom = compact ? 22 : 26;
+      var plotH = (opt.height || (compact ? 140 : 190)) - padTop - padBottom;
+      var h = plotH + padTop + padBottom;
+      var max = 0, i;
+      for (i = 0; i < data.length; i++) max = Math.max(max, n(data[i].value));
+      /* a handful of columns should not be strung out across a wide card */
+      var plotW = Math.min(w, data.length * (opt.maxSlot || 1e9));
+      var slot = plotW / data.length;
+      var barW = Math.max(3, Math.min(opt.maxBar || 24, slot - (slot > 26 ? 10 : 4)));
+      var g = s("g", { class: "grow", style: "--o:50% " + (padTop + plotH) + "px" });
+      svgEl.appendChild(g);
+      var base = s("line", { x1: 0, y1: padTop + plotH + 0.5, x2: plotW, y2: padTop + plotH + 0.5,
+        stroke: "currentColor", "stroke-opacity": .22, "stroke-width": 1 });
+      svgEl.appendChild(base);
+
+      for (i = 0; i < data.length; i++) {
+        var v = n(data[i].value);
+        var bh = max > 0 ? Math.max(v > 0 ? 3 : 2, (v / max) * plotH) : 2;
+        var x = slot * i + (slot - barW) / 2;
+        var y = padTop + plotH - bh;
+        var hot = !!data[i].hot;
+        var p = s("path", {
+          d: topRoundedPath(x, y, barW, bh, 4),
+          fill: hot ? "var(--accent)" : "currentColor",
+          "fill-opacity": hot ? 1 : (v > 0 ? .46 : .16)
+        });
+        g.appendChild(p);
+        if (opt.capLabels !== false && (data[i].capLabel != null) && (hot || opt.capLabels === "all")) {
+          txt(svgEl, x + barW / 2, y - 7, data[i].capLabel,
+              { size: compact ? 11 : 12, weight: hot ? 800 : 600, op: hot ? 1 : .68 });
+        }
+        if (data[i].label != null && data[i].label !== "") {
+          fitText(txt(svgEl, x + barW / 2, padTop + plotH + (compact ? 15 : 17), data[i].label,
+              { size: compact ? 10.5 : 12, weight: hot ? 800 : 600, op: hot ? .95 : .6 }),
+            Math.max(28, slot - 3), 9);
+        }
+      }
+      return h;
+    });
+  }
+
+  /*  100% stacked horizontal bar: ordered parts of a whole, 2px surface gaps. */
+  function stackedBar(parts, opt) {
+    opt = opt || {};
+    return chart(function (svgEl, w) {
+      var total = 0, i;
+      for (i = 0; i < parts.length; i++) total += n(parts[i].value);
+      if (total <= 0) return 0;
+      var h = opt.height || (w < 520 ? 48 : 62);
+      var gap = 2, r = 8;
+      var id = "clip" + Math.random().toString(36).slice(2, 9);
+      var defs = s("defs");
+      var cp = s("clipPath", { id: id });
+      cp.appendChild(s("rect", { x: 0, y: 0, width: w, height: h, rx: r, ry: r }));
+      defs.appendChild(cp);
+      svgEl.appendChild(defs);
+      var g = s("g", { "clip-path": "url(#" + id + ")" });
+      svgEl.appendChild(g);
+      var x = 0;
+      for (i = 0; i < parts.length; i++) {
+        var seg = (n(parts[i].value) / total) * w;
+        var wid = Math.max(0, seg - (i < parts.length - 1 ? gap : 0));
+        if (wid > 0) {
+          g.appendChild(s("rect", {
+            x: x, y: 0, width: wid, height: h,
+            fill: parts[i].color || "currentColor",
+            "fill-opacity": parts[i].opacity == null ? 1 : parts[i].opacity
+          }));
+        }
+        x += seg;
+      }
+      return h;
+    });
+  }
+
+  /*  Ranked horizontal bars, magnitude by length, value at the tip. */
+  function rankedBars(items, opt) {
+    opt = opt || {};
+    return chart(function (svgEl, w) {
+      if (!items.length) return 0;
+      var compact = w < 620;
+      var labelSize = compact ? 14 : 16;
+      var rowH = compact ? 52 : 60;
+      var barH = compact ? 12 : 14;
+      var max = 0, i;
+      for (i = 0; i < items.length; i++) max = Math.max(max, n(items[i].value));
+      var valSize = compact ? 12 : 13;
+      var valGutter = 0;
+      for (i = 0; i < items.length; i++) valGutter = Math.max(valGutter, textW(items[i].valueLabel || "", valSize, 700));
+      valGutter = Math.ceil(valGutter) + 12;
+      var trackW = Math.max(40, w - valGutter);
+      var h = rowH * items.length;
+
+      for (i = 0; i < items.length; i++) {
+        var top = rowH * i;
+        var v = n(items[i].value);
+        var bw = max > 0 ? Math.max(4, (v / max) * trackW) : 4;
+        var hot = !!items[i].hot;
+        var label = txt(svgEl, 0, top + labelSize + 2, items[i].label, {
+          anchor: "start", size: labelSize, weight: hot ? 800 : 650, op: hot ? 1 : .88
+        });
+        label.setAttribute("letter-spacing", "-0.01em");
+        fitText(label, w - 2, 12);
+        var by = top + labelSize + 14;
+        var g = s("g", { class: "grow-x" });
+        g.appendChild(s("path", {
+          d: endRoundedPath(0, by, bw, barH, 4),
+          fill: hot ? "var(--accent)" : "currentColor",
+          "fill-opacity": hot ? 1 : .4
+        }));
+        svgEl.appendChild(g);
+        if (items[i].valueLabel) {
+          txt(svgEl, bw + 9, by + barH - 2, items[i].valueLabel,
+              { anchor: "start", size: valSize, weight: 700, op: hot ? .95 : .7 });
+        }
+      }
+      return h;
+    });
+  }
+
+  /* -------------------------------------------------------- card builders */
+  var PALETTE = {
+    ink:        { bg: "#0A0A0C", ink: "#FAFAF7", accent: "#D6FF3F" },
+    vermilion:  { bg: "#FF4E28", ink: "#1A0500", accent: "#2B0A80" },
+    blue:       { bg: "#0B3BE0", ink: "#FFFFFF", accent: "#D6FF3F" },
+    yellow:     { bg: "#FFD22E", ink: "#17140A", accent: "#0B2AD1" },
+    slate:      { bg: "#0E1113", ink: "#F2F4F3", accent: "#24E0A6" },
+    cream:      { bg: "#F3EFE4", ink: "#14120C", accent: "#D93A12" },
+    violet:     { bg: "#6C3BF5", ink: "#FFFFFF", accent: "#FFD22E" },
+    green:      { bg: "#0A7F58", ink: "#FFFFFF", accent: "#D6FF3F" },
+    pink:       { bg: "#FF7FB6", ink: "#2A0716", accent: "#0B2AD1" },
+    midnight:   { bg: "#101418", ink: "#ECEFF1", accent: "#FF9D5C" },
+    forest:     { bg: "#12332C", ink: "#EFFBF5", accent: "#FFD22E" },
+    finale:     { bg: "#120A2E", ink: "#FFFFFF", accent: "#D6FF3F", pop: "#FF4E28" }
+  };
+
+  var cards = [];
+  function card(key, theme, label) {
+    var p = PALETTE[theme] || PALETTE.ink;
+    var sec = el("section", "card");
+    sec.setAttribute("data-card", key);
+    sec.style.setProperty("--bg", p.bg);
+    sec.style.setProperty("--ink", p.ink);
+    sec.style.setProperty("--accent", p.accent);
+    sec.style.setProperty("--pop", p.pop || p.accent);
+    sec.dataset.ink = p.ink;
+    sec.dataset.label = label || key;
+    var wrap = el("div", "wrap stack");
+    sec.appendChild(wrap);
+    cards.push(sec);
+    return { section: sec, body: wrap };
+  }
+  function eyebrow(text) { var e = el("div", "eyebrow", text); e.setAttribute("data-anim", ""); return e; }
+  function anim(node) { node.setAttribute("data-anim", ""); return node; }
+
+  function statTile(value, label) {
+    var d = el("div", "stat");
+    var b = el("b", "", value); var sp = el("span", "", label);
+    add(d, b, sp);
+    return anim(d);
+  }
+
+  /* ---------------------------------------------------------------- data */
+  var W = obj(DATA.window);
+  var PERSON = obj(DATA.person);
+  var T = obj(DATA.totals);
+  var HI = obj(DATA.highlights);
+  var NARR = obj(DATA.narrative);
+  var SOURCES = arr(DATA.by_source).filter(function (x) { return n(x && x.sessions) > 0 || str(x && x.label); });
+  var WEEKS = arr(DATA.by_week);
+  var WEEKDAYS = arr(DATA.by_weekday);
+  var HOURS = arr(DATA.by_hour);
+  var CATS = arr(DATA.by_category);
+  var ASSIST = arr(DATA.by_assist_type);
+  var MODES = arr(DATA.by_mode);
+  var TOOLS = arr(DATA.tools);
+  var CONNECTORS = arr(DATA.connectors);
+  var MODELS = arr(DATA.models);
+  var LEN = obj(DATA.session_length);
+  var SAMPLES = arr(DATA.sample_sessions).filter(function (x) { return str(x && x.paraphrase); });
+  var SURPRISES = arr(DATA.surprises).filter(function (x) { return str(x && x.paraphrase); });
+
+  var windowLabel = (W.start && W.end) ? (longDate(W.start) + " → " + longDate(W.end))
+                  : (isNum(W.days) ? "the last " + fmt(W.days) + " days" : "");
+  var daysLabel = isNum(W.days) ? fmt(W.days) + " days" : "the window";
+
+  /* stable identity steps for stacked parts: order is fixed by the data, and
+     each slot keeps its step so a swatch in the legend always means one thing. */
+  var STEPS = [1, .72, .52, .37, .26, .18, .13, .1];
+  function stepOf(i) { return STEPS[Math.min(i, STEPS.length - 1)]; }
+
+  function sourceLabel(x) {
+    return str(x.label) || titleCase(str(x.source).replace(/[-_]/g, " ")) || "Unknown";
+  }
+
+  /* =====================================================  1. intro ===== */
+  (function () {
+    var c = card("intro", "ink", "Intro");
+    var b = c.body;
+    add(b, eyebrow("howiai · personal wrapped"));
+    var h = el("h1", "h1");
+    h.appendChild(document.createTextNode("How I actually "));
+    var span = el("span", "accent", "used AI");
+    h.appendChild(span);
+    h.appendChild(document.createTextNode("."));
+    add(b, anim(h));
+    var sub = el("p", "lede");
+    var who = str(PERSON.title);
+    var fn = str(PERSON.function);
+    sub.textContent = (who ? who + (fn && fn !== who ? " · " + fn : "") + ". " : "") +
+      "Every session from " + (windowLabel || "the window") + ", read back to you.";
+    add(b, anim(sub));
+    var chips = el("div", "chips");
+    if (isNum(W.days)) add(chips, anim(el("span", "chip chip--solid", daysLabel)));
+    if (isNum(T.sessions)) add(chips, anim(el("span", "chip chip--solid", fmt(T.sessions) + " sessions")));
+    if (isNum(T.sources) || SOURCES.length) {
+      var srcN = isNum(T.sources) ? T.sources : SOURCES.length;
+      add(chips, anim(el("span", "chip chip--solid", fmt(srcN) + " " + plural(srcN, "tool", "tools"))));
+    }
+    if (str(PERSON.participant_id)) add(chips, anim(el("span", "chip", str(PERSON.participant_id))));
+    if (chips.children.length) add(b, chips);
+    var cue = el("div", "scrollcue");
+    add(cue, el("i"), el("span", "", "scroll"));
+    c.section.appendChild(cue);
+    stagger(b, 90);
+  })();
+
+  /* ==============================================  2. total sessions ===== */
+  if (isNum(T.sessions) || isNum(T.sessions_per_week) || isNum(T.active_days)) (function () {
+    var c = card("totals", "vermilion", "Volume");
+    var b = c.body;
+    add(b, eyebrow("the raw count"));
+    var line = el("p", "h3");
+    line.textContent = "In " + daysLabel + " you started";
+    add(b, anim(line));
+    var hero = el("span", "hero mono-num");
+    hero.textContent = fmt(T.sessions);
+    if (isNum(T.sessions)) hero.setAttribute("data-count", T.sessions);
+    var heroWrap = el("div");
+    heroWrap.appendChild(hero);
+    add(b, anim(heroWrap));
+    var after = el("p", "h3");
+    after.textContent = plural(T.sessions, "conversation with an AI.", "conversations with an AI.");
+    add(b, anim(after));
+
+    var tiles = el("div", "statgrid");
+    if (isNum(T.sessions_per_week)) add(tiles, statTile(fmt(T.sessions_per_week), "a week"));
+    if (isNum(T.active_days)) add(tiles, statTile(fmt(T.active_days) + (isNum(W.days) ? " / " + fmt(W.days) : ""), "active days"));
+    if (isNum(T.longest_streak_days)) add(tiles, statTile(fmt(T.longest_streak_days), "day streak"));
+    if (isNum(T.messages)) add(tiles, statTile(fmt(T.messages), "messages"));
+    if (isNum(T.hours_estimated)) add(tiles, statTile(fmt(T.hours_estimated) + "h", "est. time"));
+    if (tiles.children.length) add(b, tiles);
+    stagger(b, 80);
+  })();
+
+  /* ===================================================  3. sources ===== */
+  if (SOURCES.length) (function () {
+    var c = card("sources", "blue", "Tools");
+    var b = c.body;
+    var total = 0, i;
+    for (i = 0; i < SOURCES.length; i++) total += n(SOURCES[i].sessions);
+    add(b, eyebrow("where it happened"));
+    var top = SOURCES[0];
+    var h = el("h2", "h2");
+    h.textContent = SOURCES.length === 1
+      ? "It all happened in " + sourceLabel(top) + "."
+      : "You spread it across " + fmt(SOURCES.length) + " " + plural(SOURCES.length, "tool", "tools") + ".";
+    add(b, anim(h));
+    var lede = el("p", "lede");
+    lede.textContent = SOURCES.length === 1
+      ? "One place, " + fmt(n(top.sessions)) + " " + plural(n(top.sessions), "session", "sessions") + "."
+      : sourceLabel(top) + " took the biggest share at " +
+        (pct(top.share, total, top.sessions) || fmt(n(top.sessions)) + " sessions") + ".";
+    add(b, anim(lede));
+
+    var parts = SOURCES.map(function (x, idx) { return { value: n(x.sessions), opacity: stepOf(idx) }; });
+    add(b, anim(stackedBar(parts, {})));
+
+    var legend = el("ul", "legend");
+    for (i = 0; i < SOURCES.length; i++) {
+      var li = el("li");
+      var sw = el("span", "sw");
+      sw.style.opacity = stepOf(i);
+      var nm = el("span", "nm", sourceLabel(SOURCES[i]));
+      var v = el("span", "v", fmt(n(SOURCES[i].sessions)) + " " + plural(n(SOURCES[i].sessions), "session", "sessions"));
+      var p = el("span", "p", pct(SOURCES[i].share, total, SOURCES[i].sessions));
+      add(li, sw, nm, v, p);
+      add(legend, anim(li));
+    }
+    add(b, legend);
+
+    if (MODELS.length) {
+      var names = MODELS.slice(0, 4).map(function (m) { return str(m.name); }).filter(Boolean);
+      if (names.length) {
+        var mp = el("p", "small");
+        mp.textContent = "Models on the other end: " + names.join(" · ") +
+          (MODELS.length > names.length ? " · +" + (MODELS.length - names.length) + " more" : "");
+        add(b, anim(mp));
+      }
+    }
+    stagger(b, 60);
+  })();
+
+  /* ====================================================  4. rhythm ===== */
+  if (WEEKS.length) (function () {
+    var c = card("rhythm", "yellow", "Rhythm");
+    var b = c.body;
+    var i, max = 0, maxIdx = 0;
+    for (i = 0; i < WEEKS.length; i++) if (n(WEEKS[i].sessions) > max) { max = n(WEEKS[i].sessions); maxIdx = i; }
+    add(b, eyebrow("week by week"));
+    var h = el("h2", "h2");
+    h.textContent = WEEKS.length > 1
+      ? "Your busiest week started " + shortDate(WEEKS[maxIdx].week_start) + "."
+      : "One week on the record.";
+    add(b, anim(h));
+    var lede = el("p", "lede");
+    lede.textContent = fmt(max) + " " + plural(max, "session", "sessions") + " in seven days" +
+      (WEEKS.length > 1 ? ", against a typical " + fmt(median(WEEKS.map(function (x) { return n(x.sessions); }))) + "." : ".");
+    add(b, anim(lede));
+
+    var items = WEEKS.map(function (x, idx) {
+      return { value: n(x.sessions), label: shortDate(x.week_start), capLabel: fmt(n(x.sessions)), hot: idx === maxIdx };
+    });
+    add(b, anim(columnChart(items, { height: 220, capLabels: "all", maxBar: 44, maxSlot: 118 })));
+
+    var tiles = el("div", "statgrid");
+    tiles.style.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
+    var busiest = obj(HI.busiest_day);
+    if (str(busiest.date)) add(tiles, statTile(shortDate(busiest.date),
+      (isNum(busiest.sessions) ? fmt(busiest.sessions) + " sessions · " : "") + "busiest day"));
+    if (MODES.length) {
+      add(tiles, statTile(
+        MODES.slice(0, 3).map(function (m) { return fmt(n(m.sessions)); }).join(" / "),
+        MODES.slice(0, 3).map(function (m) { return str(m.mode) || "other"; }).join(" / ")));
+    }
+    if (isNum(LEN.median_messages)) add(tiles, statTile(fmt(LEN.median_messages), "median messages"));
+    if (isNum(LEN.p90_messages)) add(tiles, statTile(fmt(LEN.p90_messages), "p90 messages"));
+
+    var buckets = arr(LEN.buckets).filter(function (x) { return str(x.label); });
+    var bottom = el("div", "cols cols--2");
+    if (buckets.length) {
+      var bmax = 0;
+      for (i = 0; i < buckets.length; i++) bmax = Math.max(bmax, n(buckets[i].sessions));
+      var wrap2 = el("div");
+      add(wrap2, el("div", "chart-title", "session length, in messages"));
+      add(wrap2, columnChart(buckets.map(function (x) {
+        return { value: n(x.sessions), label: str(x.label), capLabel: fmt(n(x.sessions)), hot: n(x.sessions) === bmax };
+      }), { height: 155, capLabels: "all", maxBar: 40, maxSlot: 130 }));
+      add(bottom, anim(wrap2));
+    }
+    if (tiles.children.length) add(bottom, anim(tiles));
+    if (bottom.children.length) add(b, bottom);
+    stagger(b, 70);
+  })();
+
+  function median(nums) {
+    var a = nums.slice().sort(function (x, y) { return x - y; });
+    if (!a.length) return 0;
+    var m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  /* =====================================================  5. clock ===== */
+  if (HOURS.length || WEEKDAYS.length) (function () {
+    var c = card("clock", "slate", "Clock");
+    var b = c.body;
+    var i;
+    /* the emphasised column must be the tall one, so derive the peak from the
+       series being drawn; highlights.peak_hour is the fallback when it is absent. */
+    var peakHour = null;
+    if (HOURS.length) {
+      var best = -1;
+      for (i = 0; i < HOURS.length; i++) if (n(HOURS[i].sessions) > best) { best = n(HOURS[i].sessions); peakHour = n(HOURS[i].hour); }
+    }
+    if (peakHour === null && isNum(HI.peak_hour)) peakHour = HI.peak_hour;
+    var dayMax = 0, dayIdx = -1;
+    for (i = 0; i < WEEKDAYS.length; i++) if (n(WEEKDAYS[i].sessions) > dayMax) { dayMax = n(WEEKDAYS[i].sessions); dayIdx = i; }
+
+    add(b, eyebrow("when you reach for it"));
+    var h = el("h2", "h2");
+    h.textContent = peakHour !== null
+      ? "Peak hour: " + hourLabel(peakHour) + "."
+      : "Your week, hour by hour.";
+    add(b, anim(h));
+    var lede = el("p", "lede");
+    lede.textContent = (dayIdx >= 0 ? str(WEEKDAYS[dayIdx].label) + " is your heaviest day at " + fmt(dayMax) +
+      " " + plural(dayMax, "session", "sessions") + ". " : "") +
+      (peakHour !== null ? "The " + hourLabel(peakHour) + " hour is where the day tips over." : "");
+    add(b, anim(lede));
+
+    var grid = el("div", "cols cols--2");
+    if (HOURS.length) {
+      var hourWrap = el("div");
+      add(hourWrap, el("div", "chart-title", "hour of day"));
+      var hitems = HOURS.map(function (x) {
+        var hr = n(x.hour);
+        var tick = (hr % 6 === 0);
+        return {
+          value: n(x.sessions),
+          label: tick ? hourLabel(hr) : "",
+          capLabel: fmt(n(x.sessions)),
+          hot: peakHour !== null && hr === Math.round(peakHour)
+        };
+      });
+      add(hourWrap, columnChart(hitems, { height: 190, maxBar: 18 }));
+      add(grid, anim(hourWrap));
+    }
+    if (WEEKDAYS.length) {
+      var dayWrap = el("div");
+      add(dayWrap, el("div", "chart-title", "day of week"));
+      add(dayWrap, columnChart(WEEKDAYS.map(function (x, idx) {
+        return { value: n(x.sessions), label: str(x.label), capLabel: fmt(n(x.sessions)), hot: idx === dayIdx };
+      }), { height: 190, capLabels: "all", maxBar: 34, maxSlot: 92 }));
+      add(grid, anim(dayWrap));
+    }
+    add(b, grid);
+    stagger(b, 80);
+  })();
+
+  /* ================================================  6. categories ===== */
+  if (CATS.length) (function () {
+    var c = card("categories", "cream", "Categories");
+    var b = c.body;
+    var i, total = 0;
+    for (i = 0; i < CATS.length; i++) total += n(CATS[i].sessions);
+    var ranked = CATS.slice().sort(function (a, z) { return n(z.sessions) - n(a.sessions); });
+    var shown = ranked.slice(0, 7);
+    add(b, eyebrow("what you brought to it"));
+    var h = el("h2", "h2");
+    h.textContent = "Number one: " + (str(HI.biggest_use_case) || str(shown[0].category) || "—") + ".";
+    add(b, anim(h));
+
+    var topCat = shown[0];
+    var subs = arr(topCat.subcategories).map(function (x) { return str(x.name); }).filter(Boolean);
+    var lede = el("p", "lede");
+    lede.textContent = (pct(topCat.share, total, topCat.sessions) || "") +
+      " of everything — " + fmt(n(topCat.sessions)) + " " + plural(n(topCat.sessions), "session", "sessions") +
+      (subs.length ? ". Mostly " + subs.slice(0, 3).join(", ") + "." : ".");
+    add(b, anim(lede));
+
+    add(b, anim(rankedBars(shown.map(function (x, idx) {
+      return {
+        label: str(x.category) || "Uncategorized",
+        value: n(x.sessions),
+        valueLabel: fmt(n(x.sessions)) + (pct(x.share, total, x.sessions) ? "  ·  " + pct(x.share, total, x.sessions) : ""),
+        hot: idx === 0
+      };
+    }), {})));
+
+    if (ranked.length > shown.length) {
+      var more = el("p", "small", "+ " + (ranked.length - shown.length) + " smaller " +
+        plural(ranked.length - shown.length, "category", "categories") + " below the line.");
+      add(b, anim(more));
+    }
+    stagger(b, 60);
+  })();
+
+  /* ===============================================  7. ask/make/do ===== */
+  if (ASSIST.length) (function () {
+    var c = card("assist", "violet", "Ask / make / do");
+    var b = c.body;
+    var i, total = 0;
+    for (i = 0; i < ASSIST.length; i++) total += n(ASSIST[i].sessions);
+    var COPY = {
+      ask:  "You wanted to know something. The answer came back as words you read.",
+      make: "You wanted a thing made — a draft, a doc, a design, some code. You took it and used it.",
+      do:   "You handed over the keys. It went and did the thing: files edited, commands run, tools touched."
+    };
+    var VERB = { ask: "Asked", make: "Made", do: "Did" };
+    var ordered = ASSIST.slice().sort(function (a, z) {
+      var o = { ask: 0, make: 1, do: 2 };
+      var ka = o[str(a.type)], kz = o[str(z.type)];
+      return (ka == null ? 9 : ka) - (kz == null ? 9 : kz);
+    });
+    var lead = ASSIST.slice().sort(function (a, z) { return n(z.sessions) - n(a.sessions); })[0];
+
+    add(b, eyebrow("the real question"));
+    var h = el("h2", "h2");
+    h.textContent = "Did you ask AI for information, or did it do things for you?";
+    add(b, anim(h));
+    var lede = el("p", "lede");
+    lede.textContent = "Mostly you " + (str(VERB[str(lead.type)] || lead.label) || "used it").toLowerCase() +
+      " — " + (pct(lead.share, total, lead.sessions) || fmt(n(lead.sessions))) + " of your sessions.";
+    add(b, anim(lede));
+
+    add(b, anim(stackedBar(ordered.map(function (x, idx) {
+      return { value: n(x.sessions), opacity: stepOf(idx) };
+    }), {})));
+
+    var list = el("div", "panes");
+    for (i = 0; i < ordered.length; i++) {
+      var x = ordered[i];
+      var key = str(x.type);
+      var pane = el("div", "panel");
+      var head = el("div");
+      head.style.display = "flex";
+      head.style.flexWrap = "wrap";
+      head.style.alignItems = "baseline";
+      head.style.justifyContent = "space-between";
+      head.style.gap = "6px 10px";
+      var nm = el("div", "h3", str(VERB[key]) || str(x.label) || titleCase(key) || "—");
+      var swatch = el("span", "dot");
+      swatch.style.opacity = stepOf(i);
+      swatch.style.width = "14px"; swatch.style.height = "14px"; swatch.style.borderRadius = "4px";
+      var nmWrap = el("div");
+      nmWrap.style.display = "flex"; nmWrap.style.alignItems = "center"; nmWrap.style.gap = "10px";
+      add(nmWrap, swatch, nm);
+      var val = el("div", "mono-num");
+      val.style.fontWeight = "800";
+      val.style.fontSize = "clamp(26px,4.6vw,40px)";
+      val.style.letterSpacing = "-.03em";
+      val.textContent = pct(x.share, total, x.sessions) || fmt(n(x.sessions));
+      add(head, nmWrap, val);
+      var body = el("p", "small", COPY[key] || "");
+      body.style.marginTop = "10px";
+      body.style.opacity = ".82";
+      var count = el("p", "small", fmt(n(x.sessions)) + " " + plural(n(x.sessions), "session", "sessions"));
+      count.style.marginTop = "6px";
+      count.style.opacity = ".62";
+      add(pane, head, body, count);
+      add(list, anim(pane));
+    }
+    add(b, list);
+    stagger(b, 80);
+  })();
+
+  /* =======================================  8. tools & connectors ===== */
+  if (TOOLS.length || CONNECTORS.length) (function () {
+    var c = card("tools", "green", "Tools & connectors");
+    var b = c.body;
+    add(b, eyebrow("what it touched"));
+    var h = el("h2", "h2");
+    var topTool = TOOLS.length ? str(TOOLS[0].name) : "";
+    var topConn = CONNECTORS.length ? str(CONNECTORS[0].name) : "";
+    h.textContent = topTool ? "It reached for " + topTool + " most."
+                  : "It worked through " + topConn + ".";
+    add(b, anim(h));
+    var lede = el("p", "lede");
+    lede.textContent = [
+      TOOLS.length ? fmt(TOOLS.length) + " built-in " + plural(TOOLS.length, "tool", "tools") : "",
+      CONNECTORS.length ? fmt(CONNECTORS.length) + " connected " + plural(CONNECTORS.length, "service", "services") : ""
+    ].filter(Boolean).join(" · ") + " showed up in your sessions.";
+    add(b, anim(lede));
+
+    var grid = el("div", "cols cols--even");
+    function listBlock(title, items, cap) {
+      var wrapEl = el("div");
+      add(wrapEl, el("div", "chart-title", title));
+      var max = 0, i;
+      for (i = 0; i < items.length; i++) max = Math.max(max, n(items[i].sessions));
+      var ul = el("div", "rows");
+      for (i = 0; i < Math.min(items.length, cap); i++) {
+        var r = el("div", "row");
+        var left = el("div");
+        left.style.minWidth = "0";
+        var nm = el("div", "nm", str(items[i].name) || "—");
+        var track = el("div");
+        track.style.height = "6px";
+        track.style.marginTop = "7px";
+        track.style.borderRadius = "999px";
+        track.style.background = "color-mix(in srgb, var(--ink) 16%, transparent)";
+        track.style.overflow = "hidden";
+        var fill = el("div", "grow-x");
+        fill.style.height = "100%";
+        fill.style.borderRadius = "999px";
+        fill.style.background = i === 0 ? "var(--accent)" : "currentColor";
+        fill.style.opacity = i === 0 ? "1" : ".45";
+        fill.style.width = (max > 0 ? Math.max(4, (n(items[i].sessions) / max) * 100) : 4) + "%";
+        track.appendChild(fill);
+        add(left, nm, track);
+        var v = el("div", "v", fmt(n(items[i].sessions)));
+        add(r, left, v);
+        ul.appendChild(r);
+      }
+      add(wrapEl, ul);
+      if (items.length > cap) {
+        var more = el("p", "small", "+ " + (items.length - cap) + " more");
+        more.style.marginTop = "10px";
+        add(wrapEl, more);
+      }
+      return anim(wrapEl);
+    }
+    if (TOOLS.length) add(grid, listBlock("built-in tools", TOOLS, 7));
+    if (CONNECTORS.length) add(grid, listBlock("connectors", CONNECTORS, 7));
+    add(b, grid);
+    stagger(b, 70);
+  })();
+
+  /* ==================================================  9. surprise ===== */
+  (function () {
+    var sp = obj(HI.surprise);
+    var lead = str(sp.paraphrase) ? sp : (SURPRISES.length ? SURPRISES[0] : null);
+    if (!lead || !str(lead.paraphrase)) return;
+    var c = card("surprise", "pink", "The surprise");
+    var b = c.body;
+    add(b, eyebrow("and then there was this"));
+    var kicker = el("p", "h3", "One session did not fit the pattern.");
+    kicker.style.opacity = ".78";
+    add(b, anim(kicker));
+    var q = el("blockquote", "quote");
+    q.textContent = "“" + str(lead.paraphrase) + "”";
+    add(b, anim(q));
+    var meta = el("div", "chips");
+    if (str(lead.category)) add(meta, anim(el("span", "chip chip--solid", str(lead.category))));
+    if (str(lead.source)) add(meta, anim(el("span", "chip", titleCase(str(lead.source).replace(/[-_]/g, " ")))));
+    if (str(lead.date)) add(meta, anim(el("span", "chip", shortDate(lead.date))));
+    if (meta.children.length) add(b, meta);
+    if (str(sp.why)) {
+      var why = el("p", "lede", str(sp.why) + ".");
+      why.textContent = str(sp.why).replace(/\.$/, "") + ".";
+      add(b, anim(why));
+    }
+    var rest = SURPRISES.filter(function (x) { return str(x.paraphrase) !== str(lead.paraphrase); }).slice(0, 3);
+    if (rest.length) {
+      var wrapEl = el("div");
+      add(wrapEl, el("div", "chart-title", "other things that stood out"));
+      var ul = el("div", "rows");
+      for (var i = 0; i < rest.length; i++) {
+        var r = el("div", "row");
+        add(r, el("div", "nm", str(rest[i].paraphrase)),
+               el("div", "v", [str(rest[i].category), str(rest[i].date) ? shortDate(rest[i].date) : ""].filter(Boolean).join(" · ")));
+        ul.appendChild(r);
+      }
+      add(wrapEl, ul);
+      add(b, anim(wrapEl));
+    }
+    stagger(b, 90);
+  })();
+
+  /* ==================================================  10. moments ===== */
+  if (SAMPLES.length) (function () {
+    var c = card("moments", "midnight", "Moments");
+    var b = c.body;
+    add(b, eyebrow("a few moments"));
+    var h = el("h2", "h2", "Things you actually asked for.");
+    add(b, anim(h));
+    var lede = el("p", "lede", "Paraphrased on your machine. Nothing here left it.");
+    add(b, anim(lede));
+    var list = el("div");
+    var shown = SAMPLES.slice(0, 7);
+    for (var i = 0; i < shown.length; i++) {
+      var x = shown[i];
+      var m = el("div", "moment");
+      var q = el("div", "q", "“" + str(x.paraphrase) + "”");
+      var bits = [];
+      if (str(x.date)) bits.push(shortDate(x.date));
+      if (str(x.category)) bits.push(str(x.category));
+      if (str(x.assist_type)) bits.push(str(x.assist_type).toUpperCase());
+      if (str(x.source)) bits.push(titleCase(str(x.source).replace(/[-_]/g, " ")));
+      if (isNum(x.messages)) bits.push(fmt(x.messages) + " msgs");
+      add(m, q, el("div", "m", bits.join("  ·  ")));
+      add(list, anim(m));
+    }
+    add(b, list);
+    if (SAMPLES.length > shown.length) {
+      add(b, anim(el("p", "small", shown.length + " of " + SAMPLES.length + " sampled sessions.")));
+    }
+    stagger(b, 60);
+  })();
+
+  /* =================================================  11. narrative ===== */
+  if (str(NARR.headline) || str(NARR.summary) || arr(NARR.patterns).length || str(HI.signature_move)) (function () {
+    var c = card("narrative", "forest", "The read");
+    var b = c.body;
+    add(b, eyebrow("the read on you"));
+    if (str(NARR.headline)) add(b, anim(el("h2", "h2", str(NARR.headline))));
+    if (str(NARR.summary)) {
+      var p = el("p", "lede", str(NARR.summary));
+      p.style.maxWidth = "62ch";
+      add(b, anim(p));
+    }
+    var pats = arr(NARR.patterns).filter(function (x) { return str(x); });
+    if (pats.length) {
+      var ol = el("ol", "patterns");
+      for (var i = 0; i < pats.length; i++) add(ol, anim(el("li", "", str(pats[i]))));
+      add(b, ol);
+    }
+    if (str(HI.signature_move)) {
+      var pane = el("div", "panel");
+      add(pane, el("div", "chart-title", "your signature move"));
+      var sm = el("p", "h3", str(HI.signature_move));
+      add(pane, sm);
+      add(b, anim(pane));
+    }
+    stagger(b, 70);
+  })();
+
+  /* ====================================================  12. share ===== */
+  (function () {
+    var c = card("share", "finale", "Share");
+    var b = c.body;
+    var i;
+    var catTotal = 0;
+    for (i = 0; i < CATS.length; i++) catTotal += n(CATS[i].sessions);
+    var top3 = CATS.slice().sort(function (a, z) { return n(z.sessions) - n(a.sessions); }).slice(0, 3);
+    var assistTotal = 0;
+    for (i = 0; i < ASSIST.length; i++) assistTotal += n(ASSIST[i].sessions);
+    var assistOrder = ASSIST.slice().sort(function (a, z) {
+      var o = { ask: 0, make: 1, do: 2 };
+      var ka = o[str(a.type)], kz = o[str(z.type)];
+      return (ka == null ? 9 : ka) - (kz == null ? 9 : kz);
+    });
+
+    add(b, eyebrow("the one to screenshot"));
+    var poster = el("div", "share");
+    var head = el("div", "share-head");
+    add(head, el("div", "chart-title", "my ai, " + (daysLabel || "30 days")));
+    add(head, el("div", "chart-title", str(PERSON.function) || str(PERSON.title) || "howiai"));
+    add(poster, head);
+
+    var line = el("p", "quote");
+    line.textContent = str(HI.one_liner) || str(NARR.headline) || "A month of working with AI.";
+    add(poster, line);
+
+    var grid = el("div", "share-grid");
+
+    var left = el("div");
+    add(left, el("div", "chart-title",
+      top3.length ? ("top " + (top3.length === 1 ? "category" : top3.length + " categories")) : "top categories"));
+    if (top3.length) {
+      var ul = el("ul", "mini");
+      for (i = 0; i < top3.length; i++) {
+        var li = el("li");
+        var share = isNum(top3[i].share) ? top3[i].share : (catTotal > 0 ? n(top3[i].sessions) / catTotal : 0);
+        add(li, el("span", "nm", (i + 1) + ". " + (str(top3[i].category) || "—")),
+                el("span", "v", pct(top3[i].share, catTotal, top3[i].sessions) || fmt(n(top3[i].sessions))));
+        var track = el("span", "track");
+        var fill = el("i", "fill");
+        fill.style.width = Math.max(4, Math.round(share * 100)) + "%";
+        fill.style.opacity = i === 0 ? "1" : (i === 1 ? ".7" : ".48");
+        track.appendChild(fill);
+        li.appendChild(track);
+        add(ul, li);
+      }
+      add(left, ul);
+    } else {
+      add(left, el("p", "small", "No categories in this window."));
+    }
+
+    var right = el("div");
+    var tiles = el("div", "statgrid statgrid--3");
+    tiles.style.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
+    if (isNum(T.sessions_per_week)) add(tiles, statTile(fmt(T.sessions_per_week), "sessions / week"));
+    if (isNum(T.sessions)) add(tiles, statTile(fmt(T.sessions), "sessions"));
+    if (tiles.children.length) add(right, tiles);
+    if (assistOrder.length) {
+      var ab = el("div");
+      ab.style.marginTop = "clamp(14px,2.4vh,20px)";
+      add(ab, el("div", "chart-title", "ask · make · do"));
+      add(ab, stackedBar(assistOrder.map(function (x, idx) {
+        return { value: n(x.sessions), opacity: stepOf(idx) };
+      }), { height: 26 }));
+      var row = el("div");
+      row.style.display = "flex";
+      row.style.flexWrap = "wrap";
+      row.style.gap = "10px 18px";
+      row.style.marginTop = "12px";
+      for (i = 0; i < assistOrder.length; i++) {
+        var item = el("div");
+        item.style.display = "flex";
+        item.style.alignItems = "center";
+        item.style.gap = "8px";
+        item.style.fontSize = "clamp(13px,1.7vw,15px)";
+        var sw = el("span", "dot");
+        sw.style.opacity = stepOf(i);
+        var lbl = el("span", "", (str({ ask: "Asked", make: "Made", do: "Did" }[str(assistOrder[i].type)]) ||
+          str(assistOrder[i].label) || titleCase(str(assistOrder[i].type))) + " " +
+          (pct(assistOrder[i].share, assistTotal, assistOrder[i].sessions) || fmt(n(assistOrder[i].sessions))));
+        lbl.style.fontWeight = "650";
+        add(item, sw, lbl);
+        add(row, item);
+      }
+      add(ab, row);
+      add(right, ab);
+    }
+
+    add(grid, left, right);
+    add(poster, grid);
+
+    var foot = el("div", "share-foot");
+    add(foot, el("span", "", windowLabel || daysLabel));
+    add(foot, el("span", "", "Made with howiai · data stays on your machine"));
+    add(poster, el("hr", "rule"), foot);
+
+    add(b, anim(poster));
+    stagger(b, 90);
+  })();
+
+  /* ------------------------------------------------------------- mount */
+  var app = document.getElementById("app");
+  for (var ci = 0; ci < cards.length; ci++) app.appendChild(cards[ci]);
+
+  /* rail + counter */
+  var rail = document.getElementById("rail");
+  var counter = document.getElementById("counter");
+  var bar = document.querySelector("#progress i");
+  var buttons = [];
+  cards.forEach(function (sec, idx) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.title = sec.dataset.label || ("Card " + (idx + 1));
+    btn.setAttribute("aria-label", btn.title);
+    btn.addEventListener("click", function () {
+      sec.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    });
+    rail.appendChild(btn);
+    buttons.push(btn);
+  });
+  function pad2(v) { return v < 10 ? "0" + v : "" + v; }
+  function setActive(idx) {
+    for (var i = 0; i < buttons.length; i++) buttons[i].setAttribute("aria-current", i === idx ? "true" : "false");
+    counter.textContent = pad2(idx + 1) + " / " + pad2(cards.length);
+    var ink = cards[idx].dataset.ink || "#fff";
+    document.documentElement.style.setProperty("--ui-ink", ink);
+    document.documentElement.style.setProperty("--ui-bg", cards[idx].style.getPropertyValue("--bg"));
+    bar.style.width = (((idx + 1) / cards.length) * 100) + "%";
+  }
+  setActive(0);
+
+  /* entrance + active tracking */
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add("is-in");
+          runCounts(en.target);
+        }
+      });
+    }, { threshold: 0.18 });
+    var active = new IntersectionObserver(function (entries) {
+      var best = null;
+      entries.forEach(function (en) {
+        if (en.isIntersecting && (!best || en.intersectionRatio > best.intersectionRatio)) best = en;
+      });
+      if (best) setActive(cards.indexOf(best.target));
+    }, { threshold: [0.5, 0.75] });
+    cards.forEach(function (sec) { io.observe(sec); active.observe(sec); });
+  } else {
+    cards.forEach(function (sec) { sec.classList.add("is-in"); runCounts(sec); });
+  }
+
+  function runCounts(root) {
+    var nodes = root.querySelectorAll("[data-count]");
+    for (var i = 0; i < nodes.length; i++) {
+      (function (node) {
+        if (node.dataset.counted) return;
+        node.dataset.counted = "1";
+        var target = parseFloat(node.getAttribute("data-count"));
+        if (!isFinite(target)) return;
+        if (REDUCED) { node.textContent = fmt(target); return; }
+        var start = null, dur = 1100;
+        function step(ts) {
+          if (start === null) start = ts;
+          var t = Math.min(1, (ts - start) / dur);
+          var e = 1 - Math.pow(1 - t, 3);
+          node.textContent = fmt(Math.round(target * e));
+          if (t < 1) requestAnimationFrame(step);
+          else node.textContent = fmt(target);
+        }
+        node.textContent = fmt(0);
+        requestAnimationFrame(step);
+      })(nodes[i]);
+    }
+  }
+
+  /* draw + keep charts crisp on resize */
+  redrawAll();
+  var rt;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(redrawAll, 140);
+  });
+
+  /* keyboard paging */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "PageDown" && e.key !== "PageUp") return;
+    if (e.target && /^(input|textarea|select)$/i.test(e.target.tagName)) return;
+    var cur = 0, bestTop = Infinity;
+    for (var i = 0; i < cards.length; i++) {
+      var d = Math.abs(cards[i].getBoundingClientRect().top);
+      if (d < bestTop) { bestTop = d; cur = i; }
+    }
+    var next = (e.key === "ArrowDown" || e.key === "PageDown") ? cur + 1 : cur - 1;
+    if (next >= 0 && next < cards.length) {
+      e.preventDefault();
+      cards[next].scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How we use AI — an exhibit</title>
+<script id="howiai-data" type="application/json">{"schema_version":1,"generated_at":"2026-09-19T15:00:00-04:00","window":{"days":30,"start":"2026-08-20","end":"2026-09-19"},"team":{"name":"Product team","participants":14,"by_function":[{"function":"Design","participants":4},{"function":"Product","participants":4},{"function":"Engineering","participants":6}]},"totals":{"sessions":1071,"messages":22804,"sessions_per_person_per_week":17.9},"distribution":{"sessions_per_week_per_person":{"buckets":[{"label":"0–5","participants":0},{"label":"6–15","participants":6},{"label":"16–30","participants":7},{"label":"31–50","participants":1},{"label":"51+","participants":0}],"median":17.3,"p90":28,"max":35},"participants":[{"participant_id":"p_d0","function":"Design","sessions_per_week":8.4,"top_category":"Write & edit","assist_type_mix":{"ask":14,"make":14,"do":8}},{"participant_id":"p_d1","function":"Design","sessions_per_week":15.6,"top_category":"Design critique & feedback","assist_type_mix":{"ask":35,"make":26,"do":6}},{"participant_id":"p_d2","function":"Design","sessions_per_week":12.1,"top_category":"Research & synthesis","assist_type_mix":{"ask":20,"make":27,"do":5}},{"participant_id":"p_d3","function":"Design","sessions_per_week":6.5,"top_category":"Research & synthesis","assist_type_mix":{"ask":11,"make":11,"do":6}},{"participant_id":"p_p0","function":"Product","sessions_per_week":8.2,"top_category":"Analyze data","assist_type_mix":{"ask":18,"make":12,"do":5}},{"participant_id":"p_p1","function":"Product","sessions_per_week":21,"top_category":"Plan & prioritize","assist_type_mix":{"ask":49,"make":35,"do":6}},{"participant_id":"p_p2","function":"Product","sessions_per_week":17.3,"top_category":"Write & edit","assist_type_mix":{"ask":27,"make":42,"do":5}},{"participant_id":"p_p3","function":"Product","sessions_per_week":14.5,"top_category":"Research & synthesis","assist_type_mix":{"ask":23,"make":33,"do":6}},{"participant_id":"p_e0","function":"Engineering","sessions_per_week":27.3,"top_category":"Build & ship code","assist_type_mix":{"ask":38,"make":28,"do":51}},{"participant_id":"p_e1","function":"Engineering","sessions_per_week":35,"top_category":"Build & ship code","assist_type_mix":{"ask":51,"make":26,"do":73}},{"participant_id":"p_e2","function":"Engineering","sessions_per_week":20.3,"top_category":"Debug & fix","assist_type_mix":{"ask":28,"make":15,"do":44}},{"participant_id":"p_e3","function":"Engineering","sessions_per_week":27.8,"top_category":"Build & ship code","assist_type_mix":{"ask":43,"make":27,"do":49}},{"participant_id":"p_e4","function":"Engineering","sessions_per_week":7.9,"top_category":"Build & ship code","assist_type_mix":{"ask":8,"make":6,"do":20}},{"participant_id":"p_e5","function":"Engineering","sessions_per_week":28,"top_category":"Build & ship code","assist_type_mix":{"ask":37,"make":27,"do":56}}]},"by_function":[{"function":"Design","participants":4,"sessions":183,"sessions_per_person_per_week":10.7,"top_categories":[{"category":"Design critique & feedback","share":0.224},{"category":"Write & edit","share":0.219},{"category":"Research & synthesis","share":0.219},{"category":"Prototype & build","share":0.126}],"assist_type_mix":{"ask":80,"make":78,"do":25},"by_source":{"claude-export":80,"chatgpt-export":57,"claude-cowork":24,"claude-code":22}},{"function":"Product","participants":4,"sessions":261,"sessions_per_person_per_week":15.2,"top_categories":[{"category":"Write & edit","share":0.226},{"category":"Plan & prioritize","share":0.211},{"category":"Research & synthesis","share":0.172},{"category":"Analyze data","share":0.169}],"assist_type_mix":{"ask":117,"make":122,"do":22},"by_source":{"claude-export":85,"chatgpt-export":77,"claude-cowork":57,"claude-code":42}},{"function":"Engineering","participants":6,"sessions":627,"sessions_per_person_per_week":24.4,"top_categories":[{"category":"Build & ship code","share":0.26},{"category":"Debug & fix","share":0.214},{"category":"Review & explain code","share":0.163},{"category":"Automate & ops","share":0.128}],"assist_type_mix":{"ask":205,"make":129,"do":293},"by_source":{"claude-code":377,"codex":94,"claude-export":89,"chatgpt-export":67}}],"by_category":[{"category":"Write & edit","sessions":169,"share":0.158,"assist_type_mix":{"ask":29,"make":134,"do":6},"subcategories":[{"name":"Design doc","sessions":34},{"name":"Runbook","sessions":25},{"name":"PR description","sessions":23},{"name":"Customer email","sessions":18},{"name":"Exec update","sessions":16},{"name":"Release notes","sessions":15},{"name":"Rationale for stakeholders","sessions":13},{"name":"Spec","sessions":13},{"name":"PRD","sessions":12}],"by_function":{"Design":40,"Product":59,"Engineering":70}},{"category":"Build & ship code","sessions":163,"share":0.152,"assist_type_mix":{"ask":13,"make":26,"do":124},"subcategories":[{"name":"Tests","sessions":44},{"name":"Add a feature","sessions":42},{"name":"Migration","sessions":41},{"name":"Refactor","sessions":36}],"by_function":{"Design":0,"Product":0,"Engineering":163}},{"category":"Debug & fix","sessions":134,"share":0.125,"assist_type_mix":{"ask":28,"make":10,"do":96},"subcategories":[{"name":"Flaky CI","sessions":50},{"name":"Failing test","sessions":47},{"name":"Prod incident","sessions":37}],"by_function":{"Design":0,"Product":0,"Engineering":134}},{"category":"Review & explain code","sessions":102,"share":0.095,"assist_type_mix":{"ask":79,"make":8,"do":15},"subcategories":[{"name":"Architecture","sessions":42},{"name":"PR review","sessions":40},{"name":"Explain this module","sessions":20}],"by_function":{"Design":0,"Product":0,"Engineering":102}},{"category":"Explain & learn","sessions":92,"share":0.086,"assist_type_mix":{"ask":90,"make":2,"do":0},"subcategories":[{"name":"Concept","sessions":21},{"name":"New language","sessions":17},{"name":"Terminology","sessions":14},{"name":"How does X work","sessions":9},{"name":"Domain","sessions":9},{"name":"Technical concept","sessions":9},{"name":"Library docs","sessions":8},{"name":"Engineering concepts","sessions":5}],"by_function":{"Design":19,"Product":27,"Engineering":46}},{"category":"Research & synthesis","sessions":85,"share":0.079,"assist_type_mix":{"ask":33,"make":44,"do":8},"subcategories":[{"name":"Interview synthesis","sessions":18},{"name":"Affinity mapping","sessions":16},{"name":"Competitive teardown","sessions":15},{"name":"Market scan","sessions":15},{"name":"Competitor","sessions":12},{"name":"Summarize interviews","sessions":9}],"by_function":{"Design":40,"Product":45,"Engineering":0}},{"category":"Automate & ops","sessions":80,"share":0.075,"assist_type_mix":{"ask":9,"make":20,"do":51},"subcategories":[{"name":"Infra","sessions":31},{"name":"Scripts","sessions":26},{"name":"CI","sessions":23}],"by_function":{"Design":0,"Product":0,"Engineering":80}},{"category":"Plan & prioritize","sessions":67,"share":0.063,"assist_type_mix":{"ask":40,"make":26,"do":1},"subcategories":[{"name":"OKRs","sessions":22},{"name":"Roadmap bets","sessions":17},{"name":"Tradeoffs","sessions":16},{"name":"Roadmap tradeoffs","sessions":6},{"name":"Sprint planning","sessions":6}],"by_function":{"Design":12,"Product":55,"Engineering":0}},{"category":"Personal & life admin","sessions":49,"share":0.046,"assist_type_mix":{"ask":31,"make":16,"do":2},"subcategories":[{"name":"Travel","sessions":19},{"name":"Home","sessions":11},{"name":"Fitness","sessions":11},{"name":"Kids","sessions":3},{"name":"Health","sessions":2},{"name":"Money","sessions":1},{"name":"Family","sessions":1},{"name":"Cooking","sessions":1}],"by_function":{"Design":8,"Product":9,"Engineering":32}},{"category":"Analyze data","sessions":44,"share":0.041,"assist_type_mix":{"ask":16,"make":14,"do":14},"subcategories":[{"name":"Experiment readout","sessions":16},{"name":"Funnel","sessions":15},{"name":"SQL","sessions":13}],"by_function":{"Design":0,"Product":44,"Engineering":0}},{"category":"Design critique & feedback","sessions":41,"share":0.038,"assist_type_mix":{"ask":29,"make":8,"do":4},"subcategories":[{"name":"Accessibility check","sessions":16},{"name":"Copy in the UI","sessions":13},{"name":"Critique a flow","sessions":12}],"by_function":{"Design":41,"Product":0,"Engineering":0}},{"category":"Prototype & build","sessions":23,"share":0.021,"assist_type_mix":{"ask":0,"make":8,"do":15},"subcategories":[{"name":"Motion spec","sessions":13},{"name":"Design tokens","sessions":6},{"name":"Prototype in code","sessions":4}],"by_function":{"Design":23,"Product":0,"Engineering":0}},{"category":"Communicate & coordinate","sessions":22,"share":0.021,"assist_type_mix":{"ask":5,"make":13,"do":4},"subcategories":[{"name":"Status","sessions":11},{"name":"Slack replies","sessions":7},{"name":"Meeting prep","sessions":4}],"by_function":{"Design":0,"Product":22,"Engineering":0}}],"by_assist_type":[{"type":"ask","label":"Asked","sessions":402,"share":0.375},{"type":"make","label":"Made","sessions":329,"share":0.307},{"type":"do","label":"Did","sessions":340,"share":0.317}],"by_source":[{"source":"claude-code","label":"Claude Code","sessions":441,"messages":14188,"share":0.412},{"source":"claude-export","label":"Claude","sessions":254,"messages":1864,"share":0.237},{"source":"chatgpt-export","label":"ChatGPT","sessions":201,"messages":1426,"share":0.188},{"source":"codex","label":"Codex","sessions":94,"messages":2873,"share":0.088},{"source":"claude-cowork","label":"Cowork","sessions":81,"messages":2453,"share":0.076}],"by_mode":[{"mode":"agentic","sessions":567},{"mode":"chat","sessions":455},{"mode":"routine","sessions":49}],"by_week":[{"week_start":"2026-08-17","sessions":201,"active_participants":14},{"week_start":"2026-08-24","sessions":202,"active_participants":14},{"week_start":"2026-08-31","sessions":222,"active_participants":14},{"week_start":"2026-09-07","sessions":215,"active_participants":14},{"week_start":"2026-09-14","sessions":231,"active_participants":14}],"by_weekday":[{"weekday":0,"label":"Mon","sessions":249},{"weekday":1,"label":"Tue","sessions":200},{"weekday":2,"label":"Wed","sessions":164},{"weekday":3,"label":"Thu","sessions":147},{"weekday":4,"label":"Fri","sessions":95},{"weekday":5,"label":"Sat","sessions":78},{"weekday":6,"label":"Sun","sessions":138}],"by_hour":[{"hour":0,"sessions":0},{"hour":1,"sessions":0},{"hour":2,"sessions":0},{"hour":3,"sessions":4},{"hour":4,"sessions":9},{"hour":5,"sessions":22},{"hour":6,"sessions":23},{"hour":7,"sessions":70},{"hour":8,"sessions":86},{"hour":9,"sessions":109},{"hour":10,"sessions":118},{"hour":11,"sessions":157},{"hour":12,"sessions":131},{"hour":13,"sessions":114},{"hour":14,"sessions":78},{"hour":15,"sessions":76},{"hour":16,"sessions":36},{"hour":17,"sessions":30},{"hour":18,"sessions":8},{"hour":19,"sessions":0},{"hour":20,"sessions":0},{"hour":21,"sessions":0},{"hour":22,"sessions":0},{"hour":23,"sessions":0}],"tools":[{"name":"Read","sessions":262},{"name":"Edit","sessions":256},{"name":"Agent","sessions":255},{"name":"WebSearch","sessions":249},{"name":"Glob","sessions":245},{"name":"Grep","sessions":245},{"name":"Bash","sessions":238},{"name":"Write","sessions":235},{"name":"WebFetch","sessions":221}],"connectors":[{"name":"Slack","sessions":48},{"name":"Linear","sessions":41},{"name":"GitHub","sessions":40},{"name":"Gmail","sessions":39},{"name":"Google Drive","sessions":32},{"name":"Notion","sessions":29},{"name":"Figma","sessions":27}],"surprises":[{"paraphrase":"Plan a 6-year-old's birthday party on a budget","function":"Design","category":"Personal & life admin","source":"claude-export"},{"paraphrase":"Draft a polite note to a landlord about repairs","function":"Design","category":"Personal & life admin","source":"claude-export"},{"paraphrase":"Tear down three competitor onboarding flows","function":"Design","category":"Research & synthesis","source":"chatgpt-export"},{"paraphrase":"Build a 12-week half-marathon plan","function":"Design","category":"Personal & life admin","source":"claude-export"},{"paraphrase":"Compare two car leases","function":"Design","category":"Personal & life admin","source":"claude-export"},{"paraphrase":"Plan a 6-year-old's birthday party on a budget","function":"Design","category":"Personal & life admin","source":"chatgpt-export"},{"paraphrase":"Tighten microcopy on the empty-state screen","function":"Design","category":"Design critique & feedback","source":"claude-code"},{"paraphrase":"Summarize twelve interview transcripts into themes","function":"Design","category":"Research & synthesis","source":"claude-export"}],"highlights":{"biggest_use_case":"Write & edit","surprise_use_case":"Designers prototyping in code with Cowork","most_agentic_function":"Engineering","most_curious_function":"Product","one_liner":"Engineers let AI do, designers ask it to look, PMs ask it to write"},"narrative":{"headline":"Three functions, three different relationships with AI","summary":"Engineering sessions are agentic and long. Design sessions are short critiques. Product sits in the middle, writing with AI more than anyone. The distribution is heavy-tailed: two people account for a third of all sessions.","patterns":["Sessions per person per week range from 3 to 45","Every function has a personal-life use case they did not expect to share","Thursday is the busiest day for all three functions"]}}</script>
+<style>
+/* ---------------------------------------------------------------
+   Tokens. Risograph: 2–3 inks on off-white paper.
+   Categorical + ordinal ramps validated with the dataviz validator
+   (light surface #f6f1e6, dark surface #191712) — do not eyeball-edit.
+   --------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --paper:        #f6f1e6;
+  --paper-2:      #efe8d8;
+  --card:         #fffdf7;
+  --ink:          #17140e;
+  --ink-2:        #56503f;
+  --ink-3:        #857c66;
+  --rule:         #d6cbb2;
+  --rule-soft:    #e6ddc9;
+
+  /* categorical: identity of a function. fixed order, never cycled. */
+  --s1: #d4452a; --s2: #1b5fb0; --s3: #0f8f63; --s4: #8a4fbf;
+  --s5: #b07a00; --s6: #c2518a; --s7: #0d8fa8; --s8: #6b7d1a;
+
+  /* ordinal: ask → make → do (an ordered axis, one hue, light→dark) */
+  --a-ask:  #c9a469;
+  --a-make: #a2732c;
+  --a-do:   #5e3f12;
+  --on-ask:  #17140e;
+  --on-make: #fffdf7;
+  --on-do:   #fffdf7;
+
+  --grain: 0.055;
+  --shadow: 0 1px 0 var(--rule-soft), 0 12px 28px -22px rgba(23,20,14,.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --paper:     #191712;
+    --paper-2:   #13120e;
+    --card:      #232019;
+    --ink:       #f6f1e3;
+    --ink-2:     #c0b7a1;
+    --ink-3:     #8d8471;
+    --rule:      #3d382c;
+    --rule-soft: #2c281f;
+    --s1: #e4603f; --s2: #5a92e2; --s3: #2fa478; --s4: #a276d8;
+    --s5: #b5851a; --s6: #cf6a94; --s7: #2599b4; --s8: #849629;
+    --a-ask:  #6b4a1e;
+    --a-make: #a87d3c;
+    --a-do:   #e6cb96;
+    --on-ask:  #f6f1e3;
+    --on-make: #17140e;
+    --on-do:   #17140e;
+    --grain: 0.05;
+    --shadow: 0 1px 0 #2c281f, 0 14px 30px -24px #000;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper:     #191712;
+  --paper-2:   #13120e;
+  --card:      #232019;
+  --ink:       #f6f1e3;
+  --ink-2:     #c0b7a1;
+  --ink-3:     #8d8471;
+  --rule:      #3d382c;
+  --rule-soft: #2c281f;
+  --s1: #e4603f; --s2: #5a92e2; --s3: #2fa478; --s4: #a276d8;
+  --s5: #b5851a; --s6: #cf6a94; --s7: #2599b4; --s8: #849629;
+  --a-ask:  #6b4a1e;
+  --a-make: #a87d3c;
+  --a-do:   #e6cb96;
+  --on-ask:  #f6f1e3;
+  --on-make: #17140e;
+  --on-do:   #17140e;
+  --grain: 0.05;
+  --shadow: 0 1px 0 #2c281f, 0 14px 30px -24px #000;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(rgba(128,110,70,var(--grain)) 1px, transparent 1.1px),
+    radial-gradient(rgba(128,110,70,calc(var(--grain) * .7)) 1px, transparent 1.1px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 4px 5px;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 72px; }
+@media (min-width: 900px) { .wrap { padding: 0 40px 96px; } }
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+}
+.serif { font-family: ui-serif, Georgia, "Times New Roman", serif; }
+
+/* ---- section scaffolding ---- */
+section { padding: 40px 0; border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: 0; }
+@media (min-width: 900px) { section { padding: 60px 0; } }
+.label { color: var(--ink-3); margin: 0 0 18px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.label b { color: var(--ink-2); font-weight: 700; }
+h2.sec {
+  font-size: clamp(26px, 5.2vw, 46px); line-height: 1.02; letter-spacing: -.025em;
+  font-weight: 800; margin: 0 0 8px; text-wrap: balance;
+}
+.sec-note { color: var(--ink-2); max-width: 62ch; margin: 0 0 26px; font-size: 15px; }
+
+/* ---- masthead ---- */
+header.masthead { padding: 44px 0 32px; }
+@media (min-width: 900px) { header.masthead { padding: 76px 0 40px; } }
+.kicker { color: var(--ink-3); margin: 0 0 22px; }
+h1 {
+  font-size: clamp(44px, 12.5vw, 138px);
+  line-height: .86; letter-spacing: -.045em; font-weight: 800;
+  margin: 0 0 22px; text-wrap: balance;
+  text-shadow: 3px 3px 0 color-mix(in srgb, var(--s1) 22%, transparent);
+}
+h1 em { font-style: normal; color: var(--s1); }
+.masthead-meta {
+  display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline;
+  border-top: 3px solid var(--ink); padding-top: 14px; color: var(--ink-2);
+}
+.masthead-meta span { white-space: nowrap; }
+.masthead-meta b { color: var(--ink); }
+
+/* ---- wall text ---- */
+.walltext { max-width: 48ch; }
+.walltext .head {
+  font-size: clamp(24px, 4.6vw, 40px); line-height: 1.12; font-weight: 400;
+  letter-spacing: -.012em; margin: 0 0 16px; text-wrap: balance;
+}
+.walltext .body { font-size: clamp(16px, 2.2vw, 19px); line-height: 1.6; color: var(--ink-2); margin: 0; }
+
+/* ---- statements ---- */
+.statements { list-style: none; margin: 0; padding: 0; }
+.statements li {
+  border-top: 1px solid var(--rule-soft); padding: 18px 0;
+  display: grid; grid-template-columns: 1fr; gap: 6px;
+}
+.statements li:first-child { border-top: 0; }
+.statement {
+  font-size: clamp(25px, 5.6vw, 52px); line-height: 1.02; font-weight: 800;
+  letter-spacing: -.03em; margin: 0; text-wrap: balance;
+}
+.statement .who { color: var(--fc, var(--s1)); }
+.statement-sub { color: var(--ink-3); }
+
+/* ---- triptych ---- */
+.triptych { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .triptych { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1020px) { .triptych { grid-template-columns: repeat(3, 1fr); } }
+.portrait {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 4px;
+  padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px;
+}
+.portrait .top-rule { height: 8px; background: var(--fc); margin: -20px -20px 0; border-radius: 3px 3px 0 0; }
+.portrait h3 {
+  font-size: clamp(24px, 3.4vw, 32px); line-height: 1; letter-spacing: -.03em;
+  font-weight: 800; margin: 4px 0 0; text-wrap: balance;
+}
+.portrait .who-meta { color: var(--ink-3); margin-top: 6px; }
+.p-figures { display: flex; gap: 22px; flex-wrap: wrap; }
+.figure .v { font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.figure .k { color: var(--ink-3); margin-top: 6px; display: block; max-width: 16ch; }
+.block-head { color: var(--ink-3); margin: 0 0 9px; }
+.catlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.catlist li { display: grid; gap: 4px; }
+.catlist .row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 14px; }
+.catlist .row span:last-child { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.track { height: 8px; border-radius: 4px; background: var(--paper-2); overflow: hidden; }
+.track i { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--fc); }
+
+/* ---- stacked ask/make/do bar ---- */
+.stack { display: flex; width: 100%; gap: 2px; }
+.stack .seg { min-width: 3px; cursor: default; }
+.stack .seg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.stack-labels { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 9px; font-size: 12px; color: var(--ink-2); }
+.stack-labels span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.stack-labels i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+
+/* ---- assist legend ---- */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin: 0 0 22px; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); font-size: 13px; }
+.legend .sw { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+.legend .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+
+/* ---- surprise wall ---- */
+.wall { columns: 1; column-gap: 16px; }
+@media (min-width: 620px) { .wall { columns: 2; } }
+@media (min-width: 1020px) { .wall { columns: 3; } }
+.tile {
+  break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 18px; margin: 0 0 16px; box-shadow: var(--shadow);
+  transform: rotate(var(--rot, 0deg)); transition: transform .18s ease;
+  border-left: 5px solid var(--fc);
+}
+.tile:hover { transform: rotate(0deg) translateY(-3px); }
+.tile .chip { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); margin-bottom: 12px; }
+.tile .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--fc); flex: none; }
+.tile p {
+  margin: 0 0 14px; font-size: clamp(17px, 2.4vw, 21px); line-height: 1.24;
+  font-weight: 700; letter-spacing: -.015em; text-wrap: pretty;
+}
+.tile .foot { color: var(--ink-3); border-top: 1px solid var(--rule-soft); padding-top: 10px; display: block; }
+
+/* ---- charts ---- */
+.chart { width: 100%; display: block; overflow: visible; }
+.chart text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+figure { margin: 0; }
+figcaption { color: var(--ink-2); font-size: 14px; margin-top: 14px; }
+figcaption b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.strip-card, .spotlight {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 4px;
+  padding: 20px; box-shadow: var(--shadow);
+}
+@media (min-width: 900px) { .strip-card, .spotlight { padding: 28px; } }
+
+/* ---- spotlight ---- */
+.spotlight { display: grid; gap: 26px; }
+@media (min-width: 900px) { .spotlight { grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: start; } }
+.spotlight .big { font-size: clamp(30px, 6vw, 58px); line-height: .98; font-weight: 800; letter-spacing: -.035em; margin: 6px 0 14px; text-wrap: balance; }
+.spotlight .lede { color: var(--ink-2); margin: 0 0 20px; font-size: 16px; max-width: 46ch; }
+.subcats { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.subcats li {
+  border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px;
+  color: var(--ink-2); font-size: 13px; background: var(--paper);
+}
+.subcats li b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ---- patterns ---- */
+.patterns { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.patterns li {
+  display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: baseline;
+  border-top: 1px solid var(--rule-soft); padding: 18px 0;
+}
+.patterns li .n { color: var(--s1); font-weight: 800; font-variant-numeric: tabular-nums; }
+.patterns li p { margin: 0; font-size: clamp(17px, 2.6vw, 24px); line-height: 1.24; letter-spacing: -.015em; text-wrap: pretty; }
+blockquote.oneliner {
+  margin: 0 0 30px; padding: 0 0 0 20px; border-left: 5px solid var(--s1);
+  font-size: clamp(21px, 3.8vw, 34px); line-height: 1.16; letter-spacing: -.02em;
+  font-weight: 400; text-wrap: balance;
+}
+
+/* ---- numbers band ---- */
+.band {
+  background: var(--ink); color: var(--paper); border-radius: 5px;
+  padding: 26px 20px; display: grid; gap: 24px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+@media (min-width: 900px) { .band { padding: 36px 32px; } }
+.band > div { min-width: 0; }
+.band .v {
+  font-size: clamp(26px, 3.6vw, 40px); font-weight: 800; letter-spacing: -.035em;
+  line-height: 1.02; font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word; hyphens: none;
+}
+.band .v.long { font-size: clamp(19px, 2vw, 22px); letter-spacing: -.015em; line-height: 1.12; }
+.band .k { color: color-mix(in srgb, var(--paper) 62%, transparent); margin-top: 8px; display: block; }
+
+/* ---- table view ---- */
+details.numbers { margin-top: 34px; border-top: 1px solid var(--rule); padding-top: 18px; }
+details.numbers summary { cursor: pointer; color: var(--ink-2); }
+details.numbers summary:hover { color: var(--ink); }
+.tables { display: grid; gap: 28px; margin-top: 22px; }
+.tables table { max-width: 780px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+caption { text-align: left; color: var(--ink-3); padding-bottom: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+
+/* ---- tooltip ---- */
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; opacity: 0;
+  transition: opacity .1s ease; background: var(--ink); color: var(--paper);
+  padding: 9px 11px; border-radius: 4px; font-size: 12px; line-height: 1.45;
+  max-width: 260px; box-shadow: 0 10px 24px -14px rgba(0,0,0,.8);
+}
+#tip b { font-weight: 700; }
+#tip .t-k { color: color-mix(in srgb, var(--paper) 60%, transparent); }
+
+footer {
+  border-top: 3px solid var(--ink); margin-top: 52px; padding-top: 16px;
+  color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between;
+}
+.empty { color: var(--ink-3); font-size: 15px; }
+
+@media print {
+  body { background: #fff; }
+  .tile, .portrait, .strip-card, .spotlight { box-shadow: none; }
+  section { break-inside: avoid; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .tile { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================ data ============================ */
+  var DATA = {};
+  try {
+    DATA = JSON.parse(document.getElementById('howiai-data').textContent) || {};
+  } catch (e) { DATA = {}; }
+
+  var arr = function (v) { return Array.isArray(v) ? v : []; };
+  var obj = function (v) { return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; };
+  var num = function (v) { return (typeof v === 'number' && isFinite(v)) ? v : 0; };
+  var str = function (v) { return (typeof v === 'string' && v.trim()) ? v.trim() : ''; };
+
+  var team = obj(DATA.team);
+  var totals = obj(DATA.totals);
+  var windowInfo = obj(DATA.window);
+  var distribution = obj(DATA.distribution);
+  var participants = arr(distribution.participants);
+  var spread = obj(distribution.sessions_per_week_per_person);
+  var byFunction = arr(DATA.by_function).filter(function (f) { return str(f && f.function); });
+  var byCategory = arr(DATA.by_category);
+  var byAssist = arr(DATA.by_assist_type);
+  var bySource = arr(DATA.by_source);
+  var byMode = arr(DATA.by_mode);
+  var byWeek = arr(DATA.by_week);
+  var byWeekday = arr(DATA.by_weekday);
+  var byHour = arr(DATA.by_hour);
+  var tools = arr(DATA.tools);
+  var connectors = arr(DATA.connectors);
+  var surprises = arr(DATA.surprises).filter(function (s) { return str(s && s.paraphrase); });
+  var highlights = obj(DATA.highlights);
+  var narrative = obj(DATA.narrative);
+
+  /* ========================= formatting ========================= */
+  function fmt(n) {
+    n = num(n);
+    if (Math.abs(n) >= 1000) return Math.round(n).toLocaleString('en-US');
+    if (Number.isInteger(n)) return String(n);
+    return (Math.round(n * 10) / 10).toLocaleString('en-US');
+  }
+  function pct(x) { return Math.round(num(x) * 100) + '%'; }
+  function plural(n, one, many) { return num(n) === 1 ? one : (many || one + 's'); }
+  function titleish(s) { return str(s); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmtDate(iso) {
+    var s = str(iso).slice(0, 10);
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return s;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[parseInt(m[2], 10) - 1] + ' ' + parseInt(m[3], 10);
+  }
+  function hourLabel(h) {
+    h = ((num(h) % 24) + 24) % 24;
+    if (h === 0) return '12am';
+    if (h === 12) return '12pm';
+    return (h < 12 ? h + 'am' : (h - 12) + 'pm');
+  }
+  function maxBy(list, key) {
+    var best = null;
+    arr(list).forEach(function (d) {
+      if (!d) return;
+      if (best === null || num(d[key]) > num(best[key])) best = d;
+    });
+    return best;
+  }
+  function maxKey(o) {
+    var best = null, bestV = -Infinity;
+    Object.keys(obj(o)).forEach(function (k) {
+      if (num(o[k]) > bestV) { bestV = num(o[k]); best = k; }
+    });
+    return best === null ? null : { key: best, value: bestV };
+  }
+  function sum(o, keys) {
+    return keys.reduce(function (a, k) { return a + num(obj(o)[k]); }, 0);
+  }
+
+  /* ===================== functions & color ====================== */
+  // Stable identity order: by_function order first, then any function that only
+  // shows up in participants / surprises. Color follows the entity, never rank.
+  var functionOrder = [];
+  function noteFunction(name) {
+    name = str(name);
+    if (name && functionOrder.indexOf(name) === -1) functionOrder.push(name);
+  }
+  byFunction.forEach(function (f) { noteFunction(f.function); });
+  arr(team.by_function).forEach(function (f) { noteFunction(f && f.function); });
+  participants.forEach(function (p) { noteFunction(p && p.function); });
+  surprises.forEach(function (s) { noteFunction(s && s.function); });
+
+  var SLOTS = 8;
+  function fnColor(name) {
+    var i = functionOrder.indexOf(str(name));
+    if (i < 0) return 'var(--ink-3)';
+    return 'var(--s' + ((i % SLOTS) + 1) + ')';
+  }
+  var ASSIST = [
+    { type: 'ask',  label: 'Asked',  color: 'var(--a-ask)',  on: 'var(--on-ask)',  verb: 'ask' },
+    { type: 'make', label: 'Made',   color: 'var(--a-make)', on: 'var(--on-make)', verb: 'make' },
+    { type: 'do',   label: 'Did',    color: 'var(--a-do)',   on: 'var(--on-do)',   verb: 'do' }
+  ];
+  function assistLabel(type) {
+    var found = null;
+    byAssist.forEach(function (a) { if (str(a && a.type) === type) found = str(a.label); });
+    if (found) return found;
+    var d = null;
+    ASSIST.forEach(function (a) { if (a.type === type) d = a.label; });
+    return d || type;
+  }
+
+  var sourceLabels = {};
+  bySource.forEach(function (s) {
+    if (str(s && s.source)) sourceLabels[s.source] = str(s.label) || str(s.source);
+  });
+  function sourceLabel(key) {
+    key = str(key);
+    if (!key) return '';
+    if (sourceLabels[key]) return sourceLabels[key];
+    return key.replace(/[-_]/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+
+  /* ================== typographic statements ==================== */
+  // Built from the data: which assist_type dominates a function, and which
+  // category leads it. Falls back to a noun phrase when no verb is detectable.
+  var VERBS = {
+    write: 1, build: 1, debug: 1, fix: 1, review: 1, explain: 1, research: 1,
+    plan: 1, analyze: 1, analyse: 1, design: 1, prototype: 1, communicate: 1,
+    automate: 1, critique: 1, summarize: 1, summarise: 1, test: 1, ship: 1,
+    learn: 1, draft: 1, translate: 1, code: 1, edit: 1, read: 1, search: 1,
+    organize: 1, organise: 1, brainstorm: 1, decide: 1, measure: 1, model: 1,
+    refactor: 1, document: 1, scope: 1, sketch: 1, estimate: 1, coordinate: 1,
+    support: 1, sell: 1, hire: 1, teach: 1, monitor: 1, deploy: 1, migrate: 1
+  };
+  function categoryVerb(category, functionName) {
+    var head = str(category).split('&')[0];
+    var words = head.replace(/[^A-Za-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+    var fn = str(functionName).toLowerCase();
+    for (var i = 0; i < words.length && i < 3; i++) {
+      var w = words[i].toLowerCase();
+      if (w === fn && words.length > i + 1) continue;   // "Design critique" for Design → critique
+      if (VERBS[w]) return w;
+    }
+    return null;
+  }
+  function statementFor(row) {
+    var name = str(row.function);
+    var mix = obj(row.assist_type_mix);
+    var top = maxKey(mix);
+    var lead = topCategoryFor(row);
+    var verb = lead ? categoryVerb(lead, name) : null;
+    var noun = lead ? lead.toLowerCase() : '';
+    var type = top ? top.key : '';
+    var predicate;
+    if (type === 'do') {
+      predicate = verb ? 'lets AI ' + verb + '.' : (noun ? 'lets AI run ' + noun + '.' : 'lets AI do the work.');
+    } else if (type === 'make') {
+      predicate = verb ? 'has AI ' + verb + '.' : (noun ? 'has AI make ' + noun + '.' : 'has AI make things.');
+    } else if (type === 'ask') {
+      predicate = verb ? 'asks AI to ' + verb + '.' : (noun ? 'asks AI about ' + noun + '.' : 'asks AI to think.');
+    } else {
+      predicate = noun ? 'works on ' + noun + '.' : 'uses AI.';
+    }
+    var total = sum(mix, ['ask', 'make', 'do']);
+    var sub = '';
+    if (top && total > 0) {
+      sub = assistLabel(top.key).toLowerCase() + ' in ' + pct(num(top.value) / total) + ' of sessions';
+      if (lead) sub += ' · leads with ' + lead.toLowerCase();
+    } else if (lead) {
+      sub = 'leads with ' + lead.toLowerCase();
+    }
+    return { name: name, predicate: predicate, sub: sub };
+  }
+  function topCategoryFor(row) {
+    var tops = arr(row.top_categories);
+    for (var i = 0; i < tops.length; i++) {
+      if (str(tops[i] && tops[i].category)) return str(tops[i].category);
+    }
+    // fall back to by_category's per-function split
+    var best = null, bestV = 0;
+    byCategory.forEach(function (c) {
+      var v = num(obj(c.by_function)[str(row.function)]);
+      if (v > bestV) { bestV = v; best = str(c.category); }
+    });
+    return best;
+  }
+
+  /* ========================= DOM helpers ======================== */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function h(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    apply(n, attrs, kids);
+    return n;
+  }
+  function s(tag, attrs, kids) {
+    var n = document.createElementNS(SVGNS, tag);
+    apply(n, attrs, kids, true);
+    return n;
+  }
+  function apply(n, attrs, kids, isSvg) {
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) return;
+      if (k === 'text') { n.textContent = String(v); return; }
+      if (k === 'html') { n.innerHTML = v; return; }
+      if (k === 'style' && !isSvg) { n.setAttribute('style', v); return; }
+      if (k === 'class') { n.setAttribute('class', v); return; }
+      if (k.indexOf('on') === 0 && typeof v === 'function') { n.addEventListener(k.slice(2), v); return; }
+      n.setAttribute(k, v);
+    });
+    (Array.isArray(kids) ? kids : (kids ? [kids] : [])).forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+  var app = document.getElementById('app');
+  function section(id, kids) {
+    var sec = document.createElement('section');
+    if (id) sec.id = id;
+    (kids || []).forEach(function (k) { if (k) sec.appendChild(k); });
+    app.appendChild(sec);
+    return sec;
+  }
+  function label(parts) {
+    return h('p', { class: 'label mono' }, parts.map(function (p, i) {
+      return typeof p === 'string' ? h('span', { text: p }) : p;
+    }));
+  }
+
+  /* ========================== tooltip =========================== */
+  var tipEl = document.getElementById('tip');
+  function showTip(evt, html) {
+    tipEl.innerHTML = html;
+    tipEl.style.opacity = '1';
+    moveTip(evt);
+  }
+  function moveTip(evt) {
+    var pad = 14;
+    var r = tipEl.getBoundingClientRect();
+    var x = evt.clientX + pad, y = evt.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - pad;
+    tipEl.style.left = Math.max(8, x) + 'px';
+    tipEl.style.top = Math.max(8, y) + 'px';
+  }
+  function hideTip() { tipEl.style.opacity = '0'; }
+  function bindTip(node, html) {
+    node.addEventListener('mouseenter', function (e) { showTip(e, html); });
+    node.addEventListener('mousemove', moveTip);
+    node.addEventListener('mouseleave', hideTip);
+    node.addEventListener('focus', function (e) {
+      var r = node.getBoundingClientRect();
+      showTip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }, html);
+    });
+    node.addEventListener('blur', hideTip);
+  }
+
+  /* ===================== chart: assist bar ====================== */
+  // ask → make → do is an ordered axis, so it takes the ordinal ramp
+  // (one hue, light→dark), not eight identity hues.
+  function assistBar(mix, opts) {
+    opts = opts || {};
+    var total = sum(mix, ['ask', 'make', 'do']);
+    if (total <= 0) return null;
+    var H = opts.height || 24;
+    var segs = ASSIST.map(function (a) { return { a: a, v: num(mix[a.type]) }; })
+      .filter(function (d) { return d.v > 0; });
+    var wrapEl = h('div', {});
+    // 2px surface gaps between segments; 4px rounded data-ends on the outer ends.
+    var bar = h('div', {
+      class: 'stack', style: 'height:' + H + 'px',
+      role: 'img',
+      'aria-label': segs.map(function (d) {
+        return assistLabel(d.a.type) + ' ' + pct(d.v / total);
+      }).join(', ')
+    }, segs.map(function (d, i) {
+      var seg = h('div', {
+        class: 'seg', tabindex: '0',
+        style: 'flex:' + (d.v / total) + ' 1 0;background:' + d.a.color + ';' +
+          'border-top-left-radius:' + (i === 0 ? 4 : 0) + 'px;border-bottom-left-radius:' + (i === 0 ? 4 : 0) + 'px;' +
+          'border-top-right-radius:' + (i === segs.length - 1 ? 4 : 0) + 'px;border-bottom-right-radius:' + (i === segs.length - 1 ? 4 : 0) + 'px;'
+      });
+      bindTip(seg, '<b>' + esc(assistLabel(d.a.type)) + '</b><br>' +
+        esc(fmt(d.v)) + ' ' + plural(d.v, 'session') + ' · ' + pct(d.v / total) +
+        (opts.context ? '<br><span class="t-k">' + esc(opts.context) + '</span>' : ''));
+      return seg;
+    }));
+    wrapEl.appendChild(bar);
+    // Values ride under the bar rather than inside narrow segments, so nothing clips.
+    wrapEl.appendChild(h('div', { class: 'stack-labels' }, segs.map(function (d) {
+      return h('span', {}, [
+        h('i', { style: 'background:' + d.a.color }),
+        h('span', { text: assistLabel(d.a.type).toLowerCase() + ' ' + pct(d.v / total) })
+      ]);
+    })));
+    return wrapEl;
+  }
+
+  function assistLegend() {
+    return h('ul', { class: 'legend mono' }, ASSIST.map(function (a) {
+      return h('li', {}, [
+        h('i', { class: 'sw', style: 'background:' + a.color }),
+        h('span', { text: assistLabel(a.type) })
+      ]);
+    }));
+  }
+  function functionLegend(names) {
+    return h('ul', { class: 'legend mono' }, names.map(function (n) {
+      return h('li', {}, [
+        h('i', { class: 'dot', style: 'background:' + fnColor(n) }),
+        h('span', { text: n })
+      ]);
+    }));
+  }
+
+  /* ========================== masthead ========================== */
+  (function masthead() {
+    var head = h('header', { class: 'masthead' });
+    var teamName = str(team.name) || 'The team';
+    var people = num(team.participants) || participants.length;
+    var win = '';
+    if (str(windowInfo.start) && str(windowInfo.end)) {
+      win = fmtDate(windowInfo.start) + ' – ' + fmtDate(windowInfo.end);
+    } else if (num(windowInfo.days)) {
+      win = 'last ' + fmt(windowInfo.days) + ' days';
+    }
+    head.appendChild(h('p', { class: 'kicker mono', text: 'An exhibit · ' + teamName + (win ? ' · ' + win : '') }));
+    head.appendChild(h('h1', { html: 'How we<br>actually<br>use <em>AI</em>.' }));
+    var meta = h('div', { class: 'masthead-meta mono' });
+    [
+      people ? [fmt(people), plural(people, 'person', 'people')] : null,
+      functionOrder.length ? [fmt(functionOrder.length), plural(functionOrder.length, 'function')] : null,
+      num(totals.sessions) ? [fmt(totals.sessions), plural(totals.sessions, 'session')] : null,
+      num(windowInfo.days) ? [fmt(windowInfo.days), 'days'] : null,
+      bySource.length ? [fmt(bySource.length), plural(bySource.length, 'tool')] : null
+    ].filter(Boolean).forEach(function (pair) {
+      meta.appendChild(h('span', {}, [h('b', { text: pair[0] }), ' ' + pair[1]]));
+    });
+    head.appendChild(meta);
+    app.appendChild(head);
+  })();
+
+  /* ======================== wall text =========================== */
+  if (str(narrative.headline) || str(narrative.summary)) {
+    section('wall-text', [
+      label([h('b', { text: 'Wall text' }), str(DATA.generated_at) ? 'read on ' + fmtDate(DATA.generated_at) : null].filter(Boolean)),
+      h('div', { class: 'walltext' }, [
+        str(narrative.headline) ? h('p', { class: 'head serif', text: narrative.headline }) : null,
+        str(narrative.summary) ? h('p', { class: 'body', text: narrative.summary }) : null
+      ])
+    ]);
+  }
+
+  /* ====================== the statements ======================== */
+  if (byFunction.length) {
+    var ordered = byFunction.slice().sort(function (a, b) {
+      return num(b.sessions) - num(a.sessions);
+    });
+    var list = h('ul', { class: 'statements' }, ordered.map(function (row) {
+      var st = statementFor(row);
+      return h('li', { style: '--fc:' + fnColor(st.name) }, [
+        h('p', { class: 'statement' }, [
+          h('span', { class: 'who', text: st.name + ' ' }),
+          document.createTextNode(st.predicate)
+        ]),
+        st.sub ? h('p', { class: 'statement-sub mono', text: st.sub }) : null
+      ]);
+    }));
+    section('statements', [
+      label([h('b', { text: 'The short version' }), 'one sentence per function, from the data']),
+      list
+    ]);
+  }
+
+  /* ======================== the triptych ======================== */
+  if (byFunction.length) {
+    // one shared domain across the triptych so the bars compare card to card
+    var catDomain = byFunction.reduce(function (a, f) {
+      return arr(f.top_categories).slice(0, 3).reduce(function (b, c) {
+        return Math.max(b, num(c && c.share));
+      }, a);
+    }, 0) || 1;
+    var cards = byFunction.map(function (row) {
+      var name = str(row.function);
+      var color = fnColor(name);
+      var mix = obj(row.assist_type_mix);
+      var fav = maxKey(row.by_source);
+      var favTotal = Object.keys(obj(row.by_source)).reduce(function (a, k) { return a + num(row.by_source[k]); }, 0);
+      var catSeen = {};
+      var tops = arr(row.top_categories).filter(function (c) {
+        var k = str(c && c.category).toLowerCase();
+        if (!k || catSeen[k]) return false;
+        catSeen[k] = 1; return true;
+      }).slice(0, 3);
+      if (!tops.length) {
+        var lead = topCategoryFor(row);
+        if (lead) tops = [{ category: lead, share: null }];
+      }
+      var maxShare = catDomain;
+
+      return h('article', { class: 'portrait', style: '--fc:' + color }, [
+        h('div', { class: 'top-rule' }),
+        h('div', {}, [
+          h('h3', { text: name }),
+          h('p', { class: 'who-meta mono', text: fmt(num(row.participants)) + ' ' + plural(num(row.participants), 'person', 'people') +
+            (num(row.sessions) ? ' · ' + fmt(row.sessions) + ' sessions' : '') })
+        ]),
+        h('div', { class: 'p-figures' }, [
+          h('div', { class: 'figure' }, [
+            h('div', { class: 'v', text: fmt(row.sessions_per_person_per_week) }),
+            h('span', { class: 'k mono', text: 'sessions a week, each' })
+          ]),
+          fav ? h('div', { class: 'figure' }, [
+            h('div', { class: 'v', text: favTotal ? pct(fav.value / favTotal) : fmt(fav.value) }),
+            h('span', { class: 'k mono', text: 'through ' + sourceLabel(fav.key) })
+          ]) : null
+        ]),
+        tops.length ? h('div', {}, [
+          h('p', { class: 'block-head mono', text: 'What they bring it' }),
+          h('ul', { class: 'catlist' }, tops.map(function (c) {
+            var share = num(c.share);
+            return h('li', {}, [
+              h('div', { class: 'row' }, [
+                h('span', { text: str(c.category) }),
+                h('span', { text: share ? pct(share) : '' })
+              ]),
+              share ? h('div', { class: 'track' }, [
+                h('i', { style: 'width:' + Math.max(3, (share / maxShare) * 100) + '%' })
+              ]) : null
+            ]);
+          }))
+        ]) : null,
+        sum(mix, ['ask', 'make', 'do']) > 0 ? h('div', {}, [
+          h('p', { class: 'block-head mono', text: 'Ask · make · do' }),
+          assistBar(mix, { height: 24, context: name })
+        ]) : null
+      ]);
+    });
+
+    section('portraits', [
+      h('h2', { class: 'sec', text: 'Three portraits, one team' }),
+      h('p', { class: 'sec-note', text: 'Each function, drawn from its own sessions: how often, what for, and how much of the work it hands over.' }),
+      assistLegend(),
+      h('div', { class: 'triptych' }, cards)
+    ]);
+    // headline reflects the real count
+    var secEl = document.getElementById('portraits');
+    secEl.querySelector('h2').textContent = functionCountHeadline(byFunction.length);
+  }
+  function functionCountHeadline(n) {
+    var words = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+    var w = words[n] || fmt(n);
+    return w + ' ' + plural(n, 'portrait') + ', one team';
+  }
+
+  /* ====================== the surprise wall ===================== */
+  if (surprises.length) {
+    // merge duplicates (same use case reported from two sources)
+    var seen = {}, merged = [];
+    surprises.forEach(function (sp) {
+      var key = str(sp.function) + '|' + str(sp.paraphrase).toLowerCase();
+      if (seen[key]) {
+        var srcs = seen[key].sources;
+        if (str(sp.source) && srcs.indexOf(sourceLabel(sp.source)) === -1) srcs.push(sourceLabel(sp.source));
+        return;
+      }
+      seen[key] = {
+        paraphrase: str(sp.paraphrase),
+        fn: str(sp.function),
+        category: str(sp.category),
+        sources: str(sp.source) ? [sourceLabel(sp.source)] : []
+      };
+      merged.push(seen[key]);
+    });
+    var rots = [-1.4, 0.9, -0.6, 1.5, -1.1, 0.5, 1.1, -0.9];
+    var wall = h('div', { class: 'wall' }, merged.map(function (m, i) {
+      var foot = [m.category, m.sources.join(' + ')].filter(Boolean).join(' · ');
+      return h('article', {
+        class: 'tile',
+        style: '--fc:' + fnColor(m.fn) + ';--rot:' + rots[i % rots.length] + 'deg'
+      }, [
+        m.fn ? h('span', { class: 'chip mono' }, [h('i', { class: 'dot' }), h('span', { text: m.fn })]) : null,
+        h('p', { text: m.paraphrase }),
+        foot ? h('span', { class: 'foot mono', text: foot }) : null
+      ]);
+    }));
+    section('wall', [
+      h('h2', { class: 'sec', text: 'Wait, you use it for THAT?' }),
+      h('p', { class: 'sec-note', text: str(highlights.surprise_use_case)
+        ? 'The sessions that did not match the job title. ' + str(highlights.surprise_use_case) + '.'
+        : 'The sessions that did not match the job title — pinned to the wall, in no order.' }),
+      functionOrder.length > 1 ? functionLegend(functionOrder.filter(function (fnName) {
+        return merged.some(function (m) { return m.fn === fnName; });
+      })) : null,
+      wall
+    ]);
+  }
+
+  /* =================== the distribution strip =================== */
+  if (participants.length) {
+    var stripWrap = h('div', { class: 'strip-card' });
+    var figure = h('figure', {}, [stripWrap]);
+    var capBits = [];
+    if (num(spread.median)) capBits.push('median <b>' + fmt(spread.median) + '</b>');
+    if (num(spread.p90)) capBits.push('p90 <b>' + fmt(spread.p90) + '</b>');
+    if (num(spread.max)) capBits.push('busiest <b>' + fmt(spread.max) + '</b>');
+    var cap = h('figcaption', {
+      html: (capBits.length ? capBits.join(' · ') + ' sessions a week. ' : '') +
+        'One dot is one person; nobody is named.'
+    });
+    figure.appendChild(cap);
+
+    section('strip', [
+      h('h2', { class: 'sec', text: 'Who is doing all of this?' }),
+      h('p', { class: 'sec-note', text: 'Every participant, placed by how many sessions they ran in an average week. One lane per function.' }),
+      figure
+    ]);
+
+    var drawStrip = function () {
+      stripWrap.innerHTML = '';
+      var W = Math.max(280, stripWrap.clientWidth || 600);
+      var narrow = W < 520;
+      var padL = narrow ? 8 : 108, padR = 16, padT = 28, padB = 44;
+      var lanes = functionOrder.filter(function (fnName) {
+        return participants.some(function (p) { return str(p.function) === fnName; });
+      });
+      var other = participants.filter(function (p) { return lanes.indexOf(str(p.function)) === -1; });
+      if (other.length) lanes.push('');
+      var maxX = participants.reduce(function (a, p) { return Math.max(a, num(p.sessions_per_week)); }, 0);
+      maxX = Math.max(maxX, num(spread.max)) * 1.06 || 1;
+      var x0 = padL, x1 = W - padR;
+      var sx = function (v) { return x0 + (Math.max(0, num(v)) / maxX) * (x1 - x0); };
+      var r = narrow ? 6 : 7;
+      var labelSpace = narrow ? 20 : 0;
+
+      // pass 1 — beeswarm each lane in lane-local coordinates, so a crowded lane
+      // gets the height it needs instead of spilling over its neighbour.
+      var laid = lanes.map(function (fnName) {
+        var rows = fnName
+          ? participants.filter(function (p) { return str(p.function) === fnName; })
+          : other;
+        var placed = [];
+        rows.slice().sort(function (a, b) { return num(a.sessions_per_week) - num(b.sessions_per_week); })
+          .forEach(function (p) {
+            var cx = sx(p.sessions_per_week), dy = 0, dir = 1, k = 1;
+            while (placed.some(function (q) {
+              return Math.abs(q.x - cx) < r * 2 + 1 && Math.abs(q.dy - dy) < r * 2 + 1;
+            }) && k < 10) {
+              dy = dir * Math.ceil(k / 2) * (r * 2 + 2);
+              dir *= -1; k++;
+            }
+            placed.push({ x: cx, dy: dy, p: p });
+          });
+        var spreadY = placed.reduce(function (a, q) { return Math.max(a, Math.abs(q.dy)); }, 0);
+        return {
+          name: fnName, placed: placed,
+          height: labelSpace + Math.max(46, (spreadY + r) * 2 + 18)
+        };
+      });
+      var H = padT + padB + laid.reduce(function (a, l) { return a + l.height; }, 0);
+
+      var svg = s('svg', {
+        class: 'chart', viewBox: '0 0 ' + W + ' ' + H, width: W, height: H,
+        role: 'img', 'aria-label': 'Sessions per week for each participant, one dot per person, grouped by function'
+      });
+
+      // axis
+      var ticks = [];
+      var step = maxX > 60 ? 20 : (maxX > 30 ? 10 : (maxX > 12 ? 5 : 2));
+      for (var t = 0; t <= maxX; t += step) ticks.push(t);
+      ticks.forEach(function (t) {
+        svg.appendChild(s('line', {
+          x1: sx(t), x2: sx(t), y1: 18, y2: H - padB + 6,
+          stroke: 'var(--rule-soft)', 'stroke-width': 1
+        }));
+        svg.appendChild(s('text', {
+          x: sx(t), y: H - padB + 22, 'text-anchor': 'middle',
+          'font-size': 10, fill: 'var(--ink-3)', 'letter-spacing': '.08em', text: fmt(t)
+        }));
+      });
+      svg.appendChild(s('text', {
+        x: x1, y: H - 7, 'text-anchor': 'end',
+        'font-size': 10, fill: 'var(--ink-3)', 'letter-spacing': '.12em',
+        text: 'SESSIONS PER WEEK'
+      }));
+
+      // median marker
+      if (num(spread.median)) {
+        svg.appendChild(s('line', {
+          x1: sx(spread.median), x2: sx(spread.median), y1: 18, y2: H - padB + 6,
+          stroke: 'var(--ink-3)', 'stroke-width': 1
+        }));
+        svg.appendChild(s('text', {
+          x: sx(spread.median) + 6, y: 13, 'font-size': 10,
+          fill: 'var(--ink-3)', 'letter-spacing': '.1em', text: 'MEDIAN ' + fmt(spread.median)
+        }));
+      }
+
+      var cursor = padT;
+      laid.forEach(function (lane) {
+        var yMid = cursor + labelSpace + (lane.height - labelSpace) / 2;
+        var color = lane.name ? fnColor(lane.name) : 'var(--ink-3)';
+
+        svg.appendChild(s('line', {
+          x1: x0, x2: x1, y1: yMid, y2: yMid, stroke: 'var(--rule-soft)', 'stroke-width': 1
+        }));
+        var lbl = s('text', {
+          'font-size': 11, fill: 'var(--ink-2)', 'letter-spacing': '.1em',
+          text: (lane.name || 'Other').toUpperCase()
+        });
+        if (narrow) {
+          lbl.setAttribute('x', x0); lbl.setAttribute('y', cursor + 12);
+        } else {
+          lbl.setAttribute('x', padL - 16); lbl.setAttribute('y', yMid + 4);
+          lbl.setAttribute('text-anchor', 'end');
+        }
+        svg.appendChild(lbl);
+
+        lane.placed.forEach(function (q) {
+          var p = q.p, cy = yMid + q.dy;
+          var g = s('g', { tabindex: '0' });
+          // 2px surface ring keeps overlapping dots legible
+          g.appendChild(s('circle', { cx: q.x, cy: cy, r: r + 2, fill: 'var(--card)' }));
+          g.appendChild(s('circle', { cx: q.x, cy: cy, r: r, fill: color }));
+          var mix = obj(p.assist_type_mix);
+          var tot = sum(mix, ['ask', 'make', 'do']);
+          var mixLine = tot ? ASSIST.map(function (a) {
+            return assistLabel(a.type).toLowerCase() + ' ' + pct(num(mix[a.type]) / tot);
+          }).join(' · ') : '';
+          bindTip(g, '<b>' + esc(fmt(p.sessions_per_week)) + ' sessions a week</b><br>' +
+            '<span class="t-k">' + esc(lane.name || 'Unassigned') + '</span>' +
+            (str(p.top_category) ? '<br>mostly ' + esc(p.top_category) : '') +
+            (mixLine ? '<br><span class="t-k">' + esc(mixLine) + '</span>' : ''));
+          svg.appendChild(g);
+        });
+        cursor += lane.height;
+      });
+
+      stripWrap.appendChild(svg);
+    };
+    drawStrip();
+    var stripTimer = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(stripTimer);
+      stripTimer = setTimeout(drawStrip, 150);
+    });
+  }
+
+  /* ========================= spotlight ========================== */
+  (function spotlight() {
+    var name = str(highlights.biggest_use_case);
+    var row = null;
+    if (name) {
+      byCategory.forEach(function (c) { if (!row && str(c.category) === name) row = c; });
+    }
+    if (!row) row = maxBy(byCategory, 'sessions');
+    if (!row && !name) return;
+    var title = str(row && row.category) || name;
+    if (!title) return;
+
+    var mix = obj(row && row.assist_type_mix);
+    var split = obj(row && row.by_function);
+    var splitTotal = Object.keys(split).reduce(function (a, k) { return a + num(split[k]); }, 0);
+    var subs = arr(row && row.subcategories).filter(function (x) { return str(x && x.name); }).slice(0, 6);
+
+    var left = h('div', {}, [
+      h('p', { class: 'mono', style: 'color:var(--ink-3);margin:0', text: 'The biggest use case' }),
+      h('p', { class: 'big', text: title }),
+      h('p', { class: 'lede', text:
+        (num(row && row.sessions) ? fmt(row.sessions) + ' sessions' : '') +
+        (num(row && row.share) ? ', ' + pct(row.share) + ' of everything the team did' : '') +
+        (splitTotal ? '. It shows up in ' + Object.keys(split).filter(function (k) { return num(split[k]) > 0; }).length + ' of ' + functionOrder.length + ' functions.' : '.')
+      }),
+      subs.length ? h('ul', { class: 'subcats' }, subs.map(function (x) {
+        return h('li', {}, [document.createTextNode(str(x.name) + ' '), h('b', { text: fmt(x.sessions) })]);
+      })) : null
+    ]);
+
+    var right = h('div', {});
+    if (sum(mix, ['ask', 'make', 'do']) > 0) {
+      right.appendChild(h('p', { class: 'block-head mono', text: 'Ask · make · do' }));
+      right.appendChild(assistBar(mix, { height: 30, context: title }));
+    }
+    if (splitTotal > 0) {
+      right.appendChild(h('p', { class: 'block-head mono', style: 'margin-top:26px', text: 'Who brings it' }));
+      var bars = h('ul', { class: 'catlist' }, Object.keys(split)
+        .filter(function (k) { return num(split[k]) > 0; })
+        .sort(function (a, b) { return num(split[b]) - num(split[a]); })
+        .map(function (k) {
+          var v = num(split[k]);
+          return h('li', { style: '--fc:' + fnColor(k) }, [
+            h('div', { class: 'row' }, [
+              h('span', { text: k }),
+              h('span', { text: fmt(v) + ' · ' + pct(v / splitTotal) })
+            ]),
+            h('div', { class: 'track' }, [h('i', { style: 'width:' + Math.max(3, (v / splitTotal) * 100) + '%' })])
+          ]);
+        }));
+      right.appendChild(bars);
+    }
+
+    section('spotlight', [
+      h('div', { class: 'spotlight' }, [left, right])
+    ]);
+  })();
+
+  /* ========================== patterns ========================== */
+  (function patterns() {
+    var ps = arr(narrative.patterns).filter(function (p) { return str(p); });
+    var one = str(highlights.one_liner);
+    if (!ps.length && !one) return;
+    section('patterns', [
+      label([h('b', { text: 'What the room noticed' })]),
+      one ? h('blockquote', { class: 'oneliner serif', text: '“' + one + '”' }) : null,
+      ps.length ? h('ul', { class: 'patterns' }, ps.map(function (p, i) {
+        return h('li', {}, [
+          h('span', { class: 'n mono', text: String(i + 1).padStart(2, '0') }),
+          h('p', { text: p })
+        ]);
+      })) : null
+    ]);
+  })();
+
+  /* ====================== by the numbers ======================== */
+  (function numbers() {
+    var stats = [];
+    function push(v, k) { if (v !== null && v !== undefined && v !== '') stats.push({ v: v, k: k }); }
+
+    if (num(totals.sessions)) push(fmt(totals.sessions), 'sessions');
+    if (num(totals.messages)) push(fmt(totals.messages), 'messages');
+    if (num(totals.sessions_per_person_per_week)) push(fmt(totals.sessions_per_person_per_week), 'sessions per person a week');
+    var peopleCount = num(team.participants) || participants.length;
+    if (peopleCount) push(fmt(peopleCount), plural(peopleCount, 'person', 'people') + ' took part');
+
+    var topSource = maxBy(bySource, 'sessions');
+    if (topSource) push(num(topSource.share) ? pct(topSource.share) : fmt(topSource.sessions), 'of sessions on ' + sourceLabel(topSource.source));
+
+    var agentic = null;
+    byMode.forEach(function (m) { if (str(m.mode) === 'agentic') agentic = m; });
+    var modeTotal = byMode.reduce(function (a, m) { return a + num(m.sessions); }, 0);
+    if (agentic && modeTotal) push(pct(num(agentic.sessions) / modeTotal), 'ran agentic');
+
+    var topAssist = maxBy(byAssist, 'sessions');
+    if (topAssist) push(num(topAssist.share) ? pct(topAssist.share) : fmt(topAssist.sessions), 'were ' + str(topAssist.label || topAssist.type).toLowerCase());
+
+    var busiestDay = maxBy(byWeekday, 'sessions');
+    if (busiestDay && str(busiestDay.label)) push(str(busiestDay.label), 'busiest weekday');
+
+    var peakHour = maxBy(byHour, 'sessions');
+    if (peakHour && num(peakHour.sessions)) push(hourLabel(peakHour.hour), 'peak hour');
+
+    var bigWeek = maxBy(byWeek, 'sessions');
+    if (bigWeek && num(bigWeek.sessions)) push(fmt(bigWeek.sessions), 'in the biggest week');
+
+    var topTool = maxBy(tools, 'sessions');
+    if (topTool && str(topTool.name)) push(str(topTool.name), 'most-reached-for tool');
+
+    var topConn = maxBy(connectors, 'sessions');
+    if (topConn && str(topConn.name)) push(str(topConn.name), 'most-connected app');
+
+    if (str(highlights.most_agentic_function)) push(str(highlights.most_agentic_function), 'hands over the most');
+    if (str(highlights.most_curious_function)) push(str(highlights.most_curious_function), 'asks the most');
+
+    if (!stats.length) return;
+    section('numbers', [
+      h('h2', { class: 'sec', text: 'By the numbers' }),
+      h('div', { class: 'band' }, stats.map(function (st) {
+        return h('div', {}, [
+          h('div', { class: 'v' + (/[A-Za-z]{6,}/.test(String(st.v)) ? ' long' : ''), text: st.v }),
+          h('span', { class: 'k mono', text: st.k })
+        ]);
+      }))
+    ]);
+  })();
+
+  /* ======================== table view ========================== */
+  (function tables() {
+    var blocks = [];
+    function table(caption, cols, rows) {
+      if (!rows.length) return null;
+      return h('table', {}, [
+        h('caption', { text: caption }),
+        h('thead', {}, [h('tr', {}, cols.map(function (c, i) {
+          return h('th', { class: i ? 'num' : '', text: c });
+        }))]),
+        h('tbody', {}, rows.map(function (r) {
+          return h('tr', {}, r.map(function (cell, i) {
+            return h('td', { class: i ? 'num' : '', text: cell });
+          }));
+        }))
+      ]);
+    }
+    if (byFunction.length) {
+      blocks.push(table('By function', ['Function', 'People', 'Sessions', 'Per person / week', 'Ask', 'Make', 'Do'],
+        byFunction.map(function (f) {
+          var m = obj(f.assist_type_mix);
+          return [str(f.function), fmt(f.participants), fmt(f.sessions), fmt(f.sessions_per_person_per_week),
+            fmt(m.ask), fmt(m.make), fmt(m.do)];
+        })));
+    }
+    if (byCategory.length) {
+      blocks.push(table('By category', ['Category', 'Sessions', 'Share'],
+        byCategory.map(function (c) { return [str(c.category), fmt(c.sessions), pct(c.share)]; })));
+    }
+    if (participants.length) {
+      blocks.push(table('Participants', ['Function', 'Sessions / week', 'Top category'],
+        participants.slice().sort(function (a, b) { return num(b.sessions_per_week) - num(a.sessions_per_week); })
+          .map(function (p) { return [str(p.function) || 'Unassigned', fmt(p.sessions_per_week), str(p.top_category)]; })));
+    }
+    if (bySource.length) {
+      blocks.push(table('By source', ['Source', 'Sessions', 'Share'],
+        bySource.map(function (x) { return [sourceLabel(x.source), fmt(x.sessions), pct(x.share)]; })));
+    }
+    blocks = blocks.filter(Boolean);
+    if (!blocks.length) return;
+    var det = h('details', { class: 'numbers' }, [
+      h('summary', { class: 'mono', text: 'Show the numbers behind the pictures' }),
+      h('div', { class: 'tables' }, blocks)
+    ]);
+    app.appendChild(det);
+  })();
+
+  /* =========================== footer =========================== */
+  app.appendChild(h('footer', { class: 'mono' }, [
+    h('span', { text: "Made with howiai · anonymized team data · nobody's prompts were shared" }),
+    str(DATA.generated_at) ? h('span', { text: fmtDate(DATA.generated_at) }) : null
+  ]));
+
+  if (!app.children.length) {
+    app.appendChild(h('p', { class: 'empty', text: 'No aggregate data to show yet.' }));
+  }
+})();
+</script>
+</body>
+</html>

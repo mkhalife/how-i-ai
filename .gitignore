@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+# never commit anyone's data
+sessions.json
+profile.json
+aggregate.json
+share-rows.json
+share-*.csv
+inbox/
+classify/
+*.zip

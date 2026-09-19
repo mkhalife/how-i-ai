@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>howiai · profile</title>
+<style>
+  :root {
+    color-scheme: dark;
+    /* ---- surfaces ---- */
+    --plane:      #0a0b0c;
+    --surface:    #121417;
+    --surface-2:  #171a1e;
+    --surface-3:  #1b1f25;
+    --border:     #272c33;
+    --border-2:   #343b44;
+    /* ---- ink ---- */
+    --ink:        #e6eaee;
+    --ink-2:      #a3adb8;
+    --ink-3:      #78828d;
+    /* ---- accent (single hue: all magnitude encodings) ---- */
+    --accent:     #3987e5;
+    --accent-dim: #2a78d6;
+    --track:      #1b1f25;
+    --highlight:  #e0703f;   /* reserved: the surprise callout + cursor */
+    --ok:         #199e70;
+    /* ---- sequential ramp (blue, near-zero recedes to the surface) ---- */
+    --h0: #171b21; --h1: #1d3b63; --h2: #205693; --h3: #2a78d6; --h4: #4d94e8; --h5: #86b6ef;
+    /* ---- ordinal ramp: ask -> make -> do (one hue, monotone lightness) ---- */
+    --ask:  #256abf;
+    --make: #5598e7;
+    --do:   #9ec5f4;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      color-scheme: light;
+      --plane:      #eeece4;
+      --surface:    #fbfaf6;
+      --surface-2:  #f4f2ea;
+      --surface-3:  #eceade;
+      --border:     #dcd8cd;
+      --border-2:   #c8c3b4;
+      --ink:        #14161a;
+      --ink-2:      #4d545c;
+      --ink-3:      #686f77;
+      --accent:     #2a78d6;
+      --accent-dim: #3987e5;
+      --track:      #e9e7de;
+      --highlight:  #c2511f;
+      --ok:         #0f7a56;
+      --h0: #ecebe4; --h1: #cde2fb; --h2: #9ec5f4; --h3: #5598e7; --h4: #2a78d6; --h5: #184f95;
+      --ask:  #86b6ef;
+      --make: #2a78d6;
+      --do:   #104281;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 28px; }
+
+  /* ---------- grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+  .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; }
+  .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; }
+  .stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .procrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 12px; align-items: start; min-width: 0; }
+  @media (max-width: 860px) { .grid > * { grid-column: span 12 !important; } }
+
+  /* ---------- panel ---------- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+  .phead {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-2); white-space: nowrap;
+  }
+  .phead .t { color: var(--ink); font-weight: 600; }
+  .phead .t::before { content: "▮"; color: var(--accent); margin-right: 7px; }
+  .phead .rule { flex: 1 1 auto; height: 1px; background: var(--border-2); min-width: 8px; }
+  .phead .meta { color: var(--ink-3); letter-spacing: .08em; overflow: hidden; text-overflow: ellipsis; }
+  .pbody { padding: 12px; min-width: 0; }
+  .pbody.tight { padding: 0; }
+
+  /* ---------- header ---------- */
+  .hdr { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; justify-content: space-between; padding: 16px 16px 14px; }
+  .brand { font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
+  .brand b { color: var(--accent); font-weight: 700; }
+  .prompt { color: var(--ink-3); font-size: 12px; margin-top: 6px; }
+  .prompt .u { color: var(--ok); }
+  .typed { color: var(--ink); font-size: 14px; margin-top: 9px; min-height: 1.5em; }
+  .cursor { display: inline-block; width: .55em; height: 1.05em; background: var(--highlight); vertical-align: -.18em; margin-left: 2px; animation: blink 1.05s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+  .idblock { text-align: right; font-size: 11.5px; color: var(--ink-2); line-height: 1.7; }
+  .idblock .k { color: var(--ink-3); }
+  .idblock .v { color: var(--ink); }
+  @media (max-width: 560px) { .idblock { text-align: left; } }
+
+  /* ---------- stat strip ---------- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); }
+  .stat { padding: 11px 13px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-width: 0; }
+  .headspark { display: flex; align-items: center; }
+  @media (max-width: 680px) { .headspark { display: none; } }
+  .stat .lab { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat .val { font-size: 25px; font-weight: 600; letter-spacing: -.02em; margin-top: 3px; color: var(--ink); }
+  .stat .val .u { font-size: 12px; font-weight: 400; color: var(--ink-3); margin-left: 3px; letter-spacing: 0; }
+  .stat .sub { font-size: 10.5px; color: var(--ink-3); margin-top: 1px; }
+
+  /* ---------- generic rows ---------- */
+  .rows { display: flex; flex-direction: column; }
+  .row { display: grid; align-items: center; gap: 10px; padding: 5px 0; min-width: 0; }
+  .row .nm { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .nu { color: var(--ink-2); text-align: right; font-size: 12px; }
+  .row .pc { color: var(--ink-3); text-align: right; font-size: 11.5px; }
+  .idx { color: var(--ink-3); font-size: 11px; }
+  .bar { height: 9px; background: var(--track); position: relative; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent-dim); border-radius: 0 3px 3px 0; }
+  .seg { height: 11px; display: flex; gap: 2px; background: transparent; }
+  .seg > i { display: block; height: 100%; }
+  .seg > i:last-child { border-radius: 0 3px 3px 0; }
+
+  .colhead { display: grid; gap: 10px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font-size: 11px; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .sw { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+  /* ---------- heat strips ---------- */
+  .stripwrap { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .striplab { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .strip { display: grid; gap: 3px; }
+  .cell { height: 30px; border-radius: 2px; background: var(--h0); box-shadow: inset 0 0 0 1px var(--border); }
+  .ticks { display: grid; gap: 3px; font-size: 10px; color: var(--ink-3); text-align: center; }
+  .ticks span { overflow: hidden; }
+  .hint { font-size: 11px; color: var(--ink-3); line-height: 1.55; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 11.5px; color: var(--ink-2); }
+  .facts b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- gauge ---------- */
+  .gauge { height: 26px; display: flex; gap: 2px; margin-bottom: 12px; }
+  .gauge > i { height: 100%; }
+  .gauge > i:first-child { border-radius: 3px 0 0 3px; }
+  .gauge > i:last-child { border-radius: 0 3px 3px 0; }
+
+  /* ---------- surprise ---------- */
+  .surprise { border-left: 3px solid var(--highlight); padding-left: 12px; }
+  .surprise .tag { color: var(--highlight); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; }
+  .surprise .big { font-size: 16px; color: var(--ink); margin: 6px 0 5px; line-height: 1.4; }
+  .surprise .why { color: var(--ink-2); font-size: 12px; }
+  .slist { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 9px; display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: var(--ink-2); }
+  .sgrid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  .sgrid .slist { margin-top: 0; border-top: 0; border-left: 1px solid var(--border); padding-top: 0; padding-left: 18px; }
+  @media (max-width: 860px) { .sgrid { grid-template-columns: 1fr; gap: 12px; }
+    .sgrid .slist { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; padding-top: 10px; } }
+  .slist .d { color: var(--ink-3); }
+
+  /* ---------- log ---------- */
+  .log { font-size: 12px; }
+  .logline { display: grid; grid-template-columns: 82px 96px 54px 1fr auto; gap: 10px; align-items: baseline; padding: 4px 12px; border-bottom: 1px solid var(--surface-2); }
+  .logline:nth-child(odd) { background: var(--surface-2); }
+  .logline .ts { color: var(--ink-3); }
+  .logline .src { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logline .lvl { font-size: 10.5px; letter-spacing: .06em; }
+  .logline .msg { color: var(--ink); overflow-wrap: anywhere; }
+  .logline .n { color: var(--ink-3); font-size: 11px; white-space: nowrap; }
+  @media (max-width: 860px) {
+    .logline { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 12px; }
+    .logline .ts { grid-column: 1; } .logline .n { grid-column: 2; grid-row: 1; }
+    .logline .src { grid-column: 1; grid-row: 2; display: inline; }
+    .logline .lvl { grid-column: 2; grid-row: 2; text-align: right; }
+    .logline .msg { grid-column: 1 / -1; grid-row: 3; }
+  }
+  .caret { padding: 6px 12px; color: var(--ink-3); font-size: 12px; }
+
+  /* ---------- narrative ---------- */
+  .headline { font-size: 19px; line-height: 1.35; color: var(--ink); letter-spacing: -.01em; }
+  .summary { color: var(--ink-2); margin-top: 9px; line-height: 1.65; font-size: 12.5px; max-width: 78ch; }
+  .patterns { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .patterns li { color: var(--ink); font-size: 12.5px; padding-left: 18px; position: relative; }
+  .patterns li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); }
+  .sig { margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-2); }
+  .sig b { color: var(--ink-3); font-weight: 400; letter-spacing: .1em; text-transform: uppercase; font-size: 10px; display: block; }
+
+  /* ---------- status bar ---------- */
+  .status {
+    margin-top: 12px; border: 1px solid var(--border); background: var(--surface-2);
+    display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: space-between; align-items: center;
+    padding: 8px 12px; font-size: 11px; color: var(--ink-3); letter-spacing: .04em;
+  }
+  .status .led { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); margin-right: 7px; vertical-align: 1px; }
+  .status b { color: var(--ink-2); font-weight: 400; }
+
+  /* ---------- tooltip ---------- */
+  #tip {
+    position: fixed; z-index: 50; pointer-events: none; opacity: 0;
+    transform: translate(-50%, -100%);
+    background: var(--surface-3); color: var(--ink);
+    border: 1px solid var(--border-2); border-radius: 3px;
+    padding: 6px 9px; font-size: 11.5px; line-height: 1.5; white-space: pre; max-width: 300px;
+    box-shadow: 0 6px 22px rgba(0,0,0,.45);
+  }
+  #tip.on { opacity: 1; }
+  [data-tip] { cursor: default; }
+
+  svg { display: block; width: 100%; }
+  .noscript { padding: 24px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main id="app" class="grid"></main>
+  <div id="status" class="status"></div>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script id="howiai-data" type="application/json">{"schema_version":1,"generated_at":"2026-09-19T14:05:00-04:00","window":{"days":30,"start":"2026-08-20","end":"2026-09-19"},"person":{"participant_id":"p_ab12cd34","title":"Senior Product Designer","function":"Design"},"totals":{"sessions":96,"sessions_per_week":22.4,"messages":1283,"active_days":22,"hours_estimated":31.5,"longest_streak_days":9,"sources":4},"by_source":[{"source":"claude-export","label":"Claude","sessions":44,"messages":323,"share":0.458},{"source":"chatgpt-export","label":"ChatGPT","sessions":28,"messages":193,"share":0.292},{"source":"claude-code","label":"Claude Code","sessions":13,"messages":453,"share":0.135},{"source":"claude-cowork","label":"Cowork","sessions":11,"messages":314,"share":0.115}],"by_week":[{"week_start":"2026-08-17","sessions":17,"by_source":{"chatgpt-export":3,"claude-export":8,"claude-cowork":1,"claude-code":5}},{"week_start":"2026-08-24","sessions":15,"by_source":{"chatgpt-export":7,"claude-export":6,"claude-cowork":1,"claude-code":1}},{"week_start":"2026-08-31","sessions":23,"by_source":{"chatgpt-export":6,"claude-export":13,"claude-cowork":2,"claude-code":2}},{"week_start":"2026-09-07","sessions":19,"by_source":{"chatgpt-export":3,"claude-export":7,"claude-cowork":5,"claude-code":4}},{"week_start":"2026-09-14","sessions":22,"by_source":{"chatgpt-export":9,"claude-export":10,"claude-cowork":2,"claude-code":1}}],"by_weekday":[{"weekday":0,"label":"Mon","sessions":26},{"weekday":1,"label":"Tue","sessions":21},{"weekday":2,"label":"Wed","sessions":12},{"weekday":3,"label":"Thu","sessions":12},{"weekday":4,"label":"Fri","sessions":12},{"weekday":5,"label":"Sat","sessions":1},{"weekday":6,"label":"Sun","sessions":12}],"by_hour":[{"hour":0,"sessions":0},{"hour":1,"sessions":0},{"hour":2,"sessions":0},{"hour":3,"sessions":1},{"hour":4,"sessions":0},{"hour":5,"sessions":2},{"hour":6,"sessions":1},{"hour":7,"sessions":7},{"hour":8,"sessions":5},{"hour":9,"sessions":9},{"hour":10,"sessions":7},{"hour":11,"sessions":17},{"hour":12,"sessions":16},{"hour":13,"sessions":12},{"hour":14,"sessions":8},{"hour":15,"sessions":6},{"hour":16,"sessions":3},{"hour":17,"sessions":1},{"hour":18,"sessions":1},{"hour":19,"sessions":0},{"hour":20,"sessions":0},{"hour":21,"sessions":0},{"hour":22,"sessions":0},{"hour":23,"sessions":0}],"by_category":[{"category":"Write & edit","sessions":25,"share":0.26,"assist_type_mix":{"ask":7,"make":18,"do":0},"subcategories":[{"name":"Design doc","sessions":9},{"name":"Rationale for stakeholders","sessions":8},{"name":"Release notes","sessions":8}]},{"category":"Design critique & feedback","sessions":21,"share":0.219,"assist_type_mix":{"ask":16,"make":3,"do":2},"subcategories":[{"name":"Accessibility check","sessions":8},{"name":"Critique a flow","sessions":8},{"name":"Copy in the UI","sessions":5}]},{"category":"Research & synthesis","sessions":15,"share":0.156,"assist_type_mix":{"ask":3,"make":9,"do":3},"subcategories":[{"name":"Competitive teardown","sessions":6},{"name":"Summarize interviews","sessions":5},{"name":"Affinity mapping","sessions":4}]},{"category":"Explain & learn","sessions":14,"share":0.146,"assist_type_mix":{"ask":14,"make":0,"do":0},"subcategories":[{"name":"How does X work","sessions":6},{"name":"Engineering concepts","sessions":5},{"name":"Terminology","sessions":3}]},{"category":"Prototype & build","sessions":9,"share":0.094,"assist_type_mix":{"ask":0,"make":3,"do":6},"subcategories":[{"name":"Motion spec","sessions":6},{"name":"Design tokens","sessions":3}]},{"category":"Personal & life admin","sessions":8,"share":0.083,"assist_type_mix":{"ask":7,"make":0,"do":1},"subcategories":[{"name":"Health","sessions":3},{"name":"Money","sessions":2},{"name":"Travel","sessions":2},{"name":"Family","sessions":1}]},{"category":"Plan & prioritize","sessions":4,"share":0.042,"assist_type_mix":{"ask":1,"make":3,"do":0},"subcategories":[{"name":"Roadmap tradeoffs","sessions":2},{"name":"Sprint planning","sessions":2}]}],"by_assist_type":[{"type":"ask","label":"Asked","sessions":48,"share":0.5},{"type":"make","label":"Made","sessions":36,"share":0.375},{"type":"do","label":"Did","sessions":12,"share":0.125}],"by_mode":[{"mode":"chat","sessions":72},{"mode":"agentic","sessions":24}],"tools":[{"name":"Bash","sessions":14},{"name":"Grep","sessions":11},{"name":"WebSearch","sessions":11},{"name":"Agent","sessions":11},{"name":"Read","sessions":10},{"name":"Edit","sessions":10},{"name":"Write","sessions":8},{"name":"Glob","sessions":8},{"name":"WebFetch","sessions":6}],"connectors":[{"name":"Figma","sessions":6},{"name":"GitHub","sessions":4},{"name":"Linear","sessions":4},{"name":"Google Drive","sessions":2},{"name":"Slack","sessions":2},{"name":"Notion","sessions":2}],"models":[{"name":"claude-sonnet-4-5","sessions":39},{"name":"claude-opus-4-1","sessions":29},{"name":"gpt-5","sessions":28}],"session_length":{"buckets":[{"label":"1 message","sessions":0},{"label":"2–5","sessions":25},{"label":"6–20","sessions":53},{"label":"21+","sessions":18}],"median_messages":8,"p90_messages":32},"highlights":{"biggest_use_case":"Write & edit","surprise":{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","why":"One of only a handful of non-work sessions, and the longest chat of the month"},"busiest_day":{"date":"2026-09-04","sessions":9},"peak_hour":11,"signature_move":"Pastes a screenshot and asks for a critique before asking for a fix","one_liner":"Critiques with Claude by day, learns engineering vocabulary at night"},"surprises":[{"paraphrase":"Build a 12-week half-marathon plan","category":"Personal & life admin","source":"claude-export","date":"2026-09-08"},{"paraphrase":"Compare two car leases","category":"Personal & life admin","source":"claude-export","date":"2026-09-05"},{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","source":"chatgpt-export","date":"2026-09-02"},{"paraphrase":"Tighten microcopy on the empty-state screen","category":"Design critique & feedback","source":"claude-code","date":"2026-09-05"}],"sample_sessions":[{"paraphrase":"Write release notes from a changelog","category":"Write & edit","assist_type":"make","source":"chatgpt-export","date":"2026-09-02","messages":6},{"paraphrase":"Summarize twelve interview transcripts into themes","category":"Research & synthesis","assist_type":"do","source":"claude-export","date":"2026-09-01","messages":8},{"paraphrase":"Build a 12-week half-marathon plan","category":"Personal & life admin","assist_type":"ask","source":"claude-cowork","date":"2026-09-17","messages":32},{"paraphrase":"Critique the new onboarding flow screens for clarity","category":"Design critique & feedback","assist_type":"ask","source":"claude-export","date":"2026-09-17","messages":8},{"paraphrase":"Write release notes from a changelog","category":"Write & edit","assist_type":"make","source":"claude-export","date":"2026-09-08","messages":11},{"paraphrase":"Rewrite an exec update to lead with the decision","category":"Write & edit","assist_type":"make","source":"claude-code","date":"2026-09-14","messages":14},{"paraphrase":"Tighten microcopy on the empty-state screen","category":"Design critique & feedback","assist_type":"ask","source":"claude-export","date":"2026-09-03","messages":8},{"paraphrase":"Plan a 6-year-old's birthday party on a budget","category":"Personal & life admin","assist_type":"do","source":"claude-export","date":"2026-09-09","messages":8},{"paraphrase":"Draft a polite note to a landlord about repairs","category":"Personal & life admin","assist_type":"ask","source":"chatgpt-export","date":"2026-09-02","messages":13},{"paraphrase":"Draft a design rationale doc for the checkout redesign","category":"Write & edit","assist_type":"ask","source":"claude-code","date":"2026-09-14","messages":50},{"paraphrase":"Draft a design rationale doc for the checkout redesign","category":"Write & edit","assist_type":"make","source":"claude-export","date":"2026-09-02","messages":8},{"paraphrase":"Weigh three roadmap bets against a retention goal","category":"Plan & prioritize","assist_type":"make","source":"claude-export","date":"2026-09-08","messages":4}],"narrative":{"headline":"A critic first, a builder second","summary":"Most sessions ask for a second pair of eyes on work that already exists: flows, copy, accessibility. Making things comes next, mostly docs and rationale for stakeholders. Agentic sessions are rare but long, and they cluster on Thursdays before design review.","patterns":["Sessions spike the day before design review","ChatGPT is for quick questions, Claude is for long critiques","Almost nothing on weekends, except one very long personal chat"]}}</script>
+<script>
+(function () {
+  "use strict";
+
+  var data;
+  try { data = JSON.parse(document.getElementById("howiai-data").textContent); }
+  catch (e) {
+    document.getElementById("app").innerHTML = '<div class="noscript">No profile data.</div>';
+    return;
+  }
+
+  /* ---------------- helpers ---------------- */
+  var app = document.getElementById("app");
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  function el(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt !== undefined && txt !== null) n.textContent = String(txt);
+    return n;
+  }
+  function svg(tag, attrs) {
+    var n = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function has(a) { return Array.isArray(a) && a.length > 0; }
+  function num(n) {
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    return Math.round(n).toLocaleString("en-US");
+  }
+  function dec(n, d) {
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    return Number(n).toFixed(d === undefined ? 1 : d);
+  }
+  function pct(x) {
+    if (x === null || x === undefined || isNaN(x)) return "—";
+    var v = x * 100;
+    return (v >= 10 || v === 0 ? Math.round(v) : v.toFixed(1)) + "%";
+  }
+  function sum(arr, key) {
+    var t = 0;
+    for (var i = 0; i < arr.length; i++) t += Number(arr[i][key]) || 0;
+    return t;
+  }
+  function maxOf(arr, key) {
+    var m = 0;
+    for (var i = 0; i < arr.length; i++) m = Math.max(m, Number(arr[i][key]) || 0);
+    return m;
+  }
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function shortDate(iso) {
+    if (!iso) return "";
+    var p = String(iso).slice(0, 10).split("-");
+    if (p.length !== 3) return String(iso);
+    return MON[Number(p[1]) - 1] + " " + Number(p[2]);
+  }
+  function hourLabel(h) {
+    h = Number(h);
+    if (isNaN(h)) return "—";
+    return (h < 10 ? "0" + h : String(h)) + ":00";
+  }
+  function css(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  /* ---------------- panel shell ---------------- */
+  function panel(opts) {
+    var p = el("div", "panel" + (opts.span ? " " + opts.span : ""));
+    var h = el("div", "phead");
+    h.appendChild(el("span", "t", opts.title));
+    if (opts.legend) h.appendChild(opts.legend);
+    h.appendChild(el("span", "rule"));
+    if (opts.meta) h.appendChild(el("span", "meta", opts.meta));
+    if (opts.headExtra) h.appendChild(opts.headExtra);
+    p.appendChild(h);
+    var b = el("div", "pbody" + (opts.tight ? " tight" : ""));
+    p.appendChild(b);
+    p.body = b;
+    (opts.parent || app).appendChild(p);
+    return p;
+  }
+
+  function legendSwatches(items) {
+    var l = el("div", "legend");
+    items.forEach(function (it) {
+      var s = el("span");
+      var sw = el("i", "sw");
+      sw.style.background = it.color;
+      s.appendChild(sw);
+      s.appendChild(el("b", null, it.label));
+      s.lastChild.style.fontWeight = "400";
+      l.appendChild(s);
+    });
+    return l;
+  }
+
+  /* ---------------- tooltip ---------------- */
+  var tip = document.getElementById("tip");
+  function bindTip(node, text) {
+    node.setAttribute("data-tip", text);
+    if (node.tagName && node.tagName.toLowerCase() === "rect") {
+      var t = svg("title"); t.textContent = text; node.appendChild(t);
+    }
+  }
+  function moveTip(e) {
+    var t = e.target.closest ? e.target.closest("[data-tip]") : null;
+    if (!t && e.target.correspondingUseElement) t = e.target;
+    if (!t || !t.getAttribute || !t.getAttribute("data-tip")) { tip.classList.remove("on"); return; }
+    tip.textContent = t.getAttribute("data-tip");
+    tip.classList.add("on");
+    var x = Math.max(8 + tip.offsetWidth / 2, Math.min(window.innerWidth - 8 - tip.offsetWidth / 2, e.clientX));
+    tip.style.left = x + "px";
+    tip.style.top = Math.max(tip.offsetHeight + 10, e.clientY - 12) + "px";
+  }
+  document.addEventListener("mousemove", moveTip);
+  document.addEventListener("mouseleave", function () { tip.classList.remove("on"); });
+  window.addEventListener("scroll", function () { tip.classList.remove("on"); }, { passive: true });
+
+  /* ---------------- data prep ---------------- */
+  var win = data.window || {};
+  var person = data.person || {};
+  var totals = data.totals || {};
+  var high = data.highlights || {};
+  var narrative = data.narrative || {};
+  var weeks = has(data.by_week) ? data.by_week.slice() : [];
+  var sources = has(data.by_source) ? data.by_source.slice() : [];
+  var categories = has(data.by_category) ? data.by_category.slice() : [];
+  var assist = has(data.by_assist_type) ? data.by_assist_type.slice() : [];
+  var tools = has(data.tools) ? data.tools.slice() : [];
+  var connectors = has(data.connectors) ? data.connectors.slice() : [];
+  var models = has(data.models) ? data.models.slice() : [];
+  var weekdays = has(data.by_weekday) ? data.by_weekday.slice() : [];
+  var hours = has(data.by_hour) ? data.by_hour.slice() : [];
+  var samples = has(data.sample_sessions) ? data.sample_sessions.slice() : [];
+  var surprises = has(data.surprises) ? data.surprises.slice() : [];
+  var modes = has(data.by_mode) ? data.by_mode.slice() : [];
+  var slen = data.session_length || null;
+
+  var totalSessions = Number(totals.sessions) || sum(sources, "sessions") || sum(categories, "sessions") || 0;
+
+  var ASSIST_COLOR = { ask: "--ask", make: "--make", do: "--do" };
+  var ASSIST_LABEL = { ask: "Asked", make: "Made", do: "Did" };
+  function assistColor(t) { return "var(" + (ASSIST_COLOR[t] || "--make") + ")"; }
+  function assistLabel(t) {
+    for (var i = 0; i < assist.length; i++) if (assist[i].type === t && assist[i].label) return assist[i].label;
+    return ASSIST_LABEL[t] || t;
+  }
+
+  var SOURCE_LABEL = {
+    "claude-code": "Claude Code", "claude-export": "Claude", "claude-cowork": "Cowork",
+    "chatgpt-export": "ChatGPT", "codex": "Codex", "gemini-cli": "Gemini CLI", "copilot-cli": "Copilot CLI"
+  };
+  function sourceLabel(s) {
+    for (var i = 0; i < sources.length; i++) if (sources[i].source === s && sources[i].label) return sources[i].label;
+    return SOURCE_LABEL[s] || s || "unknown";
+  }
+
+  function heatVar(v, max) {
+    if (!v) return "var(--h0)";
+    var r = max > 0 ? v / max : 0;
+    var lvl = Math.min(5, 1 + Math.floor(r * 4.999));
+    return "var(--h" + lvl + ")";
+  }
+
+  /* ================= 1. HEADER ================= */
+  (function () {
+    var p = el("div", "panel s12");
+    var h = el("div", "hdr");
+
+    var left = el("div");
+    var brand = el("div", "brand");
+    brand.appendChild(el("span", null, "howi"));
+    brand.appendChild(el("b", null, "ai"));
+    left.appendChild(brand);
+
+    var pr = el("div", "prompt");
+    pr.appendChild(el("span", "u", "~"));
+    pr.appendChild(el("span", null, " $ howiai profile --days " + (win.days !== undefined ? win.days : "30")));
+    left.appendChild(pr);
+
+    var typed = el("div", "typed");
+    var typedText = el("span");
+    typed.appendChild(typedText);
+    typed.appendChild(el("span", "cursor"));
+    left.appendChild(typed);
+
+    var right = el("div", "idblock");
+    function kv(k, v) {
+      if (!v) return;
+      var d = el("div");
+      d.appendChild(el("span", "k", k + " "));
+      d.appendChild(el("span", "v", v));
+      right.appendChild(d);
+    }
+    kv("id", person.participant_id);
+    kv("role", [person.title, person.function].filter(Boolean).join(" · "));
+    kv("window", (win.start || "?") + " → " + (win.end || "?") +
+      (win.days ? "  (" + win.days + "d)" : ""));
+    kv("sources", totals.sources !== undefined ? totals.sources + " connected" : (sources.length ? sources.length + " connected" : ""));
+
+    h.appendChild(left);
+    h.appendChild(right);
+    p.appendChild(h);
+    app.appendChild(p);
+
+    /* typed headline */
+    var line = high.one_liner || narrative.headline || "";
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!line) { typed.style.display = "none"; return; }
+    if (reduce) { typedText.textContent = line; return; }
+    var i = 0;
+    (function step() {
+      typedText.textContent = line.slice(0, i);
+      if (i++ <= line.length) setTimeout(step, 16);
+    })();
+  })();
+
+  /* ================= 2. KEY STATS ================= */
+  (function () {
+    var tiles = [];
+    function add(lab, val, unit, sub, spark) {
+      if (val === null || val === undefined || val === "—") return;
+      tiles.push({ lab: lab, val: val, unit: unit, sub: sub, spark: spark });
+    }
+    add("Sessions", num(totals.sessions !== undefined ? totals.sessions : totalSessions), null,
+      totals.messages !== undefined ? num(totals.messages) + " messages" : null);
+    add("Per week", totals.sessions_per_week !== undefined ? dec(totals.sessions_per_week) : null, "/wk",
+      weeks.length ? weeks.length + " weeks tracked" : null, weeks.length > 1);
+    add("Active days", totals.active_days !== undefined ? num(totals.active_days) : null, null,
+      win.days ? "of " + win.days : null);
+    add("Longest streak", totals.longest_streak_days !== undefined ? num(totals.longest_streak_days) : null, "days");
+    add("Hours (est)", totals.hours_estimated !== undefined ? dec(totals.hours_estimated) : null, "h",
+      totals.hours_estimated && totals.sessions ? dec((totals.hours_estimated * 60) / totals.sessions, 0) + " min / session" : null);
+    add("Busiest day", high.busiest_day ? num(high.busiest_day.sessions) : null, "sessions",
+      high.busiest_day ? shortDate(high.busiest_day.date) : null);
+    add("Peak hour", high.peak_hour !== undefined && high.peak_hour !== null ? hourLabel(high.peak_hour) : null, null,
+      "local time");
+    if (!tiles.length) return;
+
+    var p = panel({ title: "uptime", span: "s12", tight: true, meta: "last " + (win.days || 30) + " days" });
+    var g = el("div", "stats");
+    tiles.forEach(function (t) {
+      var d = el("div", "stat");
+      d.appendChild(el("div", "lab", t.lab));
+      var v = el("div", "val", t.val);
+      if (t.unit) { var u = el("span", "u", t.unit); v.appendChild(u); }
+      d.appendChild(v);
+      if (t.spark) d.appendChild(miniSpark(weeks));
+      else if (t.sub) d.appendChild(el("div", "sub", t.sub));
+      g.appendChild(d);
+    });
+    p.body.appendChild(g);
+  })();
+
+  function miniSpark(ws, width) {
+    var box = el("div");
+    box.style.marginTop = "4px";
+    var w = width || 108, h = 20, n = ws.length;
+    var s = svg("svg", { viewBox: "0 0 " + w + " " + h, width: w, height: h, role: "img" });
+    s.setAttribute("aria-label", "sessions per week trend");
+    s.style.width = w + "px";
+    var max = maxOf(ws, "sessions") || 1;
+    var pts = ws.map(function (d, i) {
+      var x = n > 1 ? (i / (n - 1)) * (w - 4) + 2 : w / 2;
+      var y = h - 2 - ((Number(d.sessions) || 0) / max) * (h - 5);
+      return [x, y];
+    });
+    var dstr = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    var area = svg("path", {
+      d: dstr + " L" + pts[pts.length - 1][0].toFixed(1) + " " + (h - 1) + " L" + pts[0][0].toFixed(1) + " " + (h - 1) + " Z",
+      fill: "var(--accent)", opacity: ".16"
+    });
+    s.appendChild(area);
+    s.appendChild(svg("path", { d: dstr, fill: "none", stroke: "var(--accent)", "stroke-width": 1.6, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    var last = pts[pts.length - 1];
+    s.appendChild(svg("circle", { cx: last[0], cy: last[1], r: 2.4, fill: "var(--accent)" }));
+    box.appendChild(s);
+    return box;
+  }
+
+  /* ================= 3. CADENCE (week bars + sparkline) ================= */
+  if (weeks.length) (function () {
+    var head = null;
+    if (weeks.length > 1) {
+      head = el("div", "headspark");
+      head.appendChild(miniSpark(weeks, 140));
+      head.firstChild.style.marginTop = "0";
+    }
+    var p = panel({
+      title: "cadence",
+      span: "s8",
+      meta: "sessions per week",
+      headExtra: head
+    });
+    var host = el("div");
+    p.body.appendChild(host);
+    drawWeeks(host, weeks);
+    observe(host, function () { drawWeeks(host, weeks); });
+
+    var sorted = weeks.slice().sort(function (a, b) { return (b.sessions || 0) - (a.sessions || 0); });
+    var vals = weeks.map(function (w) { return Number(w.sessions) || 0; }).sort(function (a, b) { return a - b; });
+    var mid = vals.length % 2 ? vals[(vals.length - 1) / 2] : (vals[vals.length / 2 - 1] + vals[vals.length / 2]) / 2;
+    var f = el("div", "facts");
+    f.style.marginTop = "12px";
+    f.style.paddingTop = "10px";
+    f.style.borderTop = "1px solid var(--border)";
+    function fact(k, v) { var d = el("div"); d.appendChild(el("span", null, k + " ")); d.appendChild(el("b", null, v)); f.appendChild(d); }
+    fact("busiest week", shortDate(sorted[0].week_start) + " · " + num(sorted[0].sessions));
+    fact("quietest week", shortDate(sorted[sorted.length - 1].week_start) + " · " + num(sorted[sorted.length - 1].sessions));
+    fact("median", dec(mid, mid % 1 ? 1 : 0) + " / week");
+    p.body.appendChild(f);
+  })();
+
+  function observe(node, fn) {
+    if (window.ResizeObserver) {
+      var last = 0;
+      var ro = new ResizeObserver(function (entries) {
+        var w = Math.round(entries[0].contentRect.width);
+        if (w !== last && w > 0) { last = w; fn(); }
+      });
+      ro.observe(node);
+    } else {
+      window.addEventListener("resize", fn);
+    }
+  }
+
+  function roundedTop(x, y, w, h, r) {
+    r = Math.min(r, w / 2, Math.max(h, 0));
+    if (h <= 0) return "";
+    return "M" + x + " " + (y + h) + " L" + x + " " + (y + r) + " Q" + x + " " + y + " " + (x + r) + " " + y +
+      " L" + (x + w - r) + " " + y + " Q" + (x + w) + " " + y + " " + (x + w) + " " + (y + r) +
+      " L" + (x + w) + " " + (y + h) + " Z";
+  }
+
+  function drawWeeks(host, ws) {
+    host.textContent = "";
+    var W = Math.max(280, host.clientWidth || 600);
+    var H = 168;
+    var padL = 34, padR = 10, padT = 20, padB = 26;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var max = maxOf(ws, "sessions");
+    var base = max <= 10 ? 2 : (max <= 50 ? 10 : (max <= 200 ? 50 : 100));
+    var nice = Math.max(base, Math.ceil(max / base) * base);
+    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, role: "img" });
+    s.setAttribute("aria-label", "Sessions per week");
+    s.style.width = "100%";
+
+    [0, 0.5, 1].forEach(function (f) {
+      var y = padT + plotH - f * plotH;
+      s.appendChild(svg("line", {
+        x1: padL, x2: W - padR, y1: y, y2: y,
+        stroke: f === 0 ? "var(--border-2)" : "var(--border)", "stroke-width": 1
+      }));
+      var t = svg("text", { x: padL - 8, y: y + 3.5, "text-anchor": "end", fill: "var(--ink-3)", "font-size": 10 });
+      t.textContent = String(Math.round(nice * f));
+      s.appendChild(t);
+    });
+
+    var band = plotW / ws.length;
+    var bw = Math.min(band - 14, 54);
+    if (bw < 6) bw = Math.max(4, band - 4);
+
+    ws.forEach(function (d, i) {
+      var v = Number(d.sessions) || 0;
+      var hgt = (v / nice) * plotH;
+      var x = padL + band * i + (band - bw) / 2;
+      var y = padT + plotH - hgt;
+      if (hgt > 0) {
+        var path = svg("path", { d: roundedTop(x, y, bw, hgt, 4), fill: "var(--accent-dim)" });
+        var parts = [];
+        if (d.by_source) {
+          for (var k in d.by_source) parts.push("  " + sourceLabel(k) + "  " + d.by_source[k]);
+        }
+        bindTip(path, "week of " + shortDate(d.week_start) + "\n" + v + " sessions" + (parts.length ? "\n" + parts.join("\n") : ""));
+        s.appendChild(path);
+      }
+      var lab = svg("text", { x: x + bw / 2, y: y - 6, "text-anchor": "middle", fill: "var(--ink-2)", "font-size": 11 });
+      lab.textContent = v;
+      s.appendChild(lab);
+      var xl = svg("text", { x: padL + band * i + band / 2, y: H - 8, "text-anchor": "middle", fill: "var(--ink-3)", "font-size": 10 });
+      xl.textContent = shortDate(d.week_start);
+      s.appendChild(xl);
+    });
+    host.appendChild(s);
+  }
+
+  /* ================= 4. SOURCES ================= */
+  if (sources.length) (function () {
+    var p = panel({ title: "sources", span: "s4", meta: sources.length + " mounted" });
+    var tot = sum(sources, "sessions") || totalSessions || 1;
+    var max = maxOf(sources, "sessions") || 1;
+    var COLS = "1fr 46px 46px";
+    var head = el("div", "colhead");
+    head.style.gridTemplateColumns = COLS;
+    head.appendChild(el("span", null, "source"));
+    var hn = el("span", null, "n"); hn.style.textAlign = "right"; head.appendChild(hn);
+    var sh = el("span", null, "share"); sh.style.textAlign = "right"; head.appendChild(sh);
+    p.body.appendChild(head);
+
+    var rows = el("div", "rows");
+    sources.forEach(function (s) {
+      var r = el("div");
+      r.style.padding = "7px 0";
+      var top = el("div", "row");
+      top.style.gridTemplateColumns = COLS;
+      top.style.padding = "0";
+      top.appendChild(el("div", "nm", s.label || sourceLabel(s.source)));
+      top.appendChild(el("div", "nu", num(s.sessions)));
+      var share = (s.share !== undefined && s.share !== null) ? s.share : (Number(s.sessions) || 0) / tot;
+      top.appendChild(el("div", "pc", pct(share)));
+      r.appendChild(top);
+
+      var bar = el("div", "bar");
+      bar.style.marginTop = "5px";
+      var fill = el("i");
+      fill.style.width = ((Number(s.sessions) || 0) / max * 100).toFixed(1) + "%";
+      bar.appendChild(fill);
+      r.appendChild(bar);
+
+      bindTip(r, (s.label || sourceLabel(s.source)) + "\n" + num(s.sessions) + " sessions" +
+        (s.messages !== undefined ? "\n" + num(s.messages) + " messages" : "") + "\n" + pct(share) + " of sessions");
+      rows.appendChild(r);
+    });
+    p.body.appendChild(rows);
+
+    if (sum(sources, "messages") > 0) {
+      var f = el("div", "hint");
+      f.style.marginTop = "10px";
+      f.style.paddingTop = "9px";
+      f.style.borderTop = "1px solid var(--border)";
+      var heaviest = sources.slice().sort(function (a, b) {
+        return (b.messages / Math.max(1, b.sessions)) - (a.messages / Math.max(1, a.sessions));
+      })[0];
+      f.textContent = "longest conversations: " + (heaviest.label || sourceLabel(heaviest.source)) +
+        " (" + dec(heaviest.messages / Math.max(1, heaviest.sessions), 1) + " msg/session)";
+      p.body.appendChild(f);
+    }
+  })();
+
+  /* ================= 5. RHYTHM: weekday + hour strips ================= */
+  if (weekdays.length || hours.length) (function () {
+    var p = panel({ title: "rhythm", span: "s12", meta: "weekday + hour of day" });
+    var wrap = el("div");
+    wrap.style.display = "grid";
+    wrap.style.gap = "16px";
+    wrap.style.gridTemplateColumns = weekdays.length && hours.length ? "minmax(200px, 7fr) minmax(280px, 16fr)" : "1fr";
+    if (window.matchMedia && window.matchMedia("(max-width: 860px)").matches) wrap.style.gridTemplateColumns = "1fr";
+
+    function strip(label, items, keyLabel, getVal, tickEvery) {
+      var box = el("div", "stripwrap");
+      var top = el("div");
+      top.style.display = "flex";
+      top.style.justifyContent = "space-between";
+      top.style.gap = "10px";
+      top.appendChild(el("div", "striplab", label));
+      var peak = items.slice().sort(function (a, b) { return getVal(b) - getVal(a); })[0];
+      top.appendChild(el("div", "striplab", "peak " + keyLabel(peak) + " · " + getVal(peak)));
+      box.appendChild(top);
+
+      var max = 0;
+      items.forEach(function (d) { max = Math.max(max, getVal(d)); });
+      var cols = "repeat(" + items.length + ", 1fr)";
+      var g = el("div", "strip");
+      g.style.gridTemplateColumns = cols;
+      items.forEach(function (d) {
+        var c = el("div", "cell");
+        var v = getVal(d);
+        c.style.background = heatVar(v, max);
+        bindTip(c, keyLabel(d) + "\n" + v + " session" + (v === 1 ? "" : "s"));
+        g.appendChild(c);
+      });
+      box.appendChild(g);
+
+      var t = el("div", "ticks");
+      t.style.gridTemplateColumns = cols;
+      items.forEach(function (d, i) {
+        t.appendChild(el("span", null, tickEvery && i % tickEvery !== 0 ? "" : keyLabel(d, true)));
+      });
+      box.appendChild(t);
+      return box;
+    }
+
+    if (weekdays.length) {
+      wrap.appendChild(strip("by weekday", weekdays,
+        function (d, short) { return d.label || ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][d.weekday] || String(d.weekday); },
+        function (d) { return Number(d.sessions) || 0; }, 0));
+    }
+    if (hours.length) {
+      wrap.appendChild(strip("by hour of day", hours,
+        function (d, short) { return short ? (Number(d.hour) < 10 ? "0" + d.hour : String(d.hour)) : hourLabel(d.hour); },
+        function (d) { return Number(d.sessions) || 0; }, 3));
+    }
+    p.body.appendChild(wrap);
+
+    var foot = el("div");
+    foot.style.display = "flex";
+    foot.style.flexWrap = "wrap";
+    foot.style.gap = "10px 22px";
+    foot.style.alignItems = "center";
+    foot.style.justifyContent = "space-between";
+    foot.style.marginTop = "14px";
+    foot.style.paddingTop = "11px";
+    foot.style.borderTop = "1px solid var(--border)";
+
+    var facts = el("div", "facts");
+    if (high.busiest_day) {
+      var f1 = el("div");
+      f1.appendChild(el("span", null, "busiest day "));
+      f1.appendChild(el("b", null, shortDate(high.busiest_day.date) + " · " + num(high.busiest_day.sessions) + " sessions"));
+      facts.appendChild(f1);
+    }
+    if (high.peak_hour !== undefined && high.peak_hour !== null) {
+      var f2 = el("div");
+      f2.appendChild(el("span", null, "peak hour "));
+      f2.appendChild(el("b", null, hourLabel(high.peak_hour)));
+      facts.appendChild(f2);
+    }
+    var f3 = el("div", "hint", "two marginals, not a joint grid — each strip is scaled to its own peak");
+    facts.appendChild(f3);
+    foot.appendChild(facts);
+
+    var leg = el("div", "legend");
+    leg.appendChild(el("span", null, "less"));
+    ["--h0","--h1","--h2","--h3","--h4","--h5"].forEach(function (v) {
+      var s = el("span");
+      var sw = el("i", "sw");
+      sw.style.background = "var(" + v + ")";
+      if (v === "--h0") sw.style.boxShadow = "inset 0 0 0 1px var(--border)";
+      s.appendChild(sw);
+      leg.appendChild(s);
+    });
+    leg.appendChild(el("span", null, "more"));
+    leg.style.gap = "3px";
+    foot.appendChild(leg);
+    p.body.appendChild(foot);
+  })();
+
+  var rightCol = null;
+  function rightColumn() {
+    if (!rightCol) {
+      rightCol = el("div", "stack " + (categories.length ? "s5" : "s12"));
+      app.appendChild(rightCol);
+    }
+    return rightCol;
+  }
+
+  /* ================= 6. CATEGORIES ================= */
+  if (categories.length) (function () {
+    var order = ["ask", "make", "do"];
+    var lg = legendSwatches(order.map(function (t) { return { color: assistColor(t), label: assistLabel(t).toLowerCase() }; }));
+    lg.style.marginLeft = "4px";
+    var p = panel({
+      title: "categories",
+      span: "s7",
+      legend: lg,
+      meta: high.biggest_use_case ? "top: " + high.biggest_use_case : categories.length + " kinds of work"
+    });
+
+    var tot = sum(categories, "sessions") || totalSessions || 1;
+    var head = el("div", "colhead");
+    head.style.gridTemplateColumns = "44px 1fr 46px";
+    head.appendChild(el("span", null, "share"));
+    head.appendChild(el("span", null, "category"));
+    var sn = el("span", null, "n"); sn.style.textAlign = "right"; head.appendChild(sn);
+    p.body.appendChild(head);
+
+    var rows = el("div", "rows");
+    var max = maxOf(categories, "sessions") || 1;
+    categories.forEach(function (c) {
+      var share = (c.share !== undefined && c.share !== null) ? c.share : (Number(c.sessions) || 0) / tot;
+      var r = el("div", "row");
+      r.style.gridTemplateColumns = "44px 1fr 46px";
+      r.style.alignItems = "start";
+      r.style.paddingTop = "7px";
+      r.style.paddingBottom = "7px";
+
+      var pc = el("div", "pc", pct(share));
+      pc.style.textAlign = "left";
+      pc.style.color = "var(--ink-2)";
+      pc.style.paddingTop = "1px";
+      r.appendChild(pc);
+
+      var mid = el("div");
+      mid.appendChild(el("div", "nm", c.category));
+
+      var mix = c.assist_type_mix || null;
+      var widthPct = (Number(c.sessions) || 0) / max * 100;
+      var track = el("div");
+      track.style.width = widthPct.toFixed(1) + "%";
+      track.style.marginTop = "4px";
+      var seg = el("div", "seg");
+      if (mix) {
+        var mtot = order.reduce(function (a, k) { return a + (Number(mix[k]) || 0); }, 0) || 1;
+        order.forEach(function (k) {
+          var v = Number(mix[k]) || 0;
+          if (!v) return;
+          var i2 = el("i");
+          i2.style.width = (v / mtot * 100).toFixed(2) + "%";
+          i2.style.background = assistColor(k);
+          seg.appendChild(i2);
+        });
+      } else {
+        var i3 = el("i");
+        i3.style.width = "100%";
+        i3.style.background = "var(--accent-dim)";
+        seg.appendChild(i3);
+      }
+      track.appendChild(seg);
+      mid.appendChild(track);
+
+      if (has(c.subcategories)) {
+        var sub = el("div", "hint", c.subcategories.map(function (s) {
+          return s.name + " " + s.sessions;
+        }).join("  ·  "));
+        sub.style.marginTop = "4px";
+        mid.appendChild(sub);
+      }
+      r.appendChild(mid);
+
+      var n = el("div", "nu", num(c.sessions));
+      n.style.paddingTop = "1px";
+      r.appendChild(n);
+
+      var tipTxt = c.category + "\n" + num(c.sessions) + " sessions · " + pct(share);
+      if (mix) tipTxt += "\n" + order.filter(function (k) { return mix[k]; })
+        .map(function (k) { return "  " + assistLabel(k).toLowerCase() + " " + mix[k]; }).join("\n");
+      bindTip(r, tipTxt);
+      rows.appendChild(r);
+    });
+    p.body.appendChild(rows);
+  })();
+
+  /* ================= 7. ASK / MAKE / DO ================= */
+  if (assist.length) (function () {
+    var p = panel({ title: "ask · make · do", parent: rightColumn(), meta: "who did the work" });
+    var tot = sum(assist, "sessions") || totalSessions || 1;
+    var order = ["ask", "make", "do"];
+    var sorted = order.map(function (t) {
+      for (var i = 0; i < assist.length; i++) if (assist[i].type === t) return assist[i];
+      return null;
+    }).filter(Boolean);
+    assist.forEach(function (a) { if (order.indexOf(a.type) === -1) sorted.push(a); });
+
+    var g = el("div", "gauge");
+    sorted.forEach(function (a) {
+      var share = (a.share !== undefined && a.share !== null) ? a.share : (Number(a.sessions) || 0) / tot;
+      var i2 = el("i");
+      i2.style.width = (share * 100).toFixed(2) + "%";
+      i2.style.background = assistColor(a.type);
+      bindTip(i2, (a.label || assistLabel(a.type)) + "\n" + num(a.sessions) + " sessions · " + pct(share));
+      g.appendChild(i2);
+    });
+    p.body.appendChild(g);
+
+    var rows = el("div", "rows");
+    var DESC = {
+      ask: "wanted words back — advice, an explanation, a review",
+      make: "wanted an artifact — a doc, a plan, code, a design",
+      do: "let AI act — files edited, commands run, things changed"
+    };
+    sorted.forEach(function (a) {
+      var share = (a.share !== undefined && a.share !== null) ? a.share : (Number(a.sessions) || 0) / tot;
+      var r = el("div", "row");
+      r.style.gridTemplateColumns = "13px 1fr 46px 50px";
+      r.style.alignItems = "start";
+      r.style.paddingTop = "7px";
+      r.style.paddingBottom = "7px";
+      var sw = el("i", "sw");
+      sw.style.background = assistColor(a.type);
+      sw.style.marginTop = "5px";
+      r.appendChild(sw);
+      var mid = el("div");
+      mid.appendChild(el("div", "nm", a.label || assistLabel(a.type)));
+      if (DESC[a.type]) {
+        var d = el("div", "hint", DESC[a.type]);
+        d.style.marginTop = "1px";
+        mid.appendChild(d);
+      }
+      r.appendChild(mid);
+      var n = el("div", "nu", num(a.sessions)); n.style.paddingTop = "1px"; r.appendChild(n);
+      var q = el("div", "pc", pct(share)); q.style.paddingTop = "2px"; r.appendChild(q);
+      rows.appendChild(r);
+    });
+    p.body.appendChild(rows);
+  })();
+
+  /* ================= 7b. SHAPE: mode + session length ================= */
+  if (modes.length || (slen && has(slen.buckets))) (function () {
+    var p = panel({ title: "session shape", parent: rightColumn(), meta: "length + mode" });
+
+    if (modes.length) {
+      var mtot = sum(modes, "sessions") || 1;
+      var g = el("div", "gauge");
+      g.style.height = "14px";
+      g.style.marginBottom = "8px";
+      var steps = ["var(--h5)", "var(--h3)", "var(--h1)"];
+      modes.forEach(function (m, i) {
+        var i2 = el("i");
+        i2.style.width = ((Number(m.sessions) || 0) / mtot * 100).toFixed(2) + "%";
+        i2.style.background = steps[i % steps.length];
+        bindTip(i2, m.mode + "\n" + num(m.sessions) + " sessions · " + pct((Number(m.sessions) || 0) / mtot));
+        g.appendChild(i2);
+      });
+      p.body.appendChild(g);
+      var leg = el("div", "legend");
+      leg.style.marginBottom = "12px";
+      modes.forEach(function (m, i) {
+        var s = el("span");
+        var sw = el("i", "sw");
+        sw.style.background = steps[i % steps.length];
+        s.appendChild(sw);
+        s.appendChild(el("span", null, m.mode + " " + pct((Number(m.sessions) || 0) / mtot)));
+        leg.appendChild(s);
+      });
+      p.body.appendChild(leg);
+    }
+
+    if (slen && has(slen.buckets)) {
+      var b = slen.buckets;
+      var max = maxOf(b, "sessions") || 1;
+      var lab = el("div", "striplab", "messages per session");
+      lab.style.marginBottom = "6px";
+      p.body.appendChild(lab);
+      var rows = el("div", "rows");
+      b.forEach(function (d) {
+        var r = el("div", "row");
+        r.style.gridTemplateColumns = "72px 1fr 40px";
+        r.appendChild(el("div", "nm", d.label));
+        var bw = el("div");
+        var bar = el("div", "bar");
+        var fill = el("i");
+        fill.style.width = ((Number(d.sessions) || 0) / max * 100).toFixed(1) + "%";
+        bar.appendChild(fill);
+        bw.appendChild(bar);
+        r.appendChild(bw);
+        r.appendChild(el("div", "nu", num(d.sessions)));
+        bindTip(r, d.label + " messages\n" + num(d.sessions) + " sessions");
+        rows.appendChild(r);
+      });
+      p.body.appendChild(rows);
+      var bits = [];
+      if (slen.median_messages !== undefined) bits.push("median " + num(slen.median_messages));
+      if (slen.p90_messages !== undefined) bits.push("p90 " + num(slen.p90_messages));
+      if (bits.length) {
+        var f = el("div", "hint", bits.join("  ·  ") + " messages");
+        f.style.marginTop = "9px";
+        f.style.paddingTop = "8px";
+        f.style.borderTop = "1px solid var(--border)";
+        p.body.appendChild(f);
+      }
+    }
+  })();
+
+  /* ================= 8. TOOLS / CONNECTORS / MODELS ================= */
+  (function () {
+    var groups = [];
+    if (tools.length) groups.push({ title: "top processes", meta: "built-in tools", items: tools, unit: "sessions", noun: "tools" });
+    if (connectors.length) groups.push({ title: "connectors", meta: "mcp servers", items: connectors, unit: "sessions", noun: "connectors" });
+    if (models.length) groups.push({ title: "models", meta: "engines used", items: models, unit: "sessions", noun: "models" });
+    if (!groups.length) return;
+
+    var procRow = el("div", "procrow s12");
+    app.appendChild(procRow);
+    var procCol = null;
+    groups.forEach(function (g, gi) {
+      var opts = { title: g.title, meta: g.meta, parent: procRow };
+      if (gi > 0 && groups.length > 2) {
+        if (!procCol) { procCol = el("div", "stack"); procRow.appendChild(procCol); }
+        opts.parent = procCol;
+      }
+      var p = panel(opts);
+      var items = g.items.slice(0, 10);
+      var max = maxOf(items, "sessions") || 1;
+      var COLS = "22px 1fr 96px 34px";
+      var head = el("div", "colhead");
+      head.style.gridTemplateColumns = COLS;
+      head.appendChild(el("span", null, "#"));
+      head.appendChild(el("span", null, "name"));
+      head.appendChild(el("span", null, ""));
+      var sh = el("span", null, "n"); sh.style.textAlign = "right"; head.appendChild(sh);
+      p.body.appendChild(head);
+
+      var rows = el("div", "rows");
+      items.forEach(function (it, i) {
+        var r = el("div", "row");
+        r.style.gridTemplateColumns = COLS;
+        r.appendChild(el("div", "idx", (i + 1 < 10 ? "0" : "") + (i + 1)));
+        r.appendChild(el("div", "nm", it.name));
+        var barwrap = el("div");
+        var bar = el("div", "bar");
+        var fill = el("i");
+        fill.style.width = ((Number(it.sessions) || 0) / max * 100).toFixed(1) + "%";
+        bar.appendChild(fill);
+        barwrap.appendChild(bar);
+        r.appendChild(barwrap);
+        var n = el("div", "nu", num(it.sessions));
+        n.style.fontSize = "11.5px";
+        r.appendChild(n);
+        var share = totalSessions ? (Number(it.sessions) || 0) / totalSessions : null;
+        bindTip(r, it.name + "\n" + num(it.sessions) + " " + g.unit +
+          (share !== null ? "\n" + pct(share) + " of all sessions" : ""));
+        rows.appendChild(r);
+      });
+      p.body.appendChild(rows);
+      var footBits = [g.items.length + " " + g.noun];
+      if (g.items.length > items.length) footBits.push((g.items.length - items.length) + " more not shown");
+      if (items.length) footBits.push("top " + items[0].name + " · " + num(items[0].sessions) + " sessions");
+      var foot = el("div", "hint", footBits.join("  ·  "));
+      foot.style.marginTop = "10px";
+      foot.style.paddingTop = "9px";
+      foot.style.borderTop = "1px solid var(--border)";
+      p.body.appendChild(foot);
+    });
+  })();
+
+  /* ================= 10. SURPRISE ================= */
+  if (high.surprise || surprises.length) (function () {
+    var p = panel({ title: "unexpected", span: "s12", meta: "outside the job description" });
+    var grid = el("div", "sgrid");
+    p.body.appendChild(grid);
+    var box = el("div", "surprise");
+    var s = high.surprise || surprises[0];
+    box.appendChild(el("div", "tag", "[!] surprise of the month"));
+    box.appendChild(el("div", "big", s.paraphrase || ""));
+    var meta = [];
+    if (s.category) meta.push(s.category);
+    if (s.source) meta.push(sourceLabel(s.source));
+    if (s.date) meta.push(shortDate(s.date));
+    if (meta.length) {
+      var m = el("div", "hint", meta.join("  ·  "));
+      box.appendChild(m);
+    }
+    if (s.why) box.appendChild(el("div", "why", s.why));
+    grid.appendChild(box);
+
+    var rest = surprises.filter(function (x) {
+      return !high.surprise || x.paraphrase !== high.surprise.paraphrase;
+    });
+    if (rest.length) {
+      var list = el("div", "slist");
+      var lh = el("div", "striplab", "other sessions nobody predicted");
+      lh.style.marginBottom = "3px";
+      list.appendChild(lh);
+      rest.slice(0, 6).forEach(function (x) {
+        var r = el("div");
+        r.appendChild(el("span", "d", (x.date ? shortDate(x.date) : "") + "  "));
+        r.appendChild(el("span", null, x.paraphrase));
+        if (x.category) r.appendChild(el("span", "d", "   " + x.category));
+        list.appendChild(r);
+      });
+      grid.appendChild(list);
+    } else {
+      grid.style.gridTemplateColumns = "1fr";
+    }
+  })();
+
+  /* ================= 11. MOMENTS LOG ================= */
+  if (samples.length) (function () {
+    var p = panel({
+      title: "moments",
+      span: "s12", tight: true,
+      meta: "tail -n " + Math.min(samples.length, 14) + " sessions.log"
+    });
+    var rows = samples.slice().sort(function (a, b) {
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    }).slice(0, 14);
+    var log = el("div", "log");
+    rows.forEach(function (s) {
+      var line = el("div", "logline");
+      line.appendChild(el("span", "ts", s.date || "—"));
+      line.appendChild(el("span", "src", sourceLabel(s.source)));
+      var lvl = el("span", "lvl", s.assist_type ? "[" + s.assist_type.toUpperCase() + "]" : "");
+      lvl.style.color = s.assist_type ? assistColor(s.assist_type) : "var(--ink-3)";
+      if (s.assist_type === "ask") lvl.style.color = "var(--ink-2)";
+      line.appendChild(lvl);
+      line.appendChild(el("span", "msg", s.paraphrase || ""));
+      line.appendChild(el("span", "n", s.messages !== undefined ? s.messages + " msg" : ""));
+      bindTip(line, (s.paraphrase || "") + "\n" + [s.category, sourceLabel(s.source), s.date].filter(Boolean).join(" · ") +
+        (s.messages !== undefined ? "\n" + s.messages + " messages" : ""));
+      log.appendChild(line);
+    });
+    p.body.appendChild(log);
+    var caret = el("div", "caret");
+    caret.appendChild(el("span", null, samples.length > 14 ? "… " + (samples.length - 14) + " more sessions in this window " : "end of sample "));
+    caret.appendChild(el("span", "cursor"));
+    caret.lastChild.style.background = "var(--ink-3)";
+    p.body.appendChild(caret);
+  })();
+
+  /* ================= 12. NARRATIVE ================= */
+  if (narrative.headline || narrative.summary || has(narrative.patterns) || high.signature_move) (function () {
+    var p = panel({ title: "readout", span: "s12", meta: "what the month says" });
+    if (narrative.headline) p.body.appendChild(el("div", "headline", narrative.headline));
+    if (narrative.summary) p.body.appendChild(el("div", "summary", narrative.summary));
+    if (has(narrative.patterns)) {
+      var ul = el("ul", "patterns");
+      narrative.patterns.forEach(function (t) { ul.appendChild(el("li", null, t)); });
+      p.body.appendChild(ul);
+    }
+    if (high.signature_move) {
+      var sig = el("div", "sig");
+      sig.appendChild(el("b", null, "signature move"));
+      sig.appendChild(el("span", null, high.signature_move));
+      p.body.appendChild(sig);
+    }
+  })();
+
+  /* ================= 13. STATUS BAR ================= */
+  (function () {
+    var bar = document.getElementById("status");
+    var left = el("div");
+    left.appendChild(el("span", "led"));
+    left.appendChild(el("span", null, "made with howiai · data stays on your machine"));
+    bar.appendChild(left);
+
+    var right = el("div");
+    var bits = [];
+    bits.push(num(totalSessions) + " sessions");
+    if (win.start && win.end) bits.push(win.start + " → " + win.end);
+    if (data.generated_at) bits.push("generated " + String(data.generated_at).slice(0, 16).replace("T", " "));
+    bits.push("schema v" + (data.schema_version !== undefined ? data.schema_version : "1"));
+    right.appendChild(el("b", null, bits.join("  ·  ")));
+    bar.appendChild(right);
+  })();
+})();
+</script>
+</body>
+</html>

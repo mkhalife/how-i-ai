@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>howiai · How I AI</title>
+<meta name="description" content="See how you actually use AI, from your own session history. One click opens Claude with the prompt ready.">
+<style>
+  :root { --bg:#fbfaf7; --ink:#181818; --mute:#5f5f5f; --line:#e6e2da; --card:#ffffff; --acc:#2b59c3; --acc-ink:#ffffff; --warn:#8a5a00; --warn-bg:#fff5dd; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121212; --ink:#f0eee9; --mute:#a9a69f; --line:#2a2a2a; --card:#1b1b1b; --acc:#8ab4ff; --acc-ink:#0b1a3a; --warn:#f2c46d; --warn-bg:#2a2210; } }
+  :root[data-theme="dark"] { --bg:#121212; --ink:#f0eee9; --mute:#a9a69f; --line:#2a2a2a; --card:#1b1b1b; --acc:#8ab4ff; --acc-ink:#0b1a3a; --warn:#f2c46d; --warn-bg:#2a2210; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 48px 16px 80px; }
+  h1 { font-size: clamp(36px, 7vw, 56px); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 12px; }
+  h2 { font-size: 22px; margin: 48px 0 12px; letter-spacing: -0.01em; }
+  p { margin: 0 0 12px; } .mute { color: var(--mute); }
+  .lede { font-size: 20px; max-width: 640px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { margin: 0; font-size: 17px; } .card p { font-size: 14px; color: var(--mute); margin: 0; flex: 1; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .btn.primary { background: var(--acc); color: var(--acc-ink); border-color: transparent; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .note { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow: auto; font-size: 13px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  ol li, ul li { margin-bottom: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; } td, th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; } th { font-weight: 600; }
+  .examples a { display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: inherit; text-decoration: none; }
+  .examples a b { display: block; } .examples a span { color: var(--mute); font-size: 14px; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  footer { margin-top: 64px; color: var(--mute); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>How I AI</h1>
+  <p class="lede">People describe how they use AI. This shows it, from your own session history: Claude, Claude Code, Cowork, Codex, ChatGPT. Everything runs on your machine. Sharing with the team is optional and you see the exact rows first.</p>
+
+  <h2>Run it</h2>
+  <p class="mute">Each button opens the app with the prompt already typed. Read it, press Enter. The prompt only tells Claude to fetch the instructions from this repository.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Claude Code</h3>
+      <p>Best option. Reads everything on this machine: Claude Code, Claude Desktop, Codex, and any export zips. Opens a terminal with the prompt filled in.</p>
+      <div class="row"><a class="btn primary" id="btn-code" href="#">Open in Claude Code</a><button class="btn" data-copy="code">Copy prompt</button></div>
+    </div>
+    <div class="card">
+      <h3>Cowork</h3>
+      <p>For people who do not use a terminal. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
+      <div class="row"><a class="btn primary" id="btn-cowork" href="#">Open in Cowork</a><button class="btn" data-copy="code">Copy prompt</button></div>
+    </div>
+    <div class="card">
+      <h3>Claude chat</h3>
+      <p>Chat cannot read your disk, so this path works from your claude.ai or ChatGPT export zip that you upload. Opens Claude Desktop.</p>
+      <div class="row"><a class="btn primary" id="btn-claude-chat" href="#">Open in Claude</a><button class="btn" data-copy="chat">Copy prompt</button></div>
+    </div>
+    <div class="card">
+      <h3>ChatGPT</h3>
+      <p>Same export-based path. Opens chatgpt.com with the prompt, which ChatGPT sends immediately.</p>
+      <div class="row"><a class="btn primary" id="btn-chatgpt" href="#" target="_blank" rel="noopener">Open in ChatGPT</a><button class="btn" data-copy="chat-full">Copy full prompt</button></div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px">If a button does nothing, the app has not registered its link handler yet: open the app once (for Claude Code, start <code>claude</code> and send any message), then try again. Or copy the prompt and paste it.</p>
+
+  <h2>Or install the skill</h2>
+  <pre><code>claude plugin marketplace add mkhalife/howiai
+claude plugin install howiai@howiai</code></pre>
+  <p class="mute">Then ask Claude Code: <em>"show me how I use AI"</em>, or run <code>/howiai:howiai</code>.</p>
+
+  <h2>What you get</h2>
+  <p>A profile page in one of three designs, rendered from your last 30 days: sessions per week, which tools, what for, whether AI informs you or does the work (ask, make, do), your biggest use case, and the surprising one.</p>
+  <div class="examples grid">
+    <a href="examples/profile-wrapped.html"><b>Wrapped</b><span>Story cards with a share card at the end</span></a>
+    <a href="examples/profile-editorial.html"><b>Editorial</b><span>Annual-report typography, prints well</span></a>
+    <a href="examples/profile-terminal.html"><b>Terminal</b><span>Dark monospace dashboard</span></a>
+  </div>
+  <p class="mute" style="margin-top:8px">Examples use generated sample data for a fictional product designer.</p>
+
+  <h2>What the team sees</h2>
+  <p>If you choose to share, your anonymized rows join the team sheet and the report answers: what is the biggest use case across functions, what is the surprise use case, how many sessions per week people have and how that is distributed, and how designers, PMs, and engineers differ on ask/make/do.</p>
+  <div class="examples grid">
+    <a href="examples/aggregate-boardroom.html"><b>Boardroom</b><span>Dashboard for a leadership readout</span></a>
+    <a href="examples/aggregate-exhibit.html"><b>Exhibit</b><span>Poster for the team meeting</span></a>
+  </div>
+
+  <h2>What leaves your machine, and only if you say yes</h2>
+  <table>
+    <tr><th>Shared</th><td>a random participant id, your function and title (title optional), and per session: source, date, week, weekday, hour, mode, category, subcategory, ask/make/do, a generic one-line paraphrase, surprise flag, message counts, duration, tool and connector names, model</td></tr>
+    <tr><th>Never shared</th><td>your prompts or messages, session titles, file paths, repo or project names, machine name, email</td></tr>
+  </table>
+  <p class="mute" style="margin-top:8px">You see the full table before anything is sent. Re-sharing replaces your earlier rows. To withdraw, send your participant id to the sheet owner.</p>
+
+  <footer>howiai · <a href="https://github.com/mkhalife/howiai" style="color:inherit">github.com/mkhalife/howiai</a> · MIT</footer>
+</main>
+<div class="toast" id="toast">Copied</div>
+<script>
+  const REPO_RAW = 'https://raw.githubusercontent.com/mkhalife/howiai/main/';
+  const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs howiai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
+  const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs howiai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
+  const enc = encodeURIComponent;
+  document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
+  document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);
+  document.getElementById('btn-claude-chat').href = 'claude://claude.ai/new?q=' + enc(CHAT_PROMPT);
+  document.getElementById('btn-chatgpt').href = 'https://chatgpt.com/?q=' + enc(CHAT_PROMPT);
+  const toast = (t) => { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1400); };
+  async function copy(text) { try { await navigator.clipboard.writeText(text); toast('Copied'); } catch { prompt('Copy this prompt:', text); } }
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
+    const k = b.dataset.copy;
+    if (k === 'code') return copy(CODE_PROMPT);
+    if (k === 'chat') return copy(CHAT_PROMPT);
+    try { const r = await fetch(REPO_RAW + 'PROMPT-chat.md'); copy(await r.text()); } catch { copy(CHAT_PROMPT); }
+  }));
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "team": "Product team",
+  "share_url": "",
+  "share_key": "",
+  "window_days": 30,
+  "_comment": "share_url is the Apps Script web app URL from apps-script/README.md. Leave empty until it is deployed; share send will refuse to run without it."
+}
