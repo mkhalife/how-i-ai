@@ -146,22 +146,18 @@ Run `stats` again so the words land in `profile.json`.
 
 ## 5. Render the profile
 
-Three designs live in `SKILL_DIR/templates`. Ask which one they want, or render all
-three; they are cheap:
-
 ```
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-wrapped.html   --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-wrapped.html
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-editorial.html --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-editorial.html
-node SKILL_DIR/scripts/how-i-ai.mjs render --template SKILL_DIR/templates/profile-terminal.html  --data ~/how-i-ai/profile.json --out ~/how-i-ai/how-i-ai-terminal.html
+node SKILL_DIR/scripts/how-i-ai.mjs render
 ```
 
-- `wrapped`: year-in-review story cards with a final share card
-- `editorial`: annual-report typography, prints well
-- `terminal`: dark monospace dashboard
+writes `~/how-i-ai/how-i-ai.html`: the wrapped design, year-in-review story cards with a
+final share card. Open it (`open <file>` on macOS, `start "" <file>` on Windows,
+`xdg-open` on Linux). The page is self-contained and works offline. If you can publish
+an Artifact, offer that too; it is the same HTML.
 
-Open the result (`open <file>` on macOS, `start "" <file>` on Windows, `xdg-open` on
-Linux). Pages are self-contained and work offline. If you can publish an Artifact, offer
-that too; it is the same HTML.
+Two other designs sit in `SKILL_DIR/templates` (`profile-editorial.html`,
+`profile-terminal.html`). Render one only if the person asks:
+`render --template <file> --out ~/how-i-ai/how-i-ai-editorial.html`.
 
 ## 6. Share, only with a yes
 

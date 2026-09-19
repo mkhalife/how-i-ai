@@ -30,7 +30,7 @@ export function summarize(sessions, window) {
   const at = counts((s) => s.classification.assist_type);
   const ATL = { ask: 'Asked', make: 'Made', do: 'Did' };
   const days = counts((s) => localDate(s.started_at));
-  const lens = sessions.map((s) => s.messages_user + s.messages_assistant).sort((a, b) => a - b);
+  const lens = sessions.filter((s) => s.messages_user != null && s.messages_assistant != null).map((s) => s.messages_user + s.messages_assistant).sort((a, b) => a - b);
   let streak = 0, best = 0; { const ds = [...days.keys()].sort(); for (let i = 0; i < ds.length; i++) { if (i && (new Date(ds[i]) - new Date(ds[i - 1])) === 86400e3) streak++; else streak = 1; best = Math.max(best, streak); } }
   const busiest = sorted(days)[0];
   const hours = Array.from({ length: 24 }, (_, hour) => ({ hour, sessions: sessions.filter((s) => localHour(s.started_at) === hour).length }));

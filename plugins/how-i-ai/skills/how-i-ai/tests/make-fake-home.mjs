@@ -190,6 +190,7 @@ writeFileSync(join(inbox, 'claude-export.zip'), zip([['data-2026/conversations.j
 writeFileSync(join(gptInbox, 'chatgpt-app-threads.json'), JSON.stringify({ source: 'chatgpt-app', exported_at: iso(new Date()), threads: [
   { id: 'app1', kind: 'chatgpt', title: 'Offsite agenda', created_at: iso(daysAgo(2, 15)), updated_at: iso(daysAgo(2, 16)), first_message: 'Draft an agenda for a two day team offsite focused on planning', second_message: 'Make day two lighter', messages_user: 2, messages_assistant: 2, model: 'gpt-6', tools: [] },
   { id: 'g1', kind: 'chatgpt', title: 'Draft PRD for transfer alerts', created_at: daysAgo(3, 12).getTime() / 1000, updated_at: daysAgo(3, 12).getTime() / 1000 + 900, first_message: 'same conversation as the export, must not be counted twice' },
+  { id: 'app2', kind: 'chatgpt', title: 'Long thread, opening not reached', created_at: daysAgo(5, 9).getTime() / 1000, updated_at: daysAgo(1, 9).getTime() / 1000, first_message: '', second_message: '', messages_user: null, messages_assistant: null, model: null, tools: [] },
   { id: 'c3', kind: 'codex', title: 'a local codex thread, already read from its rollout', created_at: iso(daysAgo(1, 12)), first_message: 'skip me' },
 ] }));
 // A codex binary that is not on PATH, where the ChatGPT app keeps it (Windows path is a guess at the same layout).

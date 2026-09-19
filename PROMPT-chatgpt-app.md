@@ -86,6 +86,10 @@ and the person's ChatGPT history will come from the data export instead.
    empty and both counts `null`; recent turns are not the opening. A failed page
    must not turn partial counts into totals.
 
+   `collect` keeps conversations that started in the last 30 days, so after the first
+   `read_thread` call, if `thread.createdAt` is older than that, drop the conversation
+   and do not page further.
+
    Map `created_at` to `thread.createdAt` and `updated_at` to `thread.updatedAt`;
    these timestamps were returned as epoch seconds. If reading fails, keep the
    listing's `updatedAt` and use `null` for unavailable `created_at`. No total-count

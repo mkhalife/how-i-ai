@@ -82,7 +82,8 @@ function baseSession(o) {
     first_message: trim(o.first_message, FIRST_MESSAGE_CHARS) || '',
     first_message_chars: (o.first_message || '').length,
     context: trim(o.context, CONTEXT_CHARS) || '',
-    messages_user: o.messages_user || 0, messages_assistant: o.messages_assistant || 0,
+    // null = the source could not say (kept as unknown, shared as blank); anything else is a count
+    messages_user: o.messages_user === null ? null : o.messages_user || 0, messages_assistant: o.messages_assistant === null ? null : o.messages_assistant || 0,
     tools: uniq(o.tools || []).filter((t) => !/^mcp__/.test(t)), connectors: uniq([...(o.connectors || []), ...connectorsFromTools(o.tools || [])]),
     skills: uniq(o.skills || []), agents: uniq(o.agents || []),
     model: o.model || null, mode: o.mode || 'chat', trigger: o.trigger || 'human',
@@ -528,6 +529,7 @@ export function chatgptAppThreads(inbox) {
   const data = readJson(file, null);
   const threads = Array.isArray(data) ? data : data?.threads;
   if (!Array.isArray(threads)) { out.notes.push('chatgpt-app-threads.json has no threads array; see PROMPT-chatgpt-app.md for the shape'); return out; }
+  const count = (v) => (v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
   const when = (v) => toISO(typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v ?? '')) ? fromEpoch(v) : v);
   for (const t of threads) {
     if (!t || (t.kind && t.kind !== 'chatgpt')) continue; // kind "codex" threads are the rollout files, already read
@@ -541,7 +543,7 @@ export function chatgptAppThreads(inbox) {
     out.sessions.push(baseSession({
       id: 's_chatgpt_' + id, source: 'chatgpt-app', surface: 'desktop', started_at: started, ended_at: when(pickKey(t, ['updated_at', 'updatedAt', 'update_time'])) || started,
       title, first_message: first || String(title), context: [second ? 'Next: ' + trim(second, 300) : null, tools.length ? 'Tools: ' + tools.slice(0, 8).join(', ') : null, first ? null : 'Only the title is available'].filter(Boolean).join(' | '),
-      messages_user: Number(t.messages_user) || 1, messages_assistant: Number(t.messages_assistant) || (first ? 1 : 0), tools, model: t.model || null, mode: 'chat', trigger: 'human',
+      messages_user: count(t.messages_user), messages_assistant: count(t.messages_assistant), tools, model: t.model || null, mode: 'chat', trigger: 'human',
     }));
   }
   return out;

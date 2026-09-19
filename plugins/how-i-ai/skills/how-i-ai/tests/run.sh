@@ -48,19 +48,22 @@ for plat in darwin win32; do
   echo "== $plat: chatgpt entry point"; node scripts/how-i-ai.mjs --app chatgpt collect --no-codex-cloud --days 30 | sed 's/^/   /'
   node -e "
     const d=require('$H/how-i-ai-chatgpt/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
-    const want={'codex':3,'chatgpt-export':3,'chatgpt-app':1,'claude-code':0,'claude-cowork':0,'claude-export':0};
+    const want={'codex':3,'chatgpt-export':3,'chatgpt-app':2,'claude-code':0,'claude-cowork':0,'claude-export':0};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
     if(d.sessions.some(s=>s.id==='s_codex_c3-review')) {console.error('FAIL codex sub-agent rollout counted as a session');process.exit(1)}
     const c3=d.sessions.find(s=>s.id==='s_codex_c3'); if(!c3||!c3.first_message.startsWith('Find the meeting notes')||c3.messages_user!==1||c3.surface!=='desktop'||!c3.connectors.includes('notion')||c3.title!=='Open action items'||c3.model!=='gpt-6') {console.error('FAIL codex desktop parse',c3);process.exit(1)}
     const app1=d.sessions.find(s=>s.id==='s_chatgpt_app1'); if(!app1||app1.source!=='chatgpt-app'||app1.messages_user!==2||!app1.context.includes('Make day two lighter')) {console.error('FAIL chatgpt-app parse',app1);process.exit(1)}
+    const app2=d.sessions.find(s=>s.id==='s_chatgpt_app2'); if(!app2||app2.messages_user!==null||app2.messages_assistant!==null||app2.first_message!=='Long thread, opening not reached') {console.error('FAIL unknown counts must stay null and the title stands in for the opening',app2);process.exit(1)}
     if(d.sessions.find(s=>s.id==='s_chatgpt_g1').source!=='chatgpt-export') {console.error('FAIL export should win over the app listing for the same conversation');process.exit(1)}
     const sig=d.signals.find(x=>x.source==='chatgpt-desktop'); if(!sig||!sig.installed){console.error('FAIL chatgpt desktop signal',d.signals);process.exit(1)}
     console.log('   chatgpt sources ok:',JSON.stringify(by));"
   node scripts/how-i-ai.mjs --app chatgpt config --title "Senior Product Designer" --function Design >/dev/null
   node scripts/how-i-ai.mjs --app chatgpt classify prep --size 10 >/dev/null; node tests/fake-classify.mjs "$H/how-i-ai-chatgpt/classify" >/dev/null; node scripts/how-i-ai.mjs --app chatgpt classify merge | sed 's/^/   /'
+  node scripts/how-i-ai.mjs --app chatgpt stats >/dev/null; node scripts/how-i-ai.mjs --app chatgpt render | sed 's/^/   /'; [ -s "$H/how-i-ai-chatgpt/how-i-ai.html" ] || { echo 'FAIL default render'; exit 1; }
   node scripts/how-i-ai.mjs --app chatgpt share preview >/dev/null
+  node -e "const b=require('$H/how-i-ai-chatgpt/share-rows.json'); if(!b.sessions.some(r=>r.messages_user===''&&r.source==='chatgpt-app')){console.error('FAIL unknown counts should be shared blank');process.exit(1)}"
   node -e "const a=require('$H/how-i-ai/share-rows.json'),b=require('$H/how-i-ai-chatgpt/share-rows.json'); if(a.participant.participant_id===b.participant.participant_id||b.sessions.some(r=>/^claude/.test(r.source))||a.sessions.some(r=>/^(codex|chatgpt)/.test(r.source))){console.error('FAIL the two entry points must not share an id or sessions');process.exit(1)}; console.log('   two entry points: separate ids, no shared sessions (',a.sessions.length,'+',b.sessions.length,'rows )')"
   node scripts/aggregate.mjs --json "$H/how-i-ai/share-rows.json" --team "Test team" --out "$H/how-i-ai/aggregate.json" | sed 's/^/   /'
   for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/aggregate.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done

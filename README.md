@@ -58,8 +58,8 @@ card copies the prompt instead):
    one-line paraphrase, surprise flag); the script validates and merges.
 4. `stats` + a short narrative → `profile.json`.
    Top skills and top custom sub-agents (from Claude Code transcripts) are counted too.
-5. `render`: one of three self-contained HTML profiles (`wrapped`, `editorial`,
-   `terminal`). Works offline.
+5. `render`: a self-contained HTML profile in the wrapped design (`editorial` and
+   `terminal` templates are also included). Works offline.
 6. `share preview` shows the exact rows; `share send` posts them only on an explicit yes.
 7. `aggregate` builds the team report (`boardroom` or `exhibit` design) from the sheet.
 
