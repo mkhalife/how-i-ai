@@ -384,8 +384,9 @@
   }
 
   var SOURCE_LABEL = {
-    "claude-code": "Claude Code", "claude-export": "Claude", "claude-cowork": "Cowork",
-    "chatgpt-export": "ChatGPT", "codex": "Codex", "gemini-cli": "Gemini CLI", "copilot-cli": "Copilot CLI"
+    "claude-code": "Claude Code", "claude-desktop": "Claude Desktop", "claude-cowork": "Cowork",
+    "claude-export": "Claude", "claude-chat": "Claude",
+    "codex": "Codex", "chatgpt-export": "ChatGPT", "chatgpt-app": "ChatGPT"
   };
   function sourceLabel(s) {
     for (var i = 0; i < sources.length; i++) if (sources[i].source === s && sources[i].label) return sources[i].label;
