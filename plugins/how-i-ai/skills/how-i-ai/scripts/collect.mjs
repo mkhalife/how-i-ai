@@ -5,7 +5,7 @@
 // Prints a source table and writes sessions.json. Nothing leaves the machine.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { parseArgs, workDir, ensureDir, readJson, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
+import { parseArgs, workDir, appName, appOf, ensureDir, readJson, writeJson, os, hostHash, toISO, localDate } from './lib/util.mjs';
 import * as src from './lib/sources.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -18,14 +18,21 @@ const start = new Date(now.getTime() - days * 86400e3);
 
 const results = [];
 const push = (r) => { if (r) results.push(r); };
-push(src.claudeCode());
-push(src.claudeDesktop());
-push(src.codex());
-if (!args['no-codex-cloud']) push(src.codexCloud());
-push(src.claudeCloud(args['cloud-sessions'] || (existsSync(join(dir, 'cloud-sessions.json')) ? join(dir, 'cloud-sessions.json') : null)));
-for (const r of src.exportsInbox(inbox)) push(r);
-push(src.geminiCli());
-push(src.chatgptDesktop());
+// Each entry point reads its own product's sessions and nothing else.
+const app = appName();
+if (app === 'claude') {
+  push(src.claudeCode());
+  push(src.claudeDesktop());
+  push(src.claudeCloud(args['cloud-sessions'] || (existsSync(join(dir, 'cloud-sessions.json')) ? join(dir, 'cloud-sessions.json') : null)));
+} else {
+  push(src.codex());
+  if (!args['no-codex-cloud']) push(src.codexCloud());
+}
+for (const r of src.exportsInbox(inbox)) if (r.source === 'export' || appOf(r.source) === app) push(r);
+if (app === 'chatgpt') {
+  push(src.chatgptAppThreads(inbox)); // after the export: same ids, the export is richer
+  push(src.chatgptDesktop());
+}
 
 // Merge, dedupe, filter to window.
 const seen = new Map();
@@ -46,8 +53,8 @@ const HINTS = {
   'claude-cowork': 'Cowork sessions live in Claude Desktop\'s local-agent-mode-sessions folder.',
   'chatgpt-export': `Request your ChatGPT export (Settings → Data controls → Export data), then drop the zip in ${inbox}`,
   'claude-export': `Request your claude.ai export (Settings → Privacy → Export data), then drop the zip in ${inbox}`,
+  'chatgpt-app': `No ${inbox}/chatgpt-app-threads.json yet. The agent inside the ChatGPT desktop app writes it (PROMPT-chatgpt-app.md step 2).`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
-  'gemini-cli': 'optional',
   'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT).',
 };
 
@@ -71,7 +78,7 @@ for (const r of results) {
     bySource.set(key, row);
   }
 }
-for (const want of ['chatgpt-export', 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, notes: [] });
+for (const want of [app === 'chatgpt' ? 'chatgpt-export' : 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, notes: [] });
 for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || (row.found && row.total ? `${row.total} on disk, none started in the last ${days} days` : (row.found && FOUND_EMPTY[row.source]) || HINTS[row.source]) || null) });
 const signals = results.filter((r) => r.signal).map((r) => ({ source: r.source, path: r.path, ...r.signal }));
 
@@ -81,7 +88,7 @@ const doc = {
   sources: table, signals, sessions,
 };
 
-console.log(`how-i-ai collect · last ${days} days (${doc.window.start} → ${doc.window.end})\n`);
+console.log(`how-i-ai collect (${app}) · last ${days} days (${doc.window.start} → ${doc.window.end})\n`);
 const pad = (s, n) => String(s ?? '').padEnd(n);
 console.log(pad('source', 16) + pad('found', 7) + pad('in window', 11) + pad('all time', 10) + 'path / hint');
 for (const t of table) console.log(pad(t.source, 16) + pad(t.found ? 'yes' : 'no', 7) + pad(t.sessions_in_window, 11) + pad(t.sessions_total, 10) + (t.found && t.sessions_in_window ? t.path : (t.hint || '')));

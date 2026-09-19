@@ -57,9 +57,13 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
 | `claude-code` | `~/.claude/projects/**/*.jsonl` (local CLI, IDE, desktop "Code" tab) |
 | `claude-cowork` | Claude Desktop Cowork session store |
 | `claude-export` | claude.ai data export zip (`conversations.json`) |
-| `codex` | `~/.codex/sessions/**/*.jsonl` |
+| `codex` | `~/.codex/sessions/**/*.jsonl`, and cloud tasks from `codex cloud list --json` |
 | `chatgpt-export` | ChatGPT data export zip (`conversations.json`) |
-| `gemini-cli`, `copilot-cli` | optional extras, same shape |
+| `chatgpt-app` | `chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app |
+
+The `claude-*` sources belong to the Claude entry point (`~/how-i-ai`), `codex` and
+`chatgpt-*` to the ChatGPT entry point (`~/how-i-ai-chatgpt`); one `sessions.json` holds
+one entry point's sources.
 
 ### `classification` (written by Claude, validated by `validate.mjs`)
 
@@ -134,6 +138,8 @@ One `participant` row and one `session` row per session. `share.mjs` prints thes
 `participant`: `participant_id, function, title, window_days, window_start, window_end, sessions_total, sources, submitted_at, schema_version`
 
 `session`: `participant_id, function, source, surface, date, week_start, weekday, hour, mode, trigger, category, subcategory, assist_type, paraphrase, surprise, messages_user, messages_assistant, duration_minutes, tools, connectors, skills, agents, model, submitted_at, schema_version`
+
+`participant_id` is minted per working folder: each entry point (`~/how-i-ai` for Claude, `~/how-i-ai-chatgpt` for ChatGPT) has its own `config.json` and so its own id, and a person who runs both appears as two ids on the sheet.
 
 Never shared: `first_message`, `context`, `title`, `project_hash`, `hostname_hash`, paths, file names, anything under `machine`.
 

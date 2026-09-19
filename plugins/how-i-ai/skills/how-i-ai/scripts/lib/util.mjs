@@ -24,7 +24,11 @@ export function os() { return process.env.HOW_I_AI_PLATFORM_OVERRIDE || platform
 export function hostHash() { return sha(hostname()); }
 
 // Directory the user's how-i-ai working files live in. Never inside the repo.
-export function workDir() { return process.env.HOW_I_AI_DIR || join(home(), 'how-i-ai'); }
+// Two entry points, each on its own: `claude` (the default) reads Claude sessions and works in ~/how-i-ai;
+// `chatgpt` (run from inside the ChatGPT desktop app with `--app chatgpt`) reads Codex and ChatGPT sessions and works
+// in ~/how-i-ai-chatgpt. Separate folders mean separate config.json, so each gets its own id on the team sheet.
+export function appName() { return process.env.HOW_I_AI_APP === 'chatgpt' ? 'chatgpt' : 'claude'; }
+export function workDir() { return process.env.HOW_I_AI_DIR || join(home(), appName() === 'chatgpt' ? 'how-i-ai-chatgpt' : 'how-i-ai'); }
 
 export function ensureDir(p) { mkdirSync(p, { recursive: true }); return p; }
 
@@ -101,7 +105,10 @@ export function uniq(arr) { return [...new Set(arr.filter((x) => x != null && x 
 
 export function minutesBetween(a, b) { if (!a || !b) return null; const ms = new Date(b) - new Date(a); return ms >= 0 ? Math.round(ms / 6000) / 10 : null; }
 
+// Which entry point a source belongs to.
+export function appOf(source) { return /^(codex|chatgpt)/.test(String(source || '')) ? 'chatgpt' : 'claude'; }
+
 export const SOURCE_LABELS = {
   'claude-code': 'Claude Code', 'claude-desktop': 'Claude Desktop', 'claude-cowork': 'Cowork', 'claude-export': 'Claude',
-  codex: 'Codex', 'chatgpt-export': 'ChatGPT', 'gemini-cli': 'Gemini CLI', 'copilot-cli': 'Copilot CLI',
+  codex: 'Codex', 'chatgpt-export': 'ChatGPT', 'chatgpt-app': 'ChatGPT', 'gemini-cli': 'Gemini CLI', 'copilot-cli': 'Copilot CLI',
 };

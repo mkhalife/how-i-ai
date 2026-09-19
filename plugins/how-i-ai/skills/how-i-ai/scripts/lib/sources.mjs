@@ -1,6 +1,7 @@
 // One parser per source. Each returns { found, path, sessions: Session[], notes: string[] }.
 // A Session follows references/data-schema.md section 1.
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, basename, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
@@ -135,7 +136,7 @@ export function parseClaudeCodeTranscript(file, overrides = {}) {
   const assistants = main.filter((r) => r.type === 'assistant' && r.message);
   // Background-task and CI notifications are user-role records too; they are not the person's words.
   const turns = users.filter((r) => !r.isMeta && !r.isCompactSummary && r.origin?.kind !== 'task-notification' && !(Array.isArray(r.message.content) && r.message.content.every((b) => b.type === 'tool_result')))
-    .map((r) => ({ r, raw: textOf(r.message.content) })).map((t) => ({ ...t, text: cleanPrompt(t.raw) })).filter((t) => !isHarnessOnly(t.raw) && !isHarnessOnly(t.text));
+    .map((r) => ({ r, raw: textOf(r.message.content) })).map((t) => ({ ...t, text: cleanPrompt(t.raw) })).filter((t) => !isHarnessOnly(t.text)); // judge the cleaned text: a real prompt can arrive behind a <system-reminder> block
   const humanTurns = turns.map((t) => t.r);
   const promptTexts = turns.map((t) => t.text);
   if (!promptTexts.length) return null; // no human words in this file
@@ -357,17 +358,44 @@ export function parseCodexRollout(file) {
   });
 }
 
-// Codex cloud tasks via the official CLI, when installed.
+// Where a codex binary can be. The ChatGPT desktop app ships one inside its bundle and does not put it on PATH
+// (verified on macOS: ChatGPT.app/Contents/Resources/codex). The Windows locations are unverified guesses at the
+// same layout; a wrong guess just falls through.
+export function codexBinaries() {
+  const h = home(); const p = os(); const list = [];
+  if (process.env.HOW_I_AI_CODEX_BIN) list.push(process.env.HOW_I_AI_CODEX_BIN);
+  if (process.env.CODEX_CLI_PATH) list.push(process.env.CODEX_CLI_PATH);
+  list.push(p === 'win32' ? 'codex.exe' : 'codex'); // on PATH
+  if (p === 'darwin') for (const apps of ['/Applications', join(h, 'Applications')]) for (const app of ['ChatGPT.app', 'Codex.app']) list.push(join(apps, app, 'Contents', 'Resources', 'codex'));
+  if (p === 'win32') {
+    const la = process.env.LOCALAPPDATA || join(h, 'AppData', 'Local');
+    for (const name of ['ChatGPT', 'Codex']) list.push(join(la, 'Programs', name, 'resources', 'codex.exe'), join(la, name, 'resources', 'codex.exe'));
+    const wa = join(process.env.ProgramFiles || 'C:\\Program Files', 'WindowsApps');
+    try { for (const d of readdirSync(wa)) if (/^OpenAI\.(ChatGPT|Codex)/i.test(d)) list.push(join(wa, d, 'app', 'resources', 'codex.exe')); } catch { /* WindowsApps is not listable without elevation */ }
+  }
+  return uniq(list).filter((b) => !/[\\/]/.test(b) || existsSync(b));
+}
+
+// Codex cloud tasks via the official CLI: on PATH, or the copy inside the ChatGPT desktop app.
 export function codexCloud() {
   const out = { source: 'codex', found: false, path: 'codex cloud list --json', sessions: [], notes: [] };
+  let bin = null;
+  for (const b of codexBinaries()) { try { execFileSync(b, ['--version'], { encoding: 'utf8', timeout: 10000, stdio: ['ignore', 'pipe', 'ignore'] }); bin = b; break; } catch { /* next candidate */ } }
+  if (!bin) { out.notes.push('codex CLI not found on PATH or inside the ChatGPT app; cloud tasks skipped'); return out; }
+  // `codex cloud` writes an error.log with the account id into its working directory. Give it a throwaway one.
+  const scratch = mkdtempSync(join(tmpdir(), 'how-i-ai-codex-'));
+  try { return codexCloudList(bin, scratch, out); } finally { rmSync(scratch, { recursive: true, force: true }); }
+}
+
+function codexCloudList(bin, cwd, out) {
   let cursor = null;
   for (let page = 0; page < 10; page++) {
     let text;
     try {
       const args = ['cloud', 'list', '--json', '--limit', '20', ...(cursor ? ['--cursor', cursor] : [])];
-      text = execFileSync('codex', args, { encoding: 'utf8', timeout: 20000, stdio: ['ignore', 'pipe', 'ignore'] });
+      text = execFileSync(bin, args, { cwd, encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'ignore'] });
     } catch (e) {
-      if (page === 0) { out.notes.push('codex CLI not available or not signed in; cloud tasks skipped'); return out; }
+      if (page === 0) { out.notes.push('codex CLI found but `cloud list` failed (not signed in?); cloud tasks skipped'); return out; }
       break;
     }
     out.found = true;
@@ -483,24 +511,34 @@ export function parseClaudeExport(convs) {
   return out;
 }
 
-// ---------- Gemini CLI (optional extra) ----------
-export function geminiCli() {
-  const root = join(home(), '.gemini', 'tmp');
-  const out = { source: 'gemini-cli', found: existsSync(root), path: root, sessions: [], notes: [] };
+// ---------- ChatGPT conversations listed from inside the ChatGPT desktop app ----------
+// Only an agent hosted by the ChatGPT app has the app's list_threads / read_thread tools (the bundled CLI does not:
+// they need a pipe the app hands its own agents). That agent follows PROMPT-chatgpt-app.md and writes what it read to
+// <inbox>/chatgpt-app-threads.json in the shape below; this turns it into sessions. Same id space as the ChatGPT
+// export, so a conversation present in both is counted once.
+//   { "source": "chatgpt-app", "exported_at": ISO, "threads": [ { "id", "kind": "chatgpt", "title", "created_at",
+//     "updated_at", "first_message", "second_message", "messages_user", "messages_assistant", "model", "tools": [] } ] }
+export function chatgptAppThreads(inbox) {
+  const file = join(inbox, 'chatgpt-app-threads.json');
+  const out = { source: 'chatgpt-app', found: existsSync(file), path: file, sessions: [], notes: [] };
   if (!out.found) return out;
-  for (const file of walk(root, { maxDepth: 4, filter: (p, n) => /chats/.test(p) && /\.jsonl?$/.test(n) })) {
-    let recs = file.endsWith('.jsonl') ? readJsonl(file) : (() => { const j = readJson(file, null); return j ? (Array.isArray(j.messages) ? j.messages : Array.isArray(j) ? j : []) : []; })();
-    const users = recs.filter((r) => /^(user|human)$/i.test(r.type || r.role || ''));
-    const texts = users.map((r) => cleanPrompt(typeof r.content === 'string' ? r.content : Array.isArray(r.content) ? r.content.map((p) => p.text || '').join('\n') : r.text || '')).filter((t) => !isHarnessOnly(t));
-    if (!texts.length) continue;
-    const meta = recs.find((r) => r.type === 'session_metadata') || {};
-    const times = recs.map((r) => r.timestamp).filter(Boolean).sort();
-    const t = fileTimes(file);
+  const data = readJson(file, null);
+  const threads = Array.isArray(data) ? data : data?.threads;
+  if (!Array.isArray(threads)) { out.notes.push('chatgpt-app-threads.json has no threads array; see PROMPT-chatgpt-app.md for the shape'); return out; }
+  const when = (v) => toISO(typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v ?? '')) ? fromEpoch(v) : v);
+  for (const t of threads) {
+    if (!t || (t.kind && t.kind !== 'chatgpt')) continue; // kind "codex" threads are the rollout files, already read
+    const id = pickKey(t, ['id', 'threadId', 'thread_id', 'conversation_id']);
+    const first = cleanPrompt(pickKey(t, ['first_message', 'firstMessage']) || '');
+    const title = pickKey(t, ['title', 'name']);
+    const started = when(pickKey(t, ['created_at', 'createdAt', 'create_time'])) || when(pickKey(t, ['updated_at', 'updatedAt', 'update_time']));
+    if (!id || !started || (!first && !title)) continue;
+    const second = cleanPrompt(pickKey(t, ['second_message', 'secondMessage']) || '');
+    const tools = Array.isArray(t.tools) ? t.tools.map(String) : [];
     out.sessions.push(baseSession({
-      id: 's_gemini_' + (meta.sessionId || meta.id || basename(file).replace(/\.\w+$/, '')), source: 'gemini-cli', surface: 'cli',
-      started_at: toISO(times[0] || meta.startTime || t?.birthtime), ended_at: toISO(times[times.length - 1] || t?.mtime), title: null, first_message: texts[0],
-      context: texts[1] ? 'Next: ' + trim(texts[1], 300) : '', messages_user: texts.length, messages_assistant: recs.filter((r) => /^(gemini|assistant|model)$/i.test(r.type || r.role || '')).length,
-      tools: uniq(recs.flatMap((r) => (r.toolCalls || r.tool_calls || []).map((c) => c.name)).filter(Boolean)), model: meta.model || null, mode: 'agentic', trigger: 'human', project: dirname(dirname(file)),
+      id: 's_chatgpt_' + id, source: 'chatgpt-app', surface: 'desktop', started_at: started, ended_at: when(pickKey(t, ['updated_at', 'updatedAt', 'update_time'])) || started,
+      title, first_message: first || String(title), context: [second ? 'Next: ' + trim(second, 300) : null, tools.length ? 'Tools: ' + tools.slice(0, 8).join(', ') : null, first ? null : 'Only the title is available'].filter(Boolean).join(' | '),
+      messages_user: Number(t.messages_user) || 1, messages_assistant: Number(t.messages_assistant) || (first ? 1 : 0), tools, model: t.model || null, mode: 'chat', trigger: 'human',
     }));
   }
   return out;

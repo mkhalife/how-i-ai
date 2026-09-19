@@ -177,8 +177,22 @@ const claude = [
   { uuid: 'k1', name: 'Roadmap tradeoffs', created_at: iso(daysAgo(7, 15)), updated_at: iso(daysAgo(7, 16)), chat_messages: [{ uuid: 'm1', sender: 'human', text: 'Weigh these three roadmap bets against our retention goal', created_at: iso(daysAgo(7, 15)), content: [{ type: 'text', text: 'Weigh these three roadmap bets against our retention goal' }] }, { uuid: 'm2', sender: 'assistant', text: 'Bet one...', created_at: iso(daysAgo(7, 15)), content: [{ type: 'text', text: 'Bet one...' }] }] },
   { uuid: 'k2', name: 'Landlord note', created_at: iso(daysAgo(11, 21)), updated_at: iso(daysAgo(11, 21)), chat_messages: [{ uuid: 'm3', sender: 'human', text: 'Draft a polite note to my landlord about the broken heater', created_at: iso(daysAgo(11, 21)) }, { uuid: 'm4', sender: 'assistant', text: 'Dear...', created_at: iso(daysAgo(11, 21)), content: [{ type: 'tool_use', name: 'artifacts' }] }] },
 ];
-writeFileSync(join(inbox, 'chatgpt-export.zip'), zip([['conversations.json', JSON.stringify(chatgpt)], ['user.json', '{}']], true));
+const gptInbox = D(join(dir, 'how-i-ai-chatgpt', 'inbox'));
+writeFileSync(join(gptInbox, 'chatgpt-export.zip'), zip([['conversations.json', JSON.stringify(chatgpt)], ['user.json', '{}']], true));
 writeFileSync(join(inbox, 'claude-export.zip'), zip([['data-2026/conversations.json', JSON.stringify(claude)], ['data-2026/projects.json', '[]']], false));
+
+// ---- ChatGPT conversations as written by the agent inside the ChatGPT desktop app (PROMPT-chatgpt-app.md)
+writeFileSync(join(gptInbox, 'chatgpt-app-threads.json'), JSON.stringify({ source: 'chatgpt-app', exported_at: iso(new Date()), threads: [
+  { id: 'app1', kind: 'chatgpt', title: 'Offsite agenda', created_at: iso(daysAgo(2, 15)), updated_at: iso(daysAgo(2, 16)), first_message: 'Draft an agenda for a two day team offsite focused on planning', second_message: 'Make day two lighter', messages_user: 2, messages_assistant: 2, model: 'gpt-6', tools: [] },
+  { id: 'g1', kind: 'chatgpt', title: 'Draft PRD for transfer alerts', created_at: daysAgo(3, 12).getTime() / 1000, updated_at: daysAgo(3, 12).getTime() / 1000 + 900, first_message: 'same conversation as the export, must not be counted twice' },
+  { id: 'c3', kind: 'codex', title: 'a local codex thread, already read from its rollout', created_at: iso(daysAgo(1, 12)), first_message: 'skip me' },
+] }));
+// A codex binary that is not on PATH, where the ChatGPT app keeps it (Windows path is a guess at the same layout).
+{
+  const bin = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Programs', 'ChatGPT', 'resources', 'codex.exe') : join(dir, 'Applications', 'ChatGPT.app', 'Contents', 'Resources', 'codex');
+  D(join(bin, '..'));
+  writeFileSync(bin, `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "codex-cli 0.0.0-test"; exit 0; fi\necho '${JSON.stringify({ tasks: [{ id: 'task_cloud1', title: 'Bump dependencies and fix the lockfile', summary: 'Opened a PR', created_at: iso(daysAgo(2, 10)), updated_at: iso(daysAgo(2, 11)), environment_label: 'org/repo', is_review: false }], cursor: null })}'\n`, { mode: 0o755 });
+}
 
 // ---- ChatGPT desktop app cache (encrypted on macOS, so only counted)
 const gptRoot = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Packages', 'OpenAI.ChatGPT-Desktop_2p2nqsd0c76g0', 'LocalCache', 'Roaming', 'ChatGPT', 'IndexedDB', 'https_chatgpt.com_0.indexeddb.leveldb') : join(dir, 'Library', 'Application Support', 'com.openai.chat', 'conversations-v3-1111');

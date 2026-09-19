@@ -50,9 +50,13 @@ skim in the preview: it is the one free-text column.
 ## Re-runs and withdrawal
 
 - Sending again with the same `participant_id` deletes that participant's earlier rows
-  in both sheets before appending, so the sheet always holds one snapshot per person.
-- To withdraw, send the `participant_id` from `~/how-i-ai/config.json` to whoever owns the
-  sheet; they delete the rows. Nothing in the sheet links the id to a person.
+  in both sheets before appending, so the sheet always holds one snapshot per id.
+- Each entry point has its own working folder (`~/how-i-ai` for Claude,
+  `~/how-i-ai-chatgpt` for ChatGPT) and so its own `participant_id`; a person who runs
+  both appears as two ids on the sheet, and each id's rows are replaced independently.
+- To withdraw, send the `participant_id` from that folder's `config.json` (both, if both
+  entry points were shared) to whoever owns the sheet; they delete the rows. Nothing in
+  the sheet links the id to a person.
 
 ## Where it goes
 

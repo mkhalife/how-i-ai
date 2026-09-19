@@ -5,11 +5,17 @@ cd "$(dirname "$0")/.."
 T="${TMPDIR:-/tmp}/how-i-ai-test-$$"; mkdir -p "$T"
 for plat in darwin win32; do
   H="$T/$plat"; node tests/make-fake-home.mjs "$H" "$plat" >/dev/null
-  export HOW_I_AI_HOME_OVERRIDE="$H" HOW_I_AI_PLATFORM_OVERRIDE="$plat" HOW_I_AI_DIR="$H/how-i-ai" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
+  unset HOW_I_AI_DIR HOW_I_AI_APP; export HOW_I_AI_HOME_OVERRIDE="$H" HOW_I_AI_PLATFORM_OVERRIDE="$plat" LOCALAPPDATA="$H/AppData/Local" APPDATA="$H/AppData/Roaming" CLAUDE_CONFIG_DIR="$H/.claude" CODEX_HOME="$H/.codex"
   echo "== $plat: collect"; node scripts/collect.mjs --no-codex-cloud --days 30 | sed 's/^/   /'
+  # The bundled codex binary is found without PATH; on the win32 pass only the lookup can be checked (no .exe to run).
+  node --input-type=module -e "
+    import { codexBinaries, codexCloud } from './scripts/lib/sources.mjs';
+    const bins = codexBinaries().filter((b) => b.includes('how-i-ai-test-')); if (bins.length !== 1) { console.error('FAIL bundled codex lookup', codexBinaries()); process.exit(1); }
+    if ('$plat' === 'darwin') { process.env.HOW_I_AI_CODEX_BIN = bins[0]; const r = codexCloud(); if (!r.found || r.sessions.length !== 1 || r.sessions[0].surface !== 'cloud' || r.sessions[0].id !== 's_codex-cloud_task_cloud1') { console.error('FAIL codex cloud via bundled binary', r); process.exit(1); } }
+    console.log('   bundled codex binary ok');" 
   node -e "
     const d=require('$H/how-i-ai/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
-    const want={'claude-code':9,'claude-desktop':1,'claude-cowork':2,'codex':3,'chatgpt-export':3,'claude-export':2};
+    const want={'claude-code':9,'claude-desktop':1,'claude-cowork':2,'claude-export':2,'codex':0,'chatgpt-export':0,'chatgpt-app':0};
     for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
     const r=d.sessions.find(s=>s.id.endsWith('aaaa-4')); if(r.mode!=='routine'||r.trigger!=='routine'||r.surface!=='cloud') {console.error('FAIL routine detection',r);process.exit(1)}
     const c=d.sessions.find(s=>s.id.includes('cloud1')); if(!c||c.surface!=='cloud') {console.error('FAIL cloud');process.exit(1)}
@@ -21,16 +27,13 @@ for plat in darwin win32; do
     const a9=d.sessions.find(s=>s.id.endsWith('aaaa-9')); if(!d.sessions.some(s=>s.id.endsWith('aaaa-8'))||!a9||!a9.first_message.startsWith('Go with the second')||a9.messages_user!==1||a9.tools.includes('Read')) {console.error('FAIL forked session must be its own session, from its own records',a9);process.exit(1)}
     const a12=d.sessions.find(s=>s.id.endsWith('aaaa-12')); if(d.sessions.some(s=>s.id.endsWith('aaaa-11'))||!a12||a12.messages_user!==2||'firstUuid' in JSON.parse(JSON.stringify(a12))) {console.error('FAIL resume copy should replace the original',a12);process.exit(1)}
     if(d.sessions.some(s=>s.id.endsWith('aaaa-10'))) {console.error('FAIL headless ping counted as a session');process.exit(1)}
-    const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
     const d2=d.sessions.find(s=>s.id==='s_claude-desktop_d2'); if(!d2||d2.source!=='claude-cowork'||d2.surface!=='cowork'||d2.title!=='Interview synthesis'||d2.messages_user!==1||!d2.tools.includes('Write')||!d2.skills.includes('research-synthesis')||!d2.connectors.includes('Google Drive')||d2.duration_minutes>10) {console.error('FAIL cowork parse',d2);process.exit(1)}
     if(d.sessions.some(s=>s.id.includes('cli-d2'))) {console.error('FAIL cowork transcript counted twice');process.exit(1)}
     const d3=d.sessions.find(s=>s.id==='s_claude-desktop_d3'); if(!d3||d3.source!=='claude-cowork'||d3.messages_user!==1||!d3.first_message.startsWith('Help me plan')||!d3.tools.includes('WebSearch')||d3.tools.includes('SubagentOnlyTool')||d3.model!=='claude-sonnet-4-6') {console.error('FAIL cowork audit-only parse',d3);process.exit(1)}
     if(JSON.stringify(d).includes('never read this')||JSON.stringify(d).includes('test.person@example.com')) {console.error('FAIL read private state-file fields');process.exit(1)}
-    const c3=d.sessions.find(s=>s.id==='s_codex_c3'); if(!c3||!c3.first_message.startsWith('Find the meeting notes')||c3.messages_user!==1||c3.surface!=='desktop'||!c3.connectors.includes('notion')||c3.title!=='Open action items'||c3.model!=='gpt-6') {console.error('FAIL codex desktop parse',c3);process.exit(1)}
     const tb=Object.fromEntries(d.sources.map(r=>[r.source,r.sessions_in_window])); if(tb['claude-cowork']!==2||tb['claude-desktop']!==1) {console.error('FAIL source table split',tb);process.exit(1)}
-    if(d.sessions.some(s=>s.id.endsWith('aaaa-5')||s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
-    const sig=d.signals.find(x=>x.source==='chatgpt-desktop'); if(!sig||!sig.installed){console.error('FAIL chatgpt desktop signal',d.signals);process.exit(1)}
-    console.log('   sources ok:',JSON.stringify(by),'signals:',JSON.stringify(d.signals));"
+    if(d.sessions.some(s=>s.id.endsWith('aaaa-5'))) {console.error('FAIL window filter');process.exit(1)}
+    console.log('   claude sources ok:',JSON.stringify(by));"
   node scripts/config.mjs --title "Senior Product Designer" --function Design >/dev/null
   node scripts/classify.mjs prep --size 6 | sed 's/^/   /'
   node tests/fake-classify.mjs "$H/how-i-ai/classify" >/dev/null
@@ -42,6 +45,22 @@ for plat in darwin win32; do
   for t in profile-wrapped profile-editorial profile-terminal; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/profile.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
   node scripts/share.mjs preview | head -4 | sed 's/^/   /'
   node -e "const p=require('$H/how-i-ai/share-rows.json'); const cols=Object.keys(p.sessions[0]); for(const bad of ['first_message','title','project_hash','context']) if(cols.includes(bad)){console.error('FAIL leak',bad);process.exit(1)}; if(JSON.stringify(p).includes('/Users/me')){console.error('FAIL path leak');process.exit(1)}; if(!cols.includes('skills')||!cols.includes('agents')){console.error('FAIL skills columns');process.exit(1)}; console.log('   share rows clean:',p.sessions.length,'rows,',cols.length,'columns')"
+  echo "== $plat: chatgpt entry point"; node scripts/how-i-ai.mjs --app chatgpt collect --no-codex-cloud --days 30 | sed 's/^/   /'
+  node -e "
+    const d=require('$H/how-i-ai-chatgpt/sessions.json'); const by={}; for(const s of d.sessions) by[s.source]=(by[s.source]||0)+1;
+    const want={'codex':3,'chatgpt-export':3,'chatgpt-app':1,'claude-code':0,'claude-cowork':0,'claude-export':0};
+    for(const [k,v] of Object.entries(want)) if((by[k]||0)!==v){console.error('FAIL',k,'expected',v,'got',by[k]);process.exit(1)}
+    const g3=d.sessions.find(s=>s.id==='s_chatgpt_g3'); if(!g3.tools.includes('python')||g3.model!=='gpt-5') {console.error('FAIL chatgpt parse',g3);process.exit(1)}
+    if(d.sessions.some(s=>s.id==='s_chatgpt_g4')) {console.error('FAIL window filter');process.exit(1)}
+    const c3=d.sessions.find(s=>s.id==='s_codex_c3'); if(!c3||!c3.first_message.startsWith('Find the meeting notes')||c3.messages_user!==1||c3.surface!=='desktop'||!c3.connectors.includes('notion')||c3.title!=='Open action items'||c3.model!=='gpt-6') {console.error('FAIL codex desktop parse',c3);process.exit(1)}
+    const app1=d.sessions.find(s=>s.id==='s_chatgpt_app1'); if(!app1||app1.source!=='chatgpt-app'||app1.messages_user!==2||!app1.context.includes('Make day two lighter')) {console.error('FAIL chatgpt-app parse',app1);process.exit(1)}
+    if(d.sessions.find(s=>s.id==='s_chatgpt_g1').source!=='chatgpt-export') {console.error('FAIL export should win over the app listing for the same conversation');process.exit(1)}
+    const sig=d.signals.find(x=>x.source==='chatgpt-desktop'); if(!sig||!sig.installed){console.error('FAIL chatgpt desktop signal',d.signals);process.exit(1)}
+    console.log('   chatgpt sources ok:',JSON.stringify(by));"
+  node scripts/how-i-ai.mjs --app chatgpt config --title "Senior Product Designer" --function Design >/dev/null
+  node scripts/how-i-ai.mjs --app chatgpt classify prep --size 10 >/dev/null; node tests/fake-classify.mjs "$H/how-i-ai-chatgpt/classify" >/dev/null; node scripts/how-i-ai.mjs --app chatgpt classify merge | sed 's/^/   /'
+  node scripts/how-i-ai.mjs --app chatgpt share preview >/dev/null
+  node -e "const a=require('$H/how-i-ai/share-rows.json'),b=require('$H/how-i-ai-chatgpt/share-rows.json'); if(a.participant.participant_id===b.participant.participant_id||b.sessions.some(r=>/^claude/.test(r.source))||a.sessions.some(r=>/^(codex|chatgpt)/.test(r.source))){console.error('FAIL the two entry points must not share an id or sessions');process.exit(1)}; console.log('   two entry points: separate ids, no shared sessions (',a.sessions.length,'+',b.sessions.length,'rows )')"
   node scripts/aggregate.mjs --json "$H/how-i-ai/share-rows.json" --team "Test team" --out "$H/how-i-ai/aggregate.json" | sed 's/^/   /'
   for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/aggregate.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
 done

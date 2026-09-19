@@ -44,12 +44,12 @@
   <div class="grid">
     <div class="card">
       <h3>Claude Code</h3>
-      <p>Best option. Reads everything on this machine: Claude Code, Claude Desktop, Codex, and any export zips. Opens a terminal with the prompt filled in.</p>
+      <p>Best option for Claude. Reads Claude Code, Cowork, and your claude.ai export. Opens a terminal with the prompt filled in.</p>
       <div class="row"><a class="btn primary" id="btn-code" href="#">Open in Claude Code</a><button class="btn" data-copy="code">Copy prompt</button></div>
     </div>
     <div class="card">
       <h3>Cowork</h3>
-      <p>For people who do not use a terminal. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
+      <p>For people who do not use a terminal. Reads Claude Code, Cowork, and your claude.ai export. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
       <div class="row"><a class="btn primary" id="btn-cowork" href="#">Open in Cowork</a><button class="btn" data-copy="code">Copy prompt</button></div>
     </div>
     <div class="card">
@@ -58,7 +58,12 @@
       <div class="row"><a class="btn primary" id="btn-claude-chat" href="#">Open in Claude</a><button class="btn" data-copy="chat">Copy prompt</button></div>
     </div>
     <div class="card">
-      <h3>ChatGPT</h3>
+      <h3>ChatGPT desktop app</h3>
+      <p>Covers your ChatGPT conversations, which only the app itself can list, and your Codex sessions. It is run separately from the Claude one; if you use both, run both. Copy the prompt and paste it into a new task in the app.</p>
+      <div class="row"><button class="btn primary" data-copy="chatgpt-app">Copy prompt</button></div>
+    </div>
+    <div class="card">
+      <h3>ChatGPT on the web</h3>
       <p>Same export-based path. Opens chatgpt.com with the prompt, which ChatGPT sends immediately.</p>
       <div class="row"><a class="btn primary" id="btn-chatgpt" href="#" target="_blank" rel="noopener">Open in ChatGPT</a><button class="btn" data-copy="chat-full">Copy full prompt</button></div>
     </div>
@@ -100,6 +105,7 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
   const REPO_RAW = 'https://raw.githubusercontent.com/mkhalife/how-i-ai/main/';
   const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs how-i-ai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
   const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs how-i-ai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
+  const CHATGPT_APP_PROMPT = `Fetch ${REPO_RAW}PROMPT-chatgpt-app.md and follow it exactly. It runs how-i-ai from inside the ChatGPT desktop app: you list my ChatGPT conversations with your own thread tools, the scripts inventory my Codex sessions on this machine, you classify them, and I get a profile of how I actually use AI. Do not share anything unless I say yes to a preview.`;
   const enc = encodeURIComponent;
   document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
   document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);
@@ -111,6 +117,7 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
     const k = b.dataset.copy;
     if (k === 'code') return copy(CODE_PROMPT);
     if (k === 'chat') return copy(CHAT_PROMPT);
+    if (k === 'chatgpt-app') return copy(CHATGPT_APP_PROMPT);
     try { const r = await fetch(REPO_RAW + 'PROMPT-chat.md'); copy(await r.text()); } catch { copy(CHAT_PROMPT); }
   }));
 </script>
