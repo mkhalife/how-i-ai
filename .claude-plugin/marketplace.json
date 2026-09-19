@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "how-i-ai",
-  "description": "See how you actually use AI, from your own Claude, Claude Code, Codex, and ChatGPT session history, and optionally compare notes with your team.",
+  "description": "See how you actually use AI, from your own Claude, Claude Code, Cowork, Codex, and ChatGPT session history, and optionally compare notes with your team.",
   "owner": {
     "name": "Mohamed Khalife",
     "url": "https://github.com/mkhalife"
@@ -10,7 +10,7 @@
     {
       "name": "how-i-ai",
       "source": "./plugins/how-i-ai",
-      "description": "Inventory the last 30 days of AI sessions on this machine, classify what each one was for and whether AI informed you or did the work, render a personal profile page, and optionally share anonymized rows to a team sheet after a full preview.",
+      "description": "Inventory the last 30 days of Claude Code and Cowork sessions, plus the Claude chat and cloud session lists (a separate ChatGPT entry point covers Codex and ChatGPT), classify what each session was for and whether AI informed you or did the work, render a personal profile page, and optionally share anonymized rows to a team sheet after a full preview.",
       "category": "analytics",
       "tags": [
         "ai-usage",

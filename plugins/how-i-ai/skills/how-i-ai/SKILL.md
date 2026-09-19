@@ -1,6 +1,6 @@
 ---
 name: how-i-ai
-description: Show how a person actually uses AI, from their own session history. Reads Claude Code, Claude Desktop (Chat and Cowork), and the claude.ai data export on this machine for the last 30 days (a separate ChatGPT entry point reads Codex and ChatGPT), grabs the first message of each session plus a little context, classifies every session (what for, and whether AI informed them or did the work), and renders a personal profile page in one of three designs. Optionally shares anonymized rows to a team sheet after showing exactly what would leave the machine. Use whenever someone asks "how do I use AI", wants an AI usage profile, "AI wrapped", "how-i-ai", a breakdown of their Claude or ChatGPT sessions, sessions per week, their biggest or most surprising AI use case, or wants to contribute to the team's AI usage aggregate.
+description: Show how a person actually uses AI, from their own session history of the last 30 days. Reads Claude Code and Cowork sessions on this machine, plus the Claude chat and cloud session lists and a claude.ai export when they are in the inbox (a separate ChatGPT entry point reads Codex and ChatGPT), grabs the first message of each session plus a little context, classifies every session (what for, and whether AI informed them or did the work), and renders a personal profile page. Optionally shares anonymized rows to a team sheet after showing exactly what would leave the machine. Use whenever someone asks "how do I use AI", wants an AI usage profile, "AI wrapped", "how-i-ai", a breakdown of their Claude or ChatGPT sessions, sessions per week, their biggest or most surprising AI use case, or wants to contribute to the team's AI usage aggregate.
 ---
 
 # how-i-ai
@@ -52,7 +52,7 @@ node SKILL_DIR/scripts/how-i-ai.mjs collect --days 30
 ```
 
 Read the source table it prints. It looks for, in order: Claude Code transcripts,
-Claude Desktop Chat and Cowork sessions, and in `~/how-i-ai/inbox` a Claude Code cloud
+Cowork sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud
 session list (`cloud-sessions.json`), a claude.ai export zip, and a Claude chat list
 (`claude-chat-threads.json`), see below. With `--app chatgpt` it looks instead
 for Codex sessions (and cloud tasks if a signed-in `codex` binary is on PATH or inside
@@ -66,7 +66,7 @@ Then handle what is missing:
   hold them cannot run these scripts.** Each of those surfaces lists its own history and
   hands the person one JSON file to download; they save it into `~/how-i-ai/inbox` and
   collect picks it up. This is the normal route for both, and both are optional:
-  - `claude-chat-threads.json`: the "Claude chats" button on the landing page (or
+  - `claude-chat-threads.json`: the "Claude chats" card on the landing page (or
     `PROMPT-claude-chat.md` pasted into claude.ai Chat, web or desktop). Claude in Chat
     mode lists the last 30 days with its `recent_chats` tool. Per chat it holds the url,
     `updated_at`, the title, and a summary written by Claude; no first message, no
@@ -80,7 +80,7 @@ Then handle what is missing:
     have `list_sessions`, follow `PROMPT-claude-cloud.md` and write the file into the
     inbox yourself.
   When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
-  missing, mention the two buttons once and continue; do not block on them. Cowork and
+  missing, mention the two cards once and continue; do not block on them. Cowork and
   local Claude Code do not have either tool.
 - **ChatGPT chats are not readable on disk** (`--app chatgpt`). ChatGPT's desktop app
   encrypts its cache with a Keychain key only OpenAI-signed apps can read, and the

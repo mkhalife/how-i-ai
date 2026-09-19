@@ -1,9 +1,10 @@
 # how-i-ai (run without installing the plugin)
 
 You are running **how-i-ai**: show how this person actually uses AI, from their own
-Claude session history on this machine (Claude Code, Cowork, and their claude.ai
-export). Follow every step. Nothing leaves the machine unless the person explicitly says
-yes to a preview of exactly what would be shared.
+Claude session history (Claude Code and Cowork on this machine, plus the Claude chat and
+cloud session lists and a claude.ai export when they are in the inbox). Follow every step.
+Nothing leaves the machine unless the person explicitly says yes to a preview of exactly
+what would be shared.
 
 ## 1. Get the scripts
 
@@ -50,7 +51,7 @@ another Claude surface and saves it into `~/how-i-ai/inbox`; collect reads them 
 present. Mention them once, do not wait for them.
 
 - `claude-chat-threads.json`: their claude.ai chats, listed by Claude in Chat mode
-  (`PROMPT-claude-chat.md`, or the "Claude chats" button on the landing page).
+  (`PROMPT-claude-chat.md`, or the "Claude chats" card on the landing page).
 - `cloud-sessions.json`: their Claude Code cloud sessions, listed by Claude inside a
   claude.ai/code session (`PROMPT-claude-cloud.md`, or the "Claude Code on the web" card).
 

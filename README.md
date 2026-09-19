@@ -43,7 +43,7 @@ Without the plugin, paste `PROMPT.md` into Claude Code or Cowork, or
 `PROMPT-chatgpt-app.md` into a new task in the ChatGPT desktop app. Or use the buttons on
 the landing page, which open the app with the prompt pre-filled:
 
-| Button | Link it opens | Reads |
+| Card | Link it opens | Reads |
 |---|---|---|
 | Optional first: Claude chats | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
 | Optional first: Claude Code on the web | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
@@ -80,7 +80,7 @@ classification rules, and the sharing contract.
 | Source | Entry point | How |
 |---|---|---|
 | Claude Code (CLI, IDE, Desktop Code tab, teleported cloud sessions) | claude | `~/.claude/projects` transcripts |
-| Claude Desktop Chat and Cowork | claude | the desktop app's local session store |
+| Cowork | claude | Claude Desktop's local session store |
 | Claude Code cloud sessions | claude | `cloud-sessions.json` in `~/how-i-ai/inbox`, listed by Claude inside a claude.ai/code session: titles and a status summary |
 | claude.ai chats | claude | `claude-chat-threads.json` in `~/how-i-ai/inbox`, listed by Claude in Chat mode (titles and summaries); optionally the official data export zip there (fuller, wins when both exist) |
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
