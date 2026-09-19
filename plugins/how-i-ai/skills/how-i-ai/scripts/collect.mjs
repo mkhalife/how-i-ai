@@ -30,7 +30,7 @@ push(src.chatgptDesktop());
 // Merge, dedupe, filter to window.
 const seen = new Map();
 for (const r of results) {
-  r.total = r.sessions.length;
+  r.total = r.sessions.length; r.all = r.sessions;
   r.sessions = r.sessions.filter((s) => s.started_at && new Date(s.started_at) >= start && new Date(s.started_at) <= new Date(now.getTime() + 86400e3));
   for (const s of r.sessions) if (!seen.has(s.id)) seen.set(s.id, s);
   r.in_window = r.sessions.length;
@@ -39,7 +39,8 @@ const sessions = [...seen.values()].sort((a, b) => new Date(a.started_at) - new 
 
 const HINTS = {
   'claude-code': 'Claude Code transcripts live in ~/.claude/projects. Nothing there means Claude Code was not used on this machine.',
-  'claude-desktop': 'Claude Desktop stores Chat and Cowork sessions under its Application Support folder. Not found means the desktop app is not installed here.',
+  'claude-desktop': 'Claude Desktop not found on this machine. Its Chat history comes from the claude.ai export either way.',
+  'claude-cowork': 'Cowork sessions live in Claude Desktop\'s local-agent-mode-sessions folder.',
   'chatgpt-export': `Request your ChatGPT export (Settings → Data controls → Export data), then drop the zip in ${inbox}`,
   'claude-export': `Request your claude.ai export (Settings → Privacy → Export data), then drop the zip in ${inbox}`,
   codex: 'Codex sessions live in ~/.codex/sessions. Not found means Codex was not used on this machine.',
@@ -47,16 +48,28 @@ const HINTS = {
   'chatgpt-desktop': 'ChatGPT desktop app not found on this machine (fine; the export covers ChatGPT).',
 };
 
+// Found, but nothing parsed and no parser note: say why that is expected.
+const FOUND_EMPTY = {
+  'claude-desktop': 'Desktop app found. Chat conversations are not stored on disk (only Cowork sessions are), so Chat history comes from the claude.ai export.',
+};
+
 const table = [];
 const bySource = new Map();
 for (const r of results) {
-  const key = r.source === 'export' ? r.path : r.source;
-  const row = bySource.get(key) || { source: r.source, found: false, paths: [], total: 0, in_window: 0, notes: [] };
-  row.found = row.found || r.found; if (r.path) row.paths.push(r.path); row.total += r.total; row.in_window += r.in_window; row.notes.push(...r.notes);
-  bySource.set(key, row);
+  // One parser can yield two sources (the Claude Desktop folder holds Cowork sessions), so rows follow the sessions.
+  const parts = new Map([[r.source, { total: 0, in_window: 0 }]]);
+  for (const s of r.all) { const c = parts.get(s.source) || { total: 0, in_window: 0 }; c.total++; parts.set(s.source, c); }
+  for (const s of r.sessions) parts.get(s.source).in_window++;
+  for (const [source, c] of parts) {
+    if (source !== r.source && !c.total) continue;
+    const key = source === 'export' ? r.path : source;
+    const row = bySource.get(key) || { source, found: false, paths: [], total: 0, in_window: 0, notes: [] };
+    row.found = row.found || r.found; if (r.path) row.paths.push(r.path); row.total += c.total; row.in_window += c.in_window; if (source === r.source) row.notes.push(...r.notes);
+    bySource.set(key, row);
+  }
 }
 for (const want of ['chatgpt-export', 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, notes: [] });
-for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || HINTS[row.source] || null) });
+for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || (row.found && row.total ? `${row.total} on disk, none started in the last ${days} days` : (row.found && FOUND_EMPTY[row.source]) || HINTS[row.source]) || null) });
 const signals = results.filter((r) => r.signal).map((r) => ({ source: r.source, path: r.path, ...r.signal }));
 
 const doc = {

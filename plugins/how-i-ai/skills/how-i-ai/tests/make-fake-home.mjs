@@ -16,42 +16,88 @@ const iso = (d) => d.toISOString();
 // ---- Claude Code ----
 const projects = D(join(dir, '.claude', 'projects', '-Users-me-work-app'));
 function ccSession(id, start, prompt, tools, opts = {}) {
-  const lines = [];
+  const lines = [...(opts.parentLines || [])]; // a forked session starts with its parent's records, parent sessionId and all
   const t0 = start.getTime();
+  const dir = opts.dir || projects;
   lines.push({ type: 'ai-title', aiTitle: opts.title || 'Session ' + id, sessionId: id });
   lines.push({ parentUuid: null, isSidechain: false, type: 'user', message: { role: 'user', content: prompt }, uuid: id + '-1', timestamp: iso(new Date(t0)), origin: { kind: opts.origin || 'human' }, entrypoint: opts.entrypoint || 'cli', cwd: '/Users/me/work/app', sessionId: id, version: '2.1.270', gitBranch: 'main' });
   let i = 2;
   for (const tool of tools) {
-    const input = tool === 'Skill' ? { skill: opts.skill || 'code-review' } : tool === 'Agent' ? { subagent_type: opts.agent || 'general-purpose', prompt: 'x' } : {};
+    // subagent_type is optional on the real Agent tool (omitted = general-purpose)
+    const input = tool === 'Skill' ? { skill: opts.skill || 'code-review' } : tool === 'Agent' ? { ...(opts.agent ? { subagent_type: opts.agent } : {}), description: 'x', prompt: 'x' } : {};
     lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + i, role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'tool_use', id: 'tu' + i, name: tool, input }] }, uuid: id + '-' + i, timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
     lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu' + i, content: 'ok' }] }, uuid: id + '-' + (i + 1), timestamp: iso(new Date(t0 + i * 60e3 + 5e3)), cwd: '/Users/me/work/app', sessionId: id });
     i += 2;
   }
   lines.push({ isSidechain: false, type: 'assistant', message: { id: 'msg_' + id + 'z', role: 'assistant', model: 'claude-opus-4-1', content: [{ type: 'text', text: 'Done.' }] }, uuid: id + '-z', timestamp: iso(new Date(t0 + i * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
   if (opts.second) lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: opts.second }, uuid: id + '-s', timestamp: iso(new Date(t0 + (i + 1) * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
-  writeFileSync(join(projects, id + '.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  // Background-task notifications are user-role records with origin.kind "task-notification"; not a human turn.
+  if (opts.notification) lines.push({ isSidechain: false, type: 'user', message: { role: 'user', content: '<task-notification>\n<task-id>t1</task-id>\n<status>completed</status>\n<summary>Agent finished</summary>\n</task-notification>' }, origin: { kind: 'task-notification' }, promptSource: 'system', uuid: id + '-n', timestamp: iso(new Date(t0 + (i + 2) * 60e3)), cwd: '/Users/me/work/app', sessionId: id });
+  writeFileSync(join(dir, id + '.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  return lines;
 }
-ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'Skill', 'Agent', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: '<command-name>/simplify</command-name>\n<command-message>simplify</command-message>', skill: 'code-review', agent: 'evidence-researcher' });
+// slash command as text blocks (seen on real data next to the plain-string shape)
+ccSession('aaaa-1', daysAgo(2, 9), 'Add a feature flag for the new checkout flow and write tests for it', ['Read', 'Edit', 'Bash', 'Skill', 'Agent', 'mcp__github__create_pull_request'], { title: 'Checkout feature flag', second: [{ type: 'text', text: '<command-name>/simplify</command-name>\n<command-message>simplify</command-message>' }], skill: 'code-review', agent: 'evidence-researcher', notification: true });
 ccSession('aaaa-2', daysAgo(5, 14), '<command-name>/clear</command-name>', [], {});
 ccSession('aaaa-3', daysAgo(5, 15), 'Why does this test pass locally but fail in CI? Here is the log: ...', ['Bash', 'Grep'], { entrypoint: 'desktop' });
 ccSession('aaaa-4', daysAgo(1, 7), 'Nightly: review open PRs and summarize', ['Bash', 'mcp__github__list_pull_requests'], { origin: 'routine', entrypoint: 'remote_web' });
 ccSession('aaaa-5', daysAgo(45, 11), 'Old session outside the window', ['Read'], {});
 ccSession('aaaa-6', daysAgo(3, 22), 'Explain how OAuth refresh tokens work, I am a designer', [], { title: 'OAuth explained' });
+// Desktop scheduled task: origin.kind is "human"; the <scheduled-task> wrapper and the state file's scheduledTaskId are the tell.
+ccSession('aaaa-7', daysAgo(1, 6), '<scheduled-task name="morning-brief" file="/Users/me/.claude/scheduled-tasks/morning-brief/SKILL.md">\nSummarize what changed in the repo since yesterday\n</scheduled-task>', ['Bash', 'Agent'], { entrypoint: 'claude-desktop' });
+// Fork: the file is named for the new session and replays the parent's records first.
+const parentLines = ccSession('aaaa-8', daysAgo(4, 9), 'Sketch two approaches for the billing migration', ['Read']);
+ccSession('aaaa-9', daysAgo(4, 10), 'Go with the second approach and draft the plan', ['Write'], { parentLines });
 // sidechain file must be ignored
 writeFileSync(join(projects, 'agent-xyz.jsonl'), JSON.stringify({ isSidechain: true, type: 'user', message: { role: 'user', content: 'subagent prompt' }, timestamp: iso(daysAgo(2)), sessionId: 'aaaa-1' }) + '\n');
 
 // ---- Claude Desktop (Chat + Cowork) ----
 const appData = plat === 'win32' ? join(dir, 'AppData', 'Local', 'Claude') : join(dir, 'Library', 'Application Support', 'Claude');
 const lam = D(join(appData, 'local-agent-mode-sessions', 'acct_123', 'org_456'));
-function desktopSession(id, start, kind, title, prompts, tools = []) {
+// Unverified guess at a Chat state file (messages inline). Real machines so far hold only Cowork sessions here;
+// kept so the tolerant fallback stays covered.
+function legacyDesktopSession(id, start, kind, title, prompts) {
   const state = { id, title, createdAt: iso(start), updatedAt: iso(new Date(start.getTime() + 20 * 60e3)), sessionType: kind, messages: prompts.flatMap((p, i) => [{ role: 'user', content: p, createdAt: iso(new Date(start.getTime() + i * 120e3)) }, { role: 'assistant', content: [{ type: 'text', text: 'Sure.' }] }]) };
   writeFileSync(join(lam, `local_${id}.json`), JSON.stringify(state, null, 1));
-  const wd = D(join(lam, id));
-  writeFileSync(join(wd, 'audit.jsonl'), tools.map((t, i) => JSON.stringify({ seq: i, event: 'tool_invocation', tool: t, ts: iso(start), hmac: 'x' })).join('\n') + '\n');
 }
-desktopSession('d1', daysAgo(4, 11), 'chat', 'Critique onboarding screens', ['Critique these onboarding screens for clarity and hierarchy', 'Now check contrast against WCAG AA']);
-desktopSession('d2', daysAgo(6, 16), 'cowork', 'Interview synthesis', ['Read the 12 interview transcripts in this folder and cluster them into themes'], ['Read', 'Write', 'Google Drive']);
-desktopSession('d3', daysAgo(0, 8), 'chat', 'Birthday party', ["Help me plan my 6 year old's birthday party for 12 kids on a $300 budget"]);
+// Real Cowork shape (macOS, September 2026): metadata-only state file; transcript in the working dir's own
+// .claude/projects as Claude Code JSONL named <cliSessionId>.jsonl; audit.jsonl is the SDK message stream.
+function coworkSession(id, start, title, prompt, tools, { transcript = true, skill = null } = {}) {
+  const sessionId = `local_${id}`, cli = `cli-${id}`, wd = D(join(lam, sessionId)), cwd = join(wd, 'outputs');
+  const t0 = start.getTime();
+  const state = { sessionId, processName: 'brave-tender-newton', cliSessionId: cli, cwd, userSelectedFolders: [], createdAt: t0, lastActivityAt: t0 + 20 * 60e3, model: 'claude-sonnet-4-6', isArchived: false, title, vmProcessName: 'brave-tender-newton', hostLoopMode: true, initialMessage: prompt, slashCommands: [], enabledMcpTools: {}, remoteMcpServersConfig: [], egressAllowedDomains: [], memoryEnabled: true, skillsEnabled: true, pluginsEnabled: true, systemPrompt: 'never read this', accountName: 'Test Person', emailAddress: 'test.person@example.com' };
+  writeFileSync(join(lam, `${sessionId}.json`), JSON.stringify(state, null, 1));
+  D(join(wd, 'outputs')); D(join(wd, 'uploads'));
+  const stamp = (r, ms) => ({ ...r, session_id: cli, timestamp: iso(new Date(t0 + ms)), _audit_timestamp: iso(new Date(t0 + ms)), _audit_hmac: 'x'.repeat(64) });
+  const audit = [
+    stamp({ type: 'user', uuid: 'u0', parent_tool_use_id: null, client_platform: 'desktop_app', message: { role: 'user', content: prompt } }, 0),
+    stamp({ type: 'user', uuid: 'u0', parent_tool_use_id: null, isReplay: true, message: { role: 'user', content: prompt } }, 1),
+    stamp({ type: 'system', subtype: 'init', cwd, tools: tools, mcp_servers: [], model: 'claude-sonnet-4-6', permissionMode: 'default', slash_commands: [], agents: [], skills: [], plugins: [], uuid: 's0' }, 2),
+    ...tools.flatMap((t, i) => [
+      stamp({ type: 'assistant', uuid: 'a' + i, parent_tool_use_id: null, request_id: 'req', message: { model: 'claude-sonnet-4-6', id: 'msg_' + id + i, type: 'message', role: 'assistant', content: [{ type: 'tool_use', id: 'tu' + i, name: t, input: t === 'Skill' ? { skill } : {}, caller: { type: 'direct' } }] } }, (i + 1) * 60e3),
+      stamp({ type: 'user', uuid: 'r' + i, parent_tool_use_id: null, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu' + i, content: 'ok' }] } }, (i + 1) * 60e3 + 5e3),
+    ]),
+    ...(skill ? [stamp({ type: 'user', uuid: 'syn', parent_tool_use_id: null, isSynthetic: true, message: { role: 'user', content: [{ type: 'text', text: 'Base directory for this skill: ...' }] } }, 30e3)] : []),
+    stamp({ type: 'assistant', uuid: 'sub', parent_tool_use_id: 'tu0', message: { model: 'claude-haiku-4-5', id: 'msg_sub', role: 'assistant', content: [{ type: 'tool_use', id: 'tus', name: 'SubagentOnlyTool', input: {} }] } }, 90e3),
+    stamp({ type: 'result', subtype: 'success', is_error: false, num_turns: tools.length + 1, result: 'Done.', origin: { kind: 'human' }, uuid: 'res' }, 19 * 60e3),
+  ];
+  writeFileSync(join(wd, 'audit.jsonl'), audit.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  if (transcript) {
+    const enc = D(join(wd, '.claude', 'projects', '-sessions-' + id + '-outputs'));
+    ccSession(cli, start, prompt, tools, { dir: enc, entrypoint: 'local-agent', skill, title: 'ai title, state title wins' });
+    D(join(enc, cli, 'subagents')); writeFileSync(join(enc, cli, 'subagents', 'agent-a1.jsonl'), JSON.stringify({ isSidechain: true, type: 'user', message: { role: 'user', content: 'subagent prompt' }, timestamp: iso(start), sessionId: cli }) + '\n');
+  }
+}
+legacyDesktopSession('d1', daysAgo(4, 11), 'chat', 'Critique onboarding screens', ['Critique these onboarding screens for clarity and hierarchy', 'Now check contrast against WCAG AA']);
+coworkSession('d2', daysAgo(6, 16), 'Interview synthesis', 'Read the 12 interview transcripts in this folder and cluster them into themes', ['Read', 'Write', 'Skill', 'mcp__gdrive__search_files'], { skill: 'research-synthesis' });
+// transcript already cleaned up: state file + audit.jsonl only
+coworkSession('d3', daysAgo(0, 8), 'Birthday party', "Help me plan my 6 year old's birthday party for 12 kids on a $300 budget", ['WebSearch', 'Write'], { transcript: false });
+writeFileSync(join(lam, 'scheduled-tasks.json'), JSON.stringify({ scheduledTasks: [], recordedSkips: {} }));
+
+// Desktop "Code" tab: state files only; transcripts are the ~/.claude/projects files above, so nothing here may be counted twice.
+const ccs = D(join(appData, 'claude-code-sessions', 'acct_123', 'org_456'));
+writeFileSync(join(ccs, 'local_code3.json'), JSON.stringify({ sessionId: 'local_code3', cliSessionId: 'aaaa-3', cwd: '/Users/me/work/app', originCwd: '/Users/me/work/app', createdAt: daysAgo(5, 15).getTime(), lastActivityAt: daysAgo(5, 16).getTime(), model: 'claude-opus-4-1', isArchived: false, title: 'CI failure', titleSource: 'auto', permissionMode: 'default' }));
+writeFileSync(join(ccs, 'local_code7.json'), JSON.stringify({ sessionId: 'local_code7', cliSessionId: 'aaaa-7', cwd: '/Users/me/work/app', originCwd: '/Users/me/work/app', createdAt: daysAgo(1, 6).getTime(), lastActivityAt: daysAgo(1, 6).getTime(), model: 'claude-opus-4-1', isArchived: false, title: 'Morning brief', scheduledTaskId: 'morning-brief', permissionMode: 'auto' }));
 
 // ---- Codex ----
 const codexDir = D(join(dir, '.codex', 'sessions', '2026', '09', '10'));
@@ -68,6 +114,32 @@ function codexSession(id, start, prompt, tools) {
   ];
   writeFileSync(join(codexDir, `rollout-2026-09-10T10-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
+// Desktop app build (0.155, September 2026): no user_message event; prompt is an item_completed UserMessage, injected
+// context shares the user role, shell and MCP go through custom_tool_call "exec", MCP detail is on the McpToolCall item.
+function codexDesktopSession(id, start, prompt, threadName) {
+  const t0 = start.getTime(); const at = (ms) => iso(new Date(t0 + ms)); let n = 0;
+  const rec = (ms, type, payload) => ({ timestamp: at(ms), ordinal: n++, type, payload });
+  const meta = (kinds) => ({ turn_id: 't1', content_item_kinds: kinds });
+  const lines = [
+    rec(0, 'session_meta', { session_id: id, id, timestamp: at(0), cwd: '/Users/me/Documents/Codex/x', originator: 'Codex Desktop', cli_version: '0.155.0-alpha.9.2', source: 'vscode', thread_source: 'user', model_provider: 'openai', base_instructions: { text: '...' } }),
+    rec(0, 'event_msg', { type: 'task_started', turn_id: 't1', started_at: t0 / 1000 }),
+    rec(1, 'response_item', { type: 'message', role: 'developer', content: [{ type: 'input_text', text: '<app-context>...</app-context>' }], internal_chat_message_metadata_passthrough: meta(['generic.developer_instructions']) }),
+    rec(2, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: '<recommended_plugins>...</recommended_plugins>' }, { type: 'input_text', text: '<environment_context>cwd=/x</environment_context>' }], internal_chat_message_metadata_passthrough: meta(['plugins.recommendations', 'environments.environment_context']) }),
+    rec(3, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: prompt }], internal_chat_message_metadata_passthrough: meta(['user.text']) }),
+    rec(3, 'world_state', { full: true, state: { model: 'gpt-6' } }),
+    rec(3, 'turn_context', { turn_id: 't1', cwd: '/Users/me/Documents/Codex/x', model: 'gpt-6', effort: 'medium' }),
+    rec(4, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'UserMessage', id: 'i1', client_id: 'c1', content: [{ type: 'text', text: prompt, text_elements: [] }] } }),
+    rec(30e3, 'response_item', { type: 'custom_tool_call', id: 'ctc1', status: 'completed', call_id: 'call1', name: 'exec', input: '...' }),
+    rec(31e3, 'response_item', { type: 'custom_tool_call_output', call_id: 'call1', output: 'ok' }),
+    rec(32e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'McpToolCall', id: 'i2', server: 'notion', tool: 'search', arguments: {}, pluginId: 'p', status: 'completed', result: {}, duration: { secs: 1, nanos: 0 } } }),
+    rec(60e3, 'response_item', { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'Done.' }] }),
+    rec(60e3, 'event_msg', { type: 'item_completed', thread_id: id, turn_id: 't1', item: { type: 'AgentMessage', id: 'i3', content: [{ type: 'Text', text: 'Done.' }], phase: 'final' } }),
+    rec(61e3, 'event_msg', { type: 'task_complete', turn_id: 't1' }),
+  ];
+  writeFileSync(join(codexDir, `rollout-2026-09-10T11-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+  writeFileSync(join(dir, '.codex', 'session_index.jsonl'), JSON.stringify({ id, thread_name: threadName, updated_at: at(61e3) }) + '\n');
+}
+codexDesktopSession('c3', daysAgo(1, 12), 'Find the meeting notes from last week and list the open action items', 'Open action items');
 codexSession('c1', daysAgo(9, 10), 'Migrate the users endpoint from REST to gRPC and keep the tests green', ['shell', 'apply_patch']);
 codexSession('c2', daysAgo(12, 13), 'Write a GitHub Action that labels PRs by changed path', ['shell']);
 

@@ -41,7 +41,7 @@ All timestamps are ISO 8601. All dates are `YYYY-MM-DD` in the user's local time
       "agents": ["general-purpose", "evidence-researcher"],       // sub-agent types spawned (Agent tool subagent_type)
       "model": "claude-opus-4-1",
       "mode": "agentic",                               // chat | agentic | routine
-      "trigger": "human",                              // human | routine | unknown
+      "trigger": "human",                              // human | scheduled | routine | review | unknown
       "project_hash": "h_1c2d...",                     // sha256 of cwd/repo, never the path
       "resumed": false,
       "classification": null                           // filled by classify step, see below

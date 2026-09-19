@@ -5,7 +5,7 @@ import { join, basename, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   home, os, walk, readJsonl, readJson, fileTimes, toISO, fromEpoch, trim, cleanPrompt, isHarnessOnly,
-  mostCommon, uniq, sha, minutesBetween,
+  mostCommon, uniq, sha, minutesBetween, localDate,
 } from './util.mjs';
 import { readZipText } from './zip.mjs';
 
@@ -22,10 +22,11 @@ function skillsAndAgents(users, assistants) {
   for (const r of assistants) for (const b of (Array.isArray(r.message.content) ? r.message.content : [])) {
     if (b.type !== 'tool_use') continue;
     if (b.name === 'Skill' && b.input && b.input.skill) skills.push(String(b.input.skill).replace(/^\//, ''));
-    if ((b.name === 'Agent' || b.name === 'Task') && b.input && b.input.subagent_type) agents.push(String(b.input.subagent_type));
+    // subagent_type is optional on the Agent tool; omitted means the general-purpose agent.
+    if ((b.name === 'Agent' || b.name === 'Task') && b.input) agents.push(String(b.input.subagent_type || 'general-purpose'));
   }
   for (const r of users) {
-    const t = typeof r.message.content === 'string' ? r.message.content : '';
+    const t = textOf(r.message.content); // slash commands arrive as a string or as text blocks
     const m = t.match(/<command-name>\s*\/?([^<\s]+)\s*<\/command-name>/);
     if (m && !BUILTIN_COMMANDS.has(m[1].toLowerCase())) skills.push(m[1]);
   }
@@ -35,6 +36,7 @@ function skillsAndAgents(users, assistants) {
 function surfaceFromEntrypoint(ep) {
   const e = String(ep || '').toLowerCase();
   if (e.includes('remote')) return 'cloud';
+  if (e.includes('local-agent')) return 'cowork';
   if (e.includes('desktop')) return 'desktop';
   if (e.includes('vscode') || e.includes('jetbrains') || e.includes('ide')) return 'ide';
   if (e.includes('sdk')) return 'sdk';
@@ -73,11 +75,24 @@ export function claudeCode({ configDir } = {}) {
   const projects = join(root, 'projects');
   const out = { source: 'claude-code', found: existsSync(projects), path: projects, sessions: [], notes: [] };
   if (!out.found) return out;
+  const scheduled = desktopScheduledCodeSessions();
   for (const file of walk(projects, { filter: (p, n) => n.endsWith('.jsonl') && !n.startsWith('agent-') })) {
-    const s = parseClaudeCodeTranscript(file);
+    const s = parseClaudeCodeTranscript(file, scheduled.has(basename(file, '.jsonl')) ? { scheduled: true } : {});
     if (s) out.sessions.push(s);
   }
   return out;
+}
+
+// The desktop app's Code tab keeps one local_<uuid>.json per session under claude-code-sessions/<account>/<org>/.
+// The transcript itself is in ~/.claude/projects (file name = cliSessionId), so nothing is counted from here;
+// the state file is only consulted for scheduledTaskId, because a scheduled run's origin.kind is "human".
+function desktopScheduledCodeSessions() {
+  const ids = new Set();
+  for (const root of claudeDesktopRoots()) for (const file of walk(join(root, 'claude-code-sessions'), { maxDepth: 3, filter: (p, n) => /^local_.*\.json$/i.test(n) })) {
+    const st = readJson(file, null);
+    if (st && st.scheduledTaskId && st.cliSessionId) ids.add(String(st.cliSessionId));
+  }
+  return ids;
 }
 
 export function parseClaudeCodeTranscript(file, overrides = {}) {
@@ -86,17 +101,23 @@ export function parseClaudeCodeTranscript(file, overrides = {}) {
   const main = recs.filter((r) => !r.isSidechain);
   const users = main.filter((r) => r.type === 'user' && r.message);
   const assistants = main.filter((r) => r.type === 'assistant' && r.message);
-  const humanTurns = users.filter((r) => !r.isMeta && !r.isCompactSummary && !(Array.isArray(r.message.content) && r.message.content.every((b) => b.type === 'tool_result')));
-  const promptTexts = humanTurns.map((r) => cleanPrompt(textOf(r.message.content))).filter((t) => !isHarnessOnly(t));
+  // Background-task and CI notifications are user-role records too; they are not the person's words.
+  const turns = users.filter((r) => !r.isMeta && !r.isCompactSummary && r.origin?.kind !== 'task-notification' && !(Array.isArray(r.message.content) && r.message.content.every((b) => b.type === 'tool_result')))
+    .map((r) => ({ r, raw: textOf(r.message.content) })).map((t) => ({ ...t, text: cleanPrompt(t.raw) })).filter((t) => !isHarnessOnly(t.raw) && !isHarnessOnly(t.text));
+  const humanTurns = turns.map((t) => t.r);
+  const promptTexts = turns.map((t) => t.text);
   if (!promptTexts.length) return null; // no human words in this file
   const times = main.map((r) => r.timestamp).filter(Boolean).sort();
-  const first = humanTurns[0] || users[0] || main[0];
-  const sessionId = first?.sessionId || recs.find((r) => r.sessionId)?.sessionId || basename(file, '.jsonl');
+  const first = humanTurns[0];
+  // A forked session starts with its parent's records (parent sessionId), so the last record names this file's session.
+  const sessionId = [...recs].reverse().find((r) => r.sessionId)?.sessionId || basename(file, '.jsonl');
   const title = recs.find((r) => r.type === 'custom-title')?.customTitle || recs.find((r) => r.type === 'ai-title')?.aiTitle || recs.find((r) => r.type === 'summary')?.summary || null;
   const toolNames = assistants.flatMap((r) => (Array.isArray(r.message.content) ? r.message.content : []).filter((b) => b.type === 'tool_use').map((b) => b.name));
   const { skills, agents } = skillsAndAgents(users, assistants);
   const originKind = first?.origin?.kind || first?.turnOrigin || 'human';
-  const trigger = /human|user/i.test(originKind) ? 'human' : String(originKind);
+  // Desktop scheduled tasks run with origin.kind "human"; the <scheduled-task> wrapper (or the state file) is the tell.
+  const scheduled = overrides.scheduled || /^\s*<scheduled-task[\s>]/.test(turns[0].raw);
+  const trigger = scheduled ? 'scheduled' : /human|user/i.test(originKind) ? 'human' : String(originKind);
   const assistantIds = uniq(assistants.map((r) => r.message.id || r.uuid));
   // resumed: a gap of more than 4 hours between two human turns
   let resumed = false;
@@ -130,12 +151,14 @@ export function claudeDesktop() {
     if (!existsSync(dir)) continue;
     out.found = true; out.path = dir;
     const seen = new Set();
+    const consumed = new Set(); // transcripts already merged into a state-file session
     for (const file of walk(dir, { maxDepth: 6, filter: (p, n) => /^local_.*\.json$/i.test(n) })) {
-      const s = parseDesktopStateFile(file);
+      const s = parseDesktopStateFile(file, consumed);
       if (s && !seen.has(s.id)) { seen.add(s.id); out.sessions.push(s); }
     }
-    // Transcripts written inside session working directories in Claude Code format.
+    // Orphan transcripts (state file gone) inside session working directories, in Claude Code format.
     for (const file of walk(dir, { maxDepth: 8, filter: (p, n) => n.endsWith('.jsonl') && n !== 'audit.jsonl' && !n.startsWith('agent-') })) {
+      if (consumed.has(file)) continue;
       const s = parseClaudeCodeTranscript(file, { source: 'claude-cowork', surface: 'cowork' });
       if (s && !seen.has(s.id)) { seen.add(s.id); out.sessions.push(s); }
     }
@@ -163,34 +186,82 @@ function msgText(m) {
   return '';
 }
 
-export function parseDesktopStateFile(file) {
+// Verified on macOS (Claude Desktop, September 2026). local-agent-mode-sessions/<account>/<org>/ holds Cowork
+// sessions only; Chat conversations are not written there. Per session:
+//   local_<uuid>.json   metadata, no messages: sessionId ("local_<uuid>"), cliSessionId, title, initialMessage,
+//                       createdAt / lastActivityAt (epoch ms), model, cwd, isArchived, processName, vmProcessName
+//   local_<uuid>/       working dir: audit.jsonl, outputs/, uploads/, and a private Claude Code config dir with the
+//                       transcript at .claude/projects/<encoded-cwd>/<cliSessionId>.jsonl (sub-agents under
+//                       <cliSessionId>/subagents/agent-*.jsonl)
+// audit.jsonl is the SDK message stream: type user|assistant|system|result|rate_limit_event, session_id,
+// parent_tool_use_id (set on sub-agent records), isReplay, isSynthetic, message.content[] with tool_use blocks (tool name in .name).
+// Never read from the state file: systemPrompt, accountName, emailAddress.
+function coworkTranscript(workDir, cliSessionId) {
+  if (!cliSessionId) return null;
+  const projects = join(workDir, '.claude', 'projects');
+  for (const f of walk(projects, { maxDepth: 1, filter: (p, n) => n === cliSessionId + '.jsonl' })) return f;
+  return null;
+}
+
+function readAudit(file) {
+  // isReplay marks the echo of a record already written; isSynthetic marks skill text injected as a user turn.
+  const recs = readJsonl(file).filter((r) => r && r.message && !r.parent_tool_use_id && !r.isReplay && !r.isSynthetic);
+  const users = recs.filter((r) => r.type === 'user'), assistants = recs.filter((r) => r.type === 'assistant');
+  const prompts = users.filter((r) => !(Array.isArray(r.message.content) && r.message.content.every((b) => b.type === 'tool_result')))
+    .map((r) => textOf(r.message.content)).filter((t) => !isHarnessOnly(t)).map((t) => cleanPrompt(t)).filter((t) => !isHarnessOnly(t));
+  const tools = assistants.flatMap((r) => (Array.isArray(r.message.content) ? r.message.content : []).filter((b) => b.type === 'tool_use').map((b) => b.name));
+  const times = recs.map((r) => r.timestamp).filter(Boolean).sort();
+  return { prompts, tools, ...skillsAndAgents(users, assistants), assistants: uniq(assistants.map((r) => r.message.id || r.uuid)).length, model: mostCommon(assistants.map((r) => r.message.model)), last: times[times.length - 1] || null };
+}
+
+export function parseDesktopStateFile(file, consumed = new Set()) {
   const obj = readJson(file, null);
   if (!obj || typeof obj !== 'object') return null;
-  const id = pickKey(obj, ['id', 'uuid', 'sessionId', 'session_id']) || basename(file, '.json').replace(/^local_/, '');
+  const id = pickKey(obj, ['sessionId', 'id', 'uuid', 'session_id']) || basename(file, '.json');
   const times = fileTimes(file);
   const created = pickKey(obj, ['createdAt', 'created_at', 'startedAt', 'started_at', 'timestamp', 'created']);
-  const updated = pickKey(obj, ['updatedAt', 'updated_at', 'lastActivityAt', 'endedAt', 'ended_at', 'modified']);
+  const updated = pickKey(obj, ['lastActivityAt', 'updatedAt', 'updated_at', 'endedAt', 'ended_at', 'modified']);
   const started_at = toISO(typeof created === 'number' ? fromEpoch(created) : created) || toISO(times?.birthtime) || toISO(times?.mtime);
-  const ended_at = toISO(typeof updated === 'number' ? fromEpoch(updated) : updated) || toISO(times?.mtime) || started_at;
+  let ended_at = toISO(typeof updated === 'number' ? fromEpoch(updated) : updated) || toISO(times?.mtime) || started_at;
   const kindStr = JSON.stringify([pickKey(obj, ['mode', 'type', 'sessionType', 'session_type', 'kind', 'surface', 'product']), obj.isCowork, obj.cowork]).toLowerCase();
-  const isCowork = /cowork|agent|task/.test(kindStr) && !/chat/.test(kindStr);
+  // Real Cowork state files carry no mode key; the agent-process keys are the tell.
+  const isCowork = !/chat/.test(kindStr) && (/cowork|agent|task/.test(kindStr) || obj.cliSessionId != null || obj.vmProcessName != null || obj.processName != null);
+  const scheduled = obj.scheduledTaskId != null || /schedul|routine|recurring/.test(JSON.stringify([obj.scheduled, obj.schedule, obj.trigger, obj.source, obj.origin]).toLowerCase());
+  const title = pickKey(obj, ['title', 'name', 'summary', 'subject']);
+  const source = isCowork ? 'claude-cowork' : 'claude-desktop', surface = isCowork ? 'cowork' : 'desktop';
+  const sid = 's_claude-desktop_' + String(id).replace(/^local_/, '');
+  const workDir = [file.replace(/\.json$/i, ''), join(dirname(file), String(id))].find((d) => existsSync(d)) || file.replace(/\.json$/i, '');
+
+  // 1. Transcript in the working directory (Claude Code shape): best source for messages, tools, skills, agents.
+  const transcript = coworkTranscript(workDir, obj.cliSessionId);
+  if (transcript) {
+    const s = parseClaudeCodeTranscript(transcript, { source, surface, scheduled });
+    if (s) {
+      consumed.add(transcript);
+      if (new Date(s.ended_at) > new Date(ended_at)) ended_at = s.ended_at;
+      return { ...s, id: sid, title: trim(title, 200) || s.title, started_at: started_at || s.started_at, ended_at, duration_minutes: minutesBetween(started_at || s.started_at, ended_at), model: s.model || obj.model || null };
+    }
+  }
+
+  // 2. No transcript (cleaned up, or an older build): state-file fields plus audit.jsonl.
+  const auditFile = join(workDir, 'audit.jsonl');
+  const audit = existsSync(auditFile) ? readAudit(auditFile) : { prompts: [], tools: [], skills: [], agents: [], assistants: 0, model: null, last: null };
+  if (!audit.tools.length && existsSync(auditFile)) for (const r of readJsonl(auditFile)) { const t = pickKey(r, ['tool', 'toolName', 'tool_name', 'name']); if (typeof t === 'string' && /tool|invoc|call/i.test(JSON.stringify(r).slice(0, 200))) audit.tools.push(t); }
   const msgs = findMessages(obj) || [];
   const humans = msgs.filter((m) => /user|human/.test(roleOf(m)));
   const assistants = msgs.filter((m) => /assistant|ai|claude|model/.test(roleOf(m)));
-  const texts = humans.map((m) => cleanPrompt(msgText(m))).filter((t) => !isHarnessOnly(t));
-  const title = pickKey(obj, ['title', 'name', 'summary', 'subject']);
+  let texts = humans.map((m) => cleanPrompt(msgText(m))).filter((t) => !isHarnessOnly(t));
+  if (!texts.length) texts = audit.prompts;
+  const initial = cleanPrompt(typeof obj.initialMessage === 'string' ? obj.initialMessage : '');
+  if (!texts.length && initial && !isHarnessOnly(initial)) texts = [initial];
   const first = texts[0] || (title ? String(title) : '');
   if (!first) return null;
-  const toolNames = [];
-  const audit = join(dirname(file), String(id), 'audit.jsonl');
-  if (existsSync(audit)) for (const r of readJsonl(audit)) { const t = pickKey(r, ['tool', 'toolName', 'tool_name', 'name']); if (typeof t === 'string' && /tool|invoc|call/i.test(JSON.stringify(r).slice(0, 200))) toolNames.push(t); }
-  const scheduled = /schedul|routine|recurring/.test(JSON.stringify([obj.scheduled, obj.schedule, obj.trigger, obj.source, obj.origin]).toLowerCase());
+  if (audit.last && new Date(audit.last) > new Date(ended_at)) ended_at = toISO(audit.last);
   return baseSession({
-    id: 's_claude-desktop_' + id, source: isCowork ? 'claude-cowork' : 'claude-desktop', surface: isCowork ? 'cowork' : 'desktop',
-    started_at, ended_at, title, first_message: first,
-    context: [texts[1] ? 'Next: ' + trim(texts[1], 300) : null, toolNames.length ? 'Tools: ' + uniq(toolNames).slice(0, 12).join(', ') : null].filter(Boolean).join(' | '),
-    messages_user: texts.length || (title ? 1 : 0), messages_assistant: assistants.length, tools: toolNames,
-    model: pickKey(obj, ['model', 'modelId', 'model_id']), mode: scheduled ? 'routine' : (isCowork ? 'agentic' : 'chat'), trigger: scheduled ? 'scheduled' : 'human',
+    id: sid, source, surface, started_at, ended_at, title, first_message: first,
+    context: [texts[1] ? 'Next: ' + trim(texts[1], 300) : null, audit.tools.length ? 'Tools: ' + uniq(audit.tools).slice(0, 12).join(', ') : null, audit.skills.length ? 'Skills: ' + audit.skills.join(', ') : null, audit.agents.length ? 'Agents: ' + audit.agents.join(', ') : null].filter(Boolean).join(' | '),
+    messages_user: texts.length || (title ? 1 : 0), messages_assistant: assistants.length || audit.assistants, tools: audit.tools, skills: audit.skills, agents: audit.agents,
+    model: pickKey(obj, ['model', 'modelId', 'model_id']) || audit.model, mode: scheduled ? 'routine' : (isCowork ? 'agentic' : 'chat'), trigger: scheduled ? 'scheduled' : 'human',
     project: pickKey(obj, ['cwd', 'folder', 'workingDirectory', 'projectId']),
   });
 }
@@ -201,9 +272,11 @@ export function codex({ codexHome } = {}) {
   const dirs = [join(root, 'sessions'), join(root, 'archived_sessions')].filter((d) => existsSync(d));
   const out = { source: 'codex', found: dirs.length > 0, path: dirs[0] || join(root, 'sessions'), sessions: [], notes: [] };
   const seen = new Set();
+  // session_index.jsonl: one { id, thread_name, updated_at } line per thread. Only source of a title.
+  const names = new Map(readJsonl(join(root, 'session_index.jsonl')).filter((r) => r && r.id && r.thread_name).map((r) => [String(r.id), String(r.thread_name)]));
   for (const dir of dirs) for (const file of walk(dir, { maxDepth: 6, filter: (p, n) => n.endsWith('.jsonl') })) {
     const s = parseCodexRollout(file);
-    if (s && !seen.has(s.id)) { seen.add(s.id); out.sessions.push(s); }
+    if (s && !seen.has(s.id)) { seen.add(s.id); if (!s.title) s.title = trim(names.get(s.id.replace(/^s_codex_/, '')), 200) || null; out.sessions.push(s); }
   }
   return out;
 }
@@ -214,19 +287,36 @@ export function parseCodexRollout(file) {
   const meta = recs.find((r) => r.type === 'session_meta')?.payload || {};
   const id = meta.id || meta.session_id || basename(file, '.jsonl').replace(/^rollout-/, '');
   const times = recs.map((r) => r.timestamp).filter(Boolean).sort();
-  const userEvents = recs.filter((r) => r.type === 'event_msg' && r.payload && r.payload.type === 'user_message').map((r) => r.payload.message);
-  const userItems = recs.filter((r) => r.type === 'response_item' && r.payload && r.payload.type === 'message' && r.payload.role === 'user')
-    .map((r) => (Array.isArray(r.payload.content) ? r.payload.content.map((c) => c.text || '').join('\n') : String(r.payload.content || '')));
+  // The person's prompt, by build: CLI writes event_msg/user_message { message }; the desktop app (0.155, Sept 2026)
+  // writes event_msg/item_completed { item: { type: 'UserMessage', content: [{ type: 'text', text }] } } and no user_message.
+  const items = recs.filter((r) => r.type === 'event_msg' && r.payload && r.payload.type === 'item_completed' && r.payload.item).map((r) => r.payload.item);
+  const itemText = (it) => (Array.isArray(it.content) ? it.content.map((c) => (c && typeof c.text === 'string' ? c.text : '')).filter(Boolean).join('\n') : String(it.content || ''));
+  const userEvents = [
+    ...recs.filter((r) => r.type === 'event_msg' && r.payload && r.payload.type === 'user_message').map((r) => r.payload.message),
+    ...items.filter((it) => it.type === 'UserMessage').map(itemText),
+  ];
+  // Fallback: user-role response_items. Injected context shares the role, one content item each (<environment_context>,
+  // <recommended_plugins>, ...), so judge items one by one; content_item_kinds names the real one 'user.text' when present.
+  const userItems = recs.filter((r) => r.type === 'response_item' && r.payload && r.payload.type === 'message' && r.payload.role === 'user').map((r) => {
+    const kinds = r.payload.internal_chat_message_metadata_passthrough?.content_item_kinds;
+    const parts = Array.isArray(r.payload.content) ? r.payload.content.map((c) => c.text || '') : [String(r.payload.content || '')];
+    return parts.filter((t, i) => (Array.isArray(kinds) && kinds[i] ? kinds[i] === 'user.text' : !/^\s*<[a-z_][\w -]*>/i.test(t))).join('\n');
+  });
   const prompts = (userEvents.length ? userEvents : userItems).map((t) => cleanPrompt(t)).filter((t) => !isHarnessOnly(t) && !/^<(environment_context|user_instructions|permissions instructions|turn_aborted)/i.test(t) && !/^# AGENTS\.md/i.test(t));
   if (!prompts.length) return null;
-  const assistants = recs.filter((r) => (r.type === 'event_msg' && r.payload?.type === 'agent_message') || (r.type === 'response_item' && r.payload?.type === 'message' && r.payload.role === 'assistant'));
-  const tools = recs.filter((r) => r.type === 'response_item' && r.payload && /^(function_call|custom_tool_call|local_shell_call|mcp_tool_call|web_search_call)$/.test(r.payload.type))
-    .map((r) => r.payload.name || r.payload.type.replace(/_call$/, ''));
-  const connectors = uniq(recs.filter((r) => r.type === 'response_item' && r.payload?.type === 'mcp_tool_call').map((r) => r.payload.server).filter(Boolean));
+  const assistantItems = recs.filter((r) => r.type === 'response_item' && r.payload?.type === 'message' && r.payload.role === 'assistant');
+  const assistants = assistantItems.length ? assistantItems : [...recs.filter((r) => r.type === 'event_msg' && r.payload?.type === 'agent_message'), ...items.filter((it) => it.type === 'AgentMessage')];
+  // Desktop builds route shell and MCP calls through one custom_tool_call named "exec"; the MCP server and tool only
+  // show up on the item_completed McpToolCall item { server, tool }.
+  const mcpItems = items.filter((it) => it.type === 'McpToolCall' && it.server);
+  const tools = [...recs.filter((r) => r.type === 'response_item' && r.payload && /^(function_call|custom_tool_call|local_shell_call|mcp_tool_call|web_search_call)$/.test(r.payload.type))
+    .map((r) => r.payload.name || r.payload.type.replace(/_call$/, '')), ...mcpItems.map((it) => `mcp__${it.server}__${it.tool || 'call'}`)];
+  const connectors = uniq([...recs.filter((r) => r.type === 'response_item' && r.payload?.type === 'mcp_tool_call').map((r) => r.payload.server), ...mcpItems.map((it) => it.server)].filter(Boolean));
   const model = mostCommon(recs.filter((r) => r.type === 'turn_context').map((r) => r.payload?.model)) || meta.model || null;
   const cwd = meta.cwd || recs.find((r) => r.type === 'turn_context')?.payload?.cwd || null;
+  // originator wins over source: the desktop app reports source "vscode" with originator "Codex Desktop" / "codex_work_desktop".
   const originator = String(meta.originator || meta.source || '').toLowerCase();
-  const surface = /vscode|ide/.test(originator) ? 'ide' : /app|desktop|gui/.test(originator) ? 'desktop' : 'cli';
+  const surface = /app|desktop|gui/.test(originator) ? 'desktop' : /vscode|ide/.test(originator) ? 'ide' : 'cli';
   return baseSession({
     id: 's_codex_' + id, source: 'codex', surface, started_at: toISO(meta.timestamp || times[0]), ended_at: toISO(times[times.length - 1] || meta.timestamp),
     title: null, first_message: prompts[0], context: [prompts[1] ? 'Next: ' + trim(prompts[1], 300) : null, tools.length ? 'Tools: ' + uniq(tools).slice(0, 12).join(', ') : null].filter(Boolean).join(' | '),
@@ -414,9 +504,13 @@ export function chatgptDesktop() {
         const idb = join(root, 'IndexedDB');
         if (existsSync(idb)) for (const f of walk(idb, { maxDepth: 3 })) { const t = fileTimes(f); if (t && t.mtime > last) last = t.mtime; }
       }
+      if (!last) { // Merged ChatGPT/Codex app (bundle com.openai.codex): a plain Chromium profile, no conversation cache.
+        // stat only, never opened: these are touched whenever the app runs.
+        for (const f of ['Local State', join('Default', 'Preferences'), join('Default', 'Network Persistent State'), 'Default']) { const t = fileTimes(join(root, f)); if (t && t.mtime > last) last = t.mtime; }
+      }
     } catch { /* unreadable */ }
-    out.signal = { installed: true, cached_conversations: files || null, last_activity: last ? toISO(last) : null };
-    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} cached conversation file(s)` : ''}${last ? `, last active ${toISO(last).slice(0, 10)}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
+    out.signal = { installed: true, layout: bundles ? 'conversation-cache' : existsSync(join(root, 'IndexedDB')) ? 'indexeddb' : 'chromium-profile', cached_conversations: files || null, last_activity: last ? toISO(last) : null };
+    out.notes.push(`ChatGPT desktop app found${files ? ` with ${files} cached conversation file(s)` : ''}${last ? `, last active ${localDate(toISO(last))}` : ''}. Its cache is encrypted or partial, so request the export for content.`);
     break;
   }
   return out;

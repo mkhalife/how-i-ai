@@ -6,20 +6,51 @@ that is `%USERPROFILE%`. All parsers are in `scripts/lib/sources.mjs`.
 | Source | Surface | Location | Status |
 |---|---|---|---|
 | `claude-code` | cli, ide, desktop, cloud (teleported) | `~/.claude/projects/<encoded-cwd>/<session>.jsonl` (or `$CLAUDE_CONFIG_DIR/projects`) | on disk, parsed |
-| `claude-desktop` | desktop chat | macOS `~/Library/Application Support/Claude/local-agent-mode-sessions/`; Windows `%LOCALAPPDATA%\Claude\local-agent-mode-sessions\` (older builds `%APPDATA%`); Linux `~/.config/Claude/`. Also `Claude-3p` for managed installs | on disk, tolerant parser |
-| `claude-cowork` | cowork | same folder; `local_<id>.json` state files plus per-session working dirs with `audit.jsonl` and transcripts | on disk, tolerant parser |
+| `claude-desktop` | desktop chat | not on disk (verified macOS, September 2026): the desktop app keeps Chat conversations server-side, so they arrive with the claude.ai export. The tolerant state-file parser still accepts an inline-`messages` shape in case a build writes one | export only |
+| `claude-cowork` | cowork | macOS `~/Library/Application Support/Claude/local-agent-mode-sessions/<account>/<org>/`; Windows `%LOCALAPPDATA%\Claude\local-agent-mode-sessions\` (older builds `%APPDATA%`); Linux `~/.config/Claude/`. Also `Claude-3p` for managed installs. `local_<uuid>.json` state file plus working dir `local_<uuid>/` (layout below) | on disk, verified on macOS |
 | `claude-code` cloud | cloud | not on disk. From inside a claude.ai/code session, the Claude Code Remote `list_sessions` tool lists them; save the output to `~/how-i-ai/cloud-sessions.json` | title and timestamps only |
 | `codex` | cli, ide, desktop | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` and `~/.codex/archived_sessions/` (or `$CODEX_HOME`) | on disk, parsed |
 | `codex` cloud | cloud | `codex cloud list --json` when the CLI is installed and signed in | title and summary only |
 | `chatgpt-export` | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
 | `claude-export` | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | parsed from `conversations.json` |
 | `gemini-cli` | cli | `~/.gemini/tmp/<project>/chats/` | optional, tolerant |
-| `chatgpt-desktop` | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*`; Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\` | installed, cached conversation count, last activity. No message bodies |
+| `chatgpt-desktop` | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*` (classic app), or `~/Library/Application Support/Codex/` (merged app, Chromium profile only: no cached count, last activity from file times); Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\` | installed, cached conversation count, last activity. No message bodies |
 
 Not covered, on purpose: Cursor and Copilot (different product category), and any route
 that scrapes a logged-in web session with cookies or tokens. Those unofficial routes
 exist but they are against the products' terms and break without notice; the exports are
 the supported path.
+
+## Claude Desktop on disk (verified on macOS, September 2026)
+
+```
+local-agent-mode-sessions/<account-uuid>/<org-uuid>/
+  local_<uuid>.json            state file, metadata only (no messages)
+  local_<uuid>/                working dir
+    audit.jsonl                SDK message stream, HMAC-signed lines
+    outputs/  uploads/
+    .claude/projects/<encoded-cwd>/<cliSessionId>.jsonl          transcript, Claude Code shape, entrypoint "local-agent"
+    .claude/projects/<encoded-cwd>/<cliSessionId>/subagents/     agent-*.jsonl, ignored
+  scheduled-tasks.json  cowork-*-cache.json  rpm/                not sessions
+claude-code-sessions/<account-uuid>/<org-uuid>/
+  local_<uuid>.json            Code-tab state file; transcript is ~/.claude/projects/**/<cliSessionId>.jsonl
+  deleted_<uuid>  archived-sessions.idx  backlog  scheduled-tasks.json
+```
+
+- State file keys used: `sessionId` (`local_<uuid>`), `cliSessionId`, `title`, `initialMessage`, `createdAt` and
+  `lastActivityAt` (epoch ms), `model`, `cwd`, `scheduledTaskId`. There is no Chat/Cowork key: everything in
+  `local-agent-mode-sessions` is Cowork. Never read: `systemPrompt`, `accountName`, `emailAddress`.
+- The state file and the transcript describe the same session. The parser joins them on `cliSessionId` and
+  emits one record; a transcript whose state file is gone is still picked up on its own.
+- `audit.jsonl` records: `type` is `user`, `assistant`, `system`, `result`, or `rate_limit_event`, with
+  `session_id`, `parent_tool_use_id` (set on sub-agent traffic), `isReplay`, `isSynthetic`, `message`. A tool
+  invocation is an `assistant` record whose `message.content[]` has a `tool_use` block; the tool name is
+  `.name`. Used only when the transcript has been cleaned up.
+- Code-tab sessions are counted once, from `~/.claude/projects`. Their state files are consulted for
+  `scheduledTaskId` only.
+- Desktop scheduled tasks run with `origin.kind: "human"`. The tells are the `<scheduled-task name file>`
+  wrapper around the first message and `scheduledTaskId` in the state file; both set `trigger: scheduled`,
+  `mode: routine`.
 
 ## Why ChatGPT is export-only (researched September 2026)
 
@@ -59,19 +90,23 @@ conversation count, last activity) and asks for the export for content.
 | Field | Claude Code | Claude Desktop | Codex | ChatGPT export | Claude export |
 |---|---|---|---|---|---|
 | id | `sessionId` | file name | `session_meta.payload.id` | `id` | `uuid` |
-| started / ended | first and last `timestamp` | `createdAt`/`updatedAt` or file times | line timestamps | `create_time`/`update_time` | `created_at`/`updated_at` |
-| first message | first `type:user` with human text, harness tags stripped | first user-role message | first `user_message` event (falls back to `response_item`) | first visible `author.role=user` node | first `sender=human` |
-| context | second message, tools, branch | second message, audit tools | second message, tools | second message, custom GPT, tools | second message, tools |
+| started / ended | first and last `timestamp` | `createdAt`/`lastActivityAt` or file times | line timestamps | `create_time`/`update_time` | `created_at`/`updated_at` |
+| first message | first `type:user` with human text, harness tags stripped | transcript's first human turn, else `audit.jsonl`, else `initialMessage` | first `user_message` event or `item_completed` `UserMessage` item (falls back to `response_item` items of kind `user.text`) | first visible `author.role=user` node | first `sender=human` |
+| context | second message, tools, branch | second message, tools, skills, agents | second message, tools | second message, custom GPT, tools | second message, tools |
 | counts | human turns, distinct assistant messages | user and assistant entries | user events, assistant messages | visible user and assistant nodes | human and assistant |
-| tools / connectors | `tool_use` names; `mcp__<server>__` → connector | `audit.jsonl` tool names | `function_call` names; MCP server | tool-author names, `code` parts → python | `tool_use` blocks |
-| skills / agents | `Skill` tool `input.skill`; `/slash` commands that are not built-ins; `Agent` tool `input.subagent_type` (custom = not a built-in type) | n/a | n/a | n/a | n/a |
+| tools / connectors | `tool_use` names; `mcp__<server>__` → connector | same, from the transcript or `audit.jsonl` `tool_use` blocks | `function_call` / `custom_tool_call` names; MCP server from `mcp_tool_call` or the `McpToolCall` item | tool-author names, `code` parts → python | `tool_use` blocks |
+| skills / agents | `Skill` tool `input.skill`; `/slash` commands that are not built-ins; `Agent` tool `input.subagent_type` (omitted = `general-purpose`; custom = not a built-in type) | same | n/a | n/a | n/a |
 | model | most common `message.model` | if present | `turn_context.model` | `model_slug` | if present |
-| mode / trigger | `origin.kind` (human vs routine); tool use → agentic | scheduled flag if present | tools → agentic | chat | chat |
-| surface | `entrypoint` (cli, desktop, ide, remote → cloud) | desktop or cowork | `originator` | export or gpt | export |
+| mode / trigger | `origin.kind` (human vs routine), `<scheduled-task>` wrapper or desktop `scheduledTaskId` → scheduled; tool use → agentic | `scheduledTaskId` | tools → agentic | chat | chat |
+| surface | `entrypoint` (`cli`, `claude-desktop` → desktop, `sdk-cli` → sdk, `local-agent` → cowork, ide, remote → cloud) | cowork | `originator` | export or gpt | export |
 
 Harness noise is removed before anything is counted: `<system-reminder>`, slash
 commands, pasted-content wrappers, tool results, compaction summaries, sub-agent
-transcripts (`agent-*.jsonl`, `isSidechain`).
+transcripts (`agent-*.jsonl`, `isSidechain`), and user-role records that are not the
+person: `<task-notification>` (`origin.kind: task-notification`), `<ci-monitor-event>`,
+`<cross-session-message>`, `<bash-input>`/`<bash-stdout>`. A forked session's file
+replays its parent's records first, so the session id is the last `sessionId` in the
+file, not the first.
 
 ## When a format changes
 
