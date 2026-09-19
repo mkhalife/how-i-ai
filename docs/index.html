@@ -49,8 +49,8 @@
     </div>
     <div class="card">
       <h3>Optional first: Claude Code on the web</h3>
-      <p>Cloud sessions are not on your disk either. Paste this prompt into a session on claude.ai/code and Claude lists them into <code>cloud-sessions.json</code>. Save it to <code>how-i-ai/inbox</code> in your home folder, then run Claude Code or Cowork below.</p>
-      <div class="row"><button class="btn primary" data-copy="claude-cloud">Copy prompt</button></div>
+      <p>Cloud sessions are not on your disk either. The button opens a new session on claude.ai/code with the prompt filled in, and Claude lists them into <code>cloud-sessions.json</code>. Save it to <code>how-i-ai/inbox</code> in your home folder, then run Claude Code or Cowork below.</p>
+      <div class="row"><a class="btn primary" id="btn-claude-cloud" href="#" target="_blank" rel="noopener">Open in Claude Code on the web</a><button class="btn" data-copy="claude-cloud">Copy prompt</button></div>
     </div>
     <div class="card">
       <h3>Claude Code</h3>
@@ -69,8 +69,8 @@
     </div>
     <div class="card">
       <h3>ChatGPT desktop app</h3>
-      <p>Covers your ChatGPT conversations, which only the app itself can list, and your Codex sessions. It is run separately from the Claude one; if you use both, run both. Copy the prompt and paste it into a new task in the app.</p>
-      <div class="row"><button class="btn primary" data-copy="chatgpt-app">Copy prompt</button></div>
+      <p>Covers your ChatGPT conversations, which only the app itself can list, and your Codex sessions. It is run separately from the Claude one; if you use both, run both. The button opens a new task in the app with the prompt filled in.</p>
+      <div class="row"><a class="btn primary" id="btn-chatgpt-app" href="#">Open in the ChatGPT app</a><button class="btn" data-copy="chatgpt-app">Copy prompt</button></div>
     </div>
     <div class="card">
       <h3>ChatGPT on the web</h3>
@@ -139,6 +139,8 @@ If list_sessions is not available, say so: it only exists inside a Claude Code s
   document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);
   document.getElementById('btn-claude-chats').href = 'claude://claude.ai/new?q=' + enc(CLAUDE_CHAT_PROMPT);
   document.getElementById('btn-claude-chat').href = 'claude://claude.ai/new?q=' + enc(CHAT_PROMPT);
+  document.getElementById('btn-claude-cloud').href = 'https://claude.ai/code?q=' + enc(CLAUDE_CLOUD_PROMPT);
+  document.getElementById('btn-chatgpt-app').href = 'codex://threads/new?prompt=' + enc(CHATGPT_APP_PROMPT);
   document.getElementById('btn-chatgpt').href = 'https://chatgpt.com/?q=' + enc(CHAT_PROMPT);
   const toast = (t) => { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1400); };
   async function copy(text) { try { await navigator.clipboard.writeText(text); toast('Copied'); } catch { prompt('Copy this prompt:', text); } }

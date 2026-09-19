@@ -241,3 +241,17 @@ node scripts/how-i-ai.mjs inspect "<one file>"
 prints the key structure with no values. Adapt the matching function in
 `scripts/lib/sources.mjs`, run `bash tests/run.sh`, and open a pull request with the
 fixture updated in `tests/make-fake-home.mjs`.
+
+## Deep links that prefill a prompt (verified on macOS, September 2026)
+
+None of these send the prompt except the last one.
+
+| Surface | Link |
+|---|---|
+| Claude Code in a terminal | `claude-cli://open?q=` |
+| Cowork | `claude://cowork/new?q=` |
+| Claude chat (desktop app) | `claude://claude.ai/new?q=` |
+| Claude chat (browser) | `https://claude.ai/new?q=` |
+| Claude Code on the web | `https://claude.ai/code?q=` |
+| ChatGPT desktop app, new task | `codex://threads/new?prompt=` |
+| chatgpt.com | `https://chatgpt.com/?q=` (sends immediately) |
