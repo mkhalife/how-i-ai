@@ -107,8 +107,8 @@ contract is in `templates/README.md`.
 
 ## Verifying on a real machine
 
-The Claude Desktop and ChatGPT parsers were written without those apps present. To
-check and fix them on a machine that has them, hand an agent `HANDOFF-verify-on-machine.md`.
+The parsers are verified on macOS. The Windows paths are guesses at the same layout; to
+check and fix them, hand an agent `HANDOFF-verify-on-windows.md` on a Windows machine.
 
 ## License
 
