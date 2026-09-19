@@ -43,9 +43,13 @@ if (app === 'chatgpt') {
 const seen = new Map();
 for (const r of results) {
   r.total = r.sessions.length; r.all = r.sessions;
-  r.sessions = r.sessions.filter((s) => s.started_at && new Date(s.started_at) >= start && new Date(s.started_at) <= new Date(now.getTime() + 86400e3));
-  for (const s of r.sessions) if (!seen.has(s.id)) seen.set(s.id, s);
+  const inWindow = r.sessions.filter((s) => s.started_at && new Date(s.started_at) >= start && new Date(s.started_at) <= new Date(now.getTime() + 86400e3));
+  for (const s of inWindow) if (!seen.has(s.id)) seen.set(s.id, s);
+  // One conversation can be in two sources (an export and the listing that named it). A row counts the sessions
+  // kept, so the rows add up to the total; the source read first wins.
+  r.sessions = inWindow.filter((s) => seen.get(s.id) === s);
   r.in_window = r.sessions.length;
+  r.duplicates = inWindow.length - r.sessions.length;
 }
 const sessions = [...seen.values()].sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
 // Re-running collect (new export zips, a second pass) must not throw away judgments already merged.
@@ -79,13 +83,13 @@ for (const r of results) {
   for (const [source, c] of parts) {
     if (source !== r.source && !c.total) continue;
     const key = source === 'export' ? r.path : source;
-    const row = bySource.get(key) || { source, found: false, paths: [], total: 0, in_window: 0, notes: [] };
-    row.found = row.found || r.found; if (r.path) row.paths.push(r.path); row.total += c.total; row.in_window += c.in_window; if (source === r.source) row.notes.push(...r.notes);
+    const row = bySource.get(key) || { source, found: false, paths: [], total: 0, in_window: 0, duplicates: 0, notes: [] };
+    row.found = row.found || r.found; if (r.path) row.paths.push(r.path); row.total += c.total; row.in_window += c.in_window; if (source === r.source) { row.duplicates += r.duplicates; row.notes.push(...r.notes); }
     bySource.set(key, row);
   }
 }
-for (const want of [app === 'chatgpt' ? 'chatgpt-export' : 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, notes: [] });
-for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || (row.found && row.total ? `${row.total} on disk, none started in the last ${days} days` : (row.found && FOUND_EMPTY[row.source]) || HINTS[row.source]) || null) });
+for (const want of [app === 'chatgpt' ? 'chatgpt-export' : 'claude-export']) if (![...bySource.values()].some((r) => r.source === want)) bySource.set(want, { source: want, found: false, paths: [], total: 0, in_window: 0, duplicates: 0, notes: [] });
+for (const row of bySource.values()) table.push({ source: row.source, found: row.found, sessions_in_window: row.in_window, sessions_total: row.total, path: row.paths[0] || null, hint: row.found && row.in_window ? null : (row.notes[0] || (row.duplicates ? `${row.duplicates} in the window, every one already counted from another source` : row.found && row.total ? `${row.total} on disk, none started in the last ${days} days` : (row.found && FOUND_EMPTY[row.source]) || HINTS[row.source]) || null) });
 const signals = results.filter((r) => r.signal).map((r) => ({ source: r.source, path: r.path, ...r.signal }));
 
 const doc = {

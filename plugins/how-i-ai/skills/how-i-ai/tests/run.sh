@@ -38,6 +38,7 @@ for plat in darwin win32; do
     const d3=d.sessions.find(s=>s.id==='s_claude-desktop_d3'); if(!d3||d3.source!=='claude-cowork'||d3.messages_user!==1||!d3.first_message.startsWith('Help me plan')||!d3.tools.includes('WebSearch')||d3.tools.includes('SubagentOnlyTool')||d3.model!=='claude-sonnet-4-6'||!(d3.duration_minutes>0&&d3.duration_minutes<10)) {console.error('FAIL cowork audit-only parse',d3);process.exit(1)}
     if(JSON.stringify(d).includes('never read this')||JSON.stringify(d).includes('test.person@example.com')) {console.error('FAIL read private state-file fields');process.exit(1)}
     const tb=Object.fromEntries(d.sources.map(r=>[r.source,r.sessions_in_window])); if(tb['claude-cowork']!==2||tb['claude-desktop']!==1) {console.error('FAIL source table split',tb);process.exit(1)}
+    if(tb['claude-chat']!==1||d.sources.reduce((a,r)=>a+r.sessions_in_window,0)!==d.sessions.length) {console.error('FAIL source rows must count sessions kept after dedupe',tb);process.exit(1)}
     if(d.sessions.some(s=>s.id.endsWith('aaaa-5'))) {console.error('FAIL window filter');process.exit(1)}
     console.log('   claude sources ok:',JSON.stringify(by));"
   node scripts/config.mjs --title "Senior Product Designer" --function Design >/dev/null
@@ -73,6 +74,7 @@ for plat in darwin win32; do
     const app1=d.sessions.find(s=>s.id==='s_chatgpt_app1'); if(!app1||app1.source!=='chatgpt-app'||app1.messages_user!==2||!app1.context.includes('Make day two lighter')) {console.error('FAIL chatgpt-app parse',app1);process.exit(1)}
     const app2=d.sessions.find(s=>s.id==='s_chatgpt_app2'); if(!app2||app2.messages_user!==null||app2.messages_assistant!==null||app2.first_message!=='Long thread, opening not reached') {console.error('FAIL unknown counts must stay null and the title stands in for the opening',app2);process.exit(1)}
     if(d.sessions.find(s=>s.id==='s_chatgpt_g1').source!=='chatgpt-export') {console.error('FAIL export should win over the app listing for the same conversation');process.exit(1)}
+    const tb=Object.fromEntries(d.sources.map(r=>[r.source,r.sessions_in_window])); if(tb['chatgpt-app']!==2||d.sources.reduce((a,r)=>a+r.sessions_in_window,0)!==d.sessions.length) {console.error('FAIL source rows must count sessions kept after dedupe',tb);process.exit(1)}
     const sig=d.signals.find(x=>x.source==='chatgpt-desktop'); if(!sig||!sig.installed){console.error('FAIL chatgpt desktop signal',d.signals);process.exit(1)}
     console.log('   chatgpt sources ok:',JSON.stringify(by));"
   node scripts/how-i-ai.mjs --app chatgpt config --title "Senior Product Designer" --function Design >/dev/null
