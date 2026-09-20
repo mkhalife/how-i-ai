@@ -85,7 +85,37 @@ for plat in darwin win32; do
   node -e "const a=require('$H/how-i-ai/share-rows.json'),b=require('$H/how-i-ai-chatgpt/share-rows.json'); if(a.participant.participant_id===b.participant.participant_id||b.sessions.some(r=>/^claude/.test(r.source))||a.sessions.some(r=>/^(codex|chatgpt)/.test(r.source))){console.error('FAIL the two entry points must not share an id or sessions');process.exit(1)}; console.log('   two entry points: separate ids, no shared sessions (',a.sessions.length,'+',b.sessions.length,'rows )')"
   node scripts/aggregate.mjs --json "$H/how-i-ai/share-rows.json" --team "Test team" --out "$H/how-i-ai/aggregate.json" | sed 's/^/   /'
   for t in aggregate-boardroom aggregate-exhibit; do [ -f templates/$t.html ] && node scripts/render.mjs --template templates/$t.html --data "$H/how-i-ai/aggregate.json" --out "$H/how-i-ai/$t.html" | sed 's/^/   /' || true; done
+  # gather: a valid chat listing arrives in Downloads under a browser's " (1)" name; an invalid listing, an unrelated
+  # file and a valid but older cloud list must stay where they are.
+  echo "== $plat: gather"; D="$H/Downloads"; mkdir -p "$D"
+  echo '{"source":"claude-cloud","data":[]}' > "$D/cloud-sessions.json"; touch -t 202001010000 "$D/cloud-sessions.json"
+  YESTERDAY=$(node -e "console.log(new Date(Date.now()-86400e3).toISOString())")
+  ( sleep 1
+    echo '{"source":"claude-chat","chats":"not a list"}' > "$D/claude-chat-threads (2).json"
+    echo '{"unrelated":true}' > "$D/notes.json"
+    echo '{"source":"claude-chat","exported_at":"'"$YESTERDAY"'","chats":[{"url":"https://claude.ai/chat/gather-1","updated_at":"'"$YESTERDAY"'","title":"Gathered chat","summary":"A chat listed for the gather test."}]}' > "$D/claude-chat-threads (1).json" ) &
+  node scripts/how-i-ai.mjs gather --no-open --timeout 5 > "$T/gather-$plat.txt"; wait; sed 's/^/   /' "$T/gather-$plat.txt"
+  grep -q 'Arrived: claude-chat-threads.json. Not arrived: cloud-sessions.json.' "$T/gather-$plat.txt" || { echo 'FAIL gather summary'; exit 1; }
+  grep -q 'gather --chatgpt' "$T/gather-$plat.txt" || { echo 'FAIL gather should point at the ChatGPT run when the app is installed'; exit 1; }
+  if grep -q 'notes.json' "$T/gather-$plat.txt"; then echo 'FAIL gather reported an unrelated file'; exit 1; fi
+  [ ! -e "$D/claude-chat-threads (1).json" ] && grep -q 'gather-1' "$H/how-i-ai/inbox/claude-chat-threads.json" || { echo 'FAIL valid listing not moved to the inbox under its canonical name'; exit 1; }
+  grep -q 'not a list' "$D/claude-chat-threads (2).json" && grep -q unrelated "$D/notes.json" && [ -e "$D/cloud-sessions.json" ] || { echo 'FAIL gather touched a file it should have left'; exit 1; }
+  grep -q session_cloud1 "$H/how-i-ai/inbox/cloud-sessions.json" || { echo 'FAIL an older cloud list replaced the inbox copy'; exit 1; }
+  if node scripts/how-i-ai.mjs --app chatgpt gather --no-open --timeout 0 >/dev/null 2>&1; then echo 'FAIL gather must refuse the ChatGPT entry point'; exit 1; fi
+  node scripts/collect.mjs --no-codex-cloud --days 30 | grep '^claude-chat' | sed 's/^/   /'
+  node -e "
+    const d=require('$H/how-i-ai/sessions.json'); const g=d.sessions.find(s=>s.id==='s_claude-export_gather-1');
+    if(!g||g.source!=='claude-chat'||!d.sources.some(r=>r.source==='claude-chat'&&r.found&&r.sessions_in_window===1)) {console.error('FAIL collect should read the gathered listing',g);process.exit(1)}
+    if(d.sessions.some(s=>s.id==='s_claude-export_0b5f7c1e-3d2a-4e61-9a77-5c1d2e3f4a5b')) {console.error('FAIL the older listing should have been replaced');process.exit(1)}
+    console.log('   gathered listing collected')"
 done
+node tests/check-prompts.mjs
+# gather in a shell with no display and no Downloads (a Cowork VM): print the links and return at once.
+C="$T/cowork"; mkdir -p "$C"
+env -u DISPLAY -u WAYLAND_DISPLAY HOW_I_AI_HOME_OVERRIDE="$C" HOW_I_AI_PLATFORM_OVERRIDE=linux CLAUDE_CONFIG_DIR="$C/.claude" node scripts/how-i-ai.mjs gather --timeout 30 > "$T/gather-cowork.txt" &
+GP=$!; sleep 5; if kill -0 $GP 2>/dev/null; then kill $GP; echo 'FAIL gather waited in a shell that cannot see Downloads'; exit 1; fi
+[ "$(grep -c '^claude://claude.ai/new?q=\|^https://claude.ai/code?q=' "$T/gather-cowork.txt")" = 2 ] && grep -q 'cannot see your Downloads' "$T/gather-cowork.txt" || { echo 'FAIL gather should print both links and say why it is not waiting'; cat "$T/gather-cowork.txt"; exit 1; }
+echo "== linux, no display: gather printed both links and did not wait"
 # Merged ChatGPT/Codex macOS app (bundle com.openai.codex): Chromium profile only, no conversation cache.
 M="$T/darwin-merged"; mkdir -p "$M/Library/Application Support/Codex/Default"; echo '{}' > "$M/Library/Application Support/Codex/Local State"
 # Its thread catalog (sqlite) lists ChatGPT conversations by title; only the count and last update may be read.

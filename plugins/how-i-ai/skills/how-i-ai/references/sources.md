@@ -12,12 +12,12 @@ parsers are in `scripts/lib/sources.mjs`.
 | `claude-code` | claude | cli, ide, desktop, cloud (teleported) | `~/.claude/projects/<encoded-cwd>/<session>.jsonl` (or `$CLAUDE_CONFIG_DIR/projects`) | on disk, parsed |
 | `claude-desktop` | claude | desktop chat | not on disk (verified macOS, September 2026): the desktop app keeps Chat conversations server-side, so they arrive with `claude-chat-threads.json` (or the optional claude.ai export). The tolerant state-file parser still accepts an inline-`messages` shape in case a build writes one | listing file, or optional export |
 | `claude-cowork` | claude | cowork | macOS `~/Library/Application Support/Claude/local-agent-mode-sessions/<account>/<org>/`; Windows `%LOCALAPPDATA%\Claude\local-agent-mode-sessions\` (older builds `%APPDATA%`); Linux `~/.config/Claude/`. Also `Claude-3p` for managed installs. `local_<uuid>.json` state file plus working dir `local_<uuid>/` (layout below) | on disk, verified on macOS |
-| `claude-code` cloud | claude | cloud | not on disk. `~/how-i-ai/inbox/cloud-sessions.json` (the working folder is also checked, `--cloud-sessions` overrides), written by Claude inside a claude.ai/code session from the Claude Code Remote `list_sessions` tool (`PROMPT-claude-cloud.md`) and saved there by the person | normal route: title, timestamps, model, status summary |
+| `claude-code` cloud | claude | cloud | not on disk. `~/how-i-ai/inbox/cloud-sessions.json` (the working folder is also checked, `--cloud-sessions` overrides), written by Claude inside a claude.ai/code session from the Claude Code Remote `list_sessions` tool (`PROMPT-claude-cloud.md`) and moved there from Downloads by `gather` (or saved there by the person) | normal route: title, timestamps, model, status summary |
 | `codex` | chatgpt | cli, ide, desktop | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` and `~/.codex/archived_sessions/` (or `$CODEX_HOME`) | on disk, parsed |
 | `codex` cloud | chatgpt | cloud | `codex cloud list --json` (`{tasks[], cursor}`). The binary is looked for on PATH, then inside the ChatGPT desktop app: macOS `ChatGPT.app/Contents/Resources/codex` (verified), Windows `%LOCALAPPDATA%\Programs\ChatGPT\resources\codex.exe` and the Store package folder (unverified) | title and summary only |
 | `chatgpt-export` | chatgpt | export, gpt | zip from ChatGPT Settings → Data controls → Export data, dropped in `~/how-i-ai-chatgpt/inbox` | optional top-up, parsed from `conversations.json` |
 | `chatgpt-app` | chatgpt | desktop | `~/how-i-ai-chatgpt/inbox/chatgpt-app-threads.json`, written by the agent inside the ChatGPT desktop app from its `list_threads` / `read_thread` tools (`PROMPT-chatgpt-app.md`). The only surface that can list ChatGPT conversations: chatgpt.com has no listing tool. Same ids as the export; when both exist the export wins | normal route: first message, counts, title |
-| `claude-chat` | claude | chat | `~/how-i-ai/inbox/claude-chat-threads.json`, written by Claude in claude.ai Chat mode (web or desktop) from its `recent_chats` tool (`PROMPT-claude-chat.md`) and saved there by the person. Same ids as the claude.ai export; when both exist the export wins | normal route: title, Claude's summary, one timestamp |
+| `claude-chat` | claude | chat | `~/how-i-ai/inbox/claude-chat-threads.json`, written by Claude in claude.ai Chat mode (web or desktop) from its `recent_chats` tool (`PROMPT-claude-chat.md`) and moved there from Downloads by `gather` (or saved there by the person). Same ids as the claude.ai export; when both exist the export wins | normal route: title, Claude's summary, one timestamp |
 | `claude-export` | claude | export | zip from claude.ai Settings → Privacy → Export data, dropped in `~/how-i-ai/inbox` | optional top-up, parsed from `conversations.json` |
 | `chatgpt-desktop` | chatgpt | signal only | macOS `~/Library/Application Support/com.openai.chat/conversations-v2-*` and `-v3-*` (classic app), or `~/Library/Application Support/Codex/` (merged app, Chromium profile only: no cached count, last activity from file times); Windows `%LOCALAPPDATA%\Packages\OpenAI.ChatGPT-Desktop_*\LocalCache\Roaming\ChatGPT\`, `%APPDATA%\OpenAI\ChatGPT\`, `%LOCALAPPDATA%\OpenAI\ChatGPT\` (all unverified) | installed, cached conversation count, last activity. No message bodies |
 
@@ -36,10 +36,11 @@ is present it wins over the listing for the same conversation.
 ## Claude surfaces that hand over a file (verified September 2026)
 
 Two Claude surfaces hold history the local run cannot reach, and neither can run the
-scripts or post to the sheet. Each writes one JSON file, the person saves it into
+scripts or post to the sheet. Each writes one JSON file that ends up in
 `~/how-i-ai/inbox`, and the normal Claude run (Claude Code or Cowork) reads it. One
-Claude profile, one id. The landing page has a card for each; both prompts are carried
-whole, with no fetch. Both surfaces produce a real file download (`claude-chat-threads.json`
+Claude profile, one id. The run's `gather` step opens both surfaces and picks the files
+up (below); the landing page has a card for each as the manual route. Both prompts are
+carried whole, with no fetch. Both surfaces produce a real file download (`claude-chat-threads.json`
 from Chat, `cloud-sessions.json` from a claude.ai/code session), each verified end to end
 from its deep link.
 
@@ -269,9 +270,53 @@ prints the key structure with no values. Adapt the matching function in
 `scripts/lib/sources.mjs`, run `bash tests/run.sh`, and open a pull request with the
 fixture updated in `tests/make-fake-home.mjs`.
 
+## `gather`: opening the two surfaces and picking up their files
+
+`node scripts/how-i-ai.mjs gather` (Claude entry point only):
+
+1. Reads each prompt from the fenced block in `PROMPT-claude-chat.md` and
+   `PROMPT-claude-cloud.md`: first in the folders above the scripts (a clone of the
+   repository), then in `~/.claude/plugins/marketplaces/how-i-ai` (a plugin install
+   copies only `plugins/how-i-ai`; the marketplace folder is the whole repository).
+   `tests/run.sh` checks these, `docs/index.html` and gather's `CHATGPT_APP_PROMPT` are
+   the same text.
+2. Opens `claude://claude.ai/new?q=` and `https://claude.ai/code?q=` with the prompt.
+   Opener: macOS `open`; Windows `rundll32 url.dll,FileProtocolHandler <link>`, so cmd.exe
+   never parses the `&` and `%` in the link (unverified); Linux `xdg-open`. Neither link
+   sends: the person presses send and clicks the download.
+3. Watches `~/Downloads` (`%USERPROFILE%\Downloads` on Windows; a relocated Downloads
+   folder is not followed) and the inbox, every second, for up to `--timeout` seconds
+   (default 300). It looks only at names that start with `claude-chat-threads` or
+   `cloud-sessions` and end in `.json` (browsers add ` (1)` and the like) and were modified
+   after it started; every other name is dropped before anything is opened. A candidate
+   is parsed and must be `{ source: "claude-chat", chats: [] }` or
+   `{ source: "claude-cloud", data: [] }`; one that fails is left where it is and checked
+   again next second (it may still be downloading). A valid one is moved into the inbox
+   under its canonical name, replacing the older copy.
+4. Prints what arrived and exits 0 either way. `--no-open` only watches, `--only chat|cloud`
+   handles one of the two.
+5. If the ChatGPT desktop app's folder exists (existence only, nothing read), prints that
+   `gather --chatgpt` opens `codex://threads/new?prompt=` with the landing page's ChatGPT
+   prompt. That run keeps its own folder and needs no pickup, so `--chatgpt` opens the link
+   and exits.
+
+Verified on macOS (September 2026): both links open from `open` with the full prompt
+filled in (prompts of about 1.2 KB and 1.7 KB, links of about 1.8 KB and 2.5 KB), and both
+downloads were picked up from `~/Downloads` and read by `collect`.
+
+A shell that cannot reach the person's screen cannot open the links. On Linux with no
+`DISPLAY` or `WAYLAND_DISPLAY`, or when the opener fails, `gather` prints them instead. If
+it also finds no Downloads folder, the shell is not on the person's computer and a
+download can never reach it, so `gather` says so and exits without waiting.
+
+Cowork is that case (verified September 2026, macOS, no folder connected). Its shell is a
+Linux VM with `$HOME` at `/root`, no Downloads folder, no display, and an `xdg-open` that
+exits 3; nothing bridges it to the Mac's browser. Its `~/.claude/projects` is the VM's own,
+not the Mac's.
+
 ## Deep links that prefill a prompt (verified on macOS, September 2026)
 
-None of these send the prompt except the last one.
+None of these send the prompt except the last one. `gather` opens the Claude chat (desktop app), Claude Code on the web and ChatGPT desktop app links.
 
 | Surface | Link |
 |---|---|

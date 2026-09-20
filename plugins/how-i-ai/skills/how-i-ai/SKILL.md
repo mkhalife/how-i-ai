@@ -54,28 +54,31 @@ sessions from Claude Desktop, and in `~/how-i-ai/inbox` a Claude Code cloud sess
 (`claude-chat-threads.json`). Each row counts the sessions kept, so the rows add up to the
 total. Details and paths per source: `references/sources.md`.
 
-Then handle what is missing:
+Then fetch the two lists that are not on disk. Claude chats and Claude Code cloud sessions
+live on claude.ai; Claude in Chat mode and Claude in a claude.ai/code session can each list
+them into one JSON file (`claude-chat-threads.json`, `cloud-sessions.json`), and `gather`
+opens both with the prompt filled in and moves the downloads into `~/how-i-ai/inbox`.
+Skip this if the table already shows both. First tell the person, in two sentences, that a
+Claude chat window and a Claude Code on the web tab are about to open, and that pressing
+send in each and clicking the file it offers adds their chats and cloud sessions to this
+profile. Then:
 
-- **Claude chats and Claude Code cloud sessions are not on disk, and the surfaces that
-  hold them cannot run these scripts.** Each of those surfaces lists its own history and
-  hands the person one JSON file to download; they save it into `~/how-i-ai/inbox` and
-  collect picks it up. This is the normal route for both, and both are optional:
-  - `claude-chat-threads.json`: the "Claude chats" card on the landing page (or
-    `PROMPT-claude-chat.md` pasted into claude.ai Chat, web or desktop). Claude in Chat
-    mode lists the last 30 days with its `recent_chats` tool. Per chat it holds the url,
-    `updated_at`, the title, and a summary written by Claude; no first message, no
-    counts, no model. These become `claude-chat` sessions.
-  - `cloud-sessions.json`: the "Claude Code on the web" card (or `PROMPT-claude-cloud.md`
-    pasted into a claude.ai/code session). Claude there lists cloud sessions with the
-    Claude Code Remote `list_sessions` tool. Per session it holds the id, title, two
-    timestamps, environment, origin, tags, model, and a short status summary; no message
-    text. Remote Control mirrors of local sessions (`environment_kind` `bridge`) are in
-    the list too and are skipped. If this conversation is itself a cloud session and you
-    have `list_sessions`, follow `PROMPT-claude-cloud.md` and write the file into the
-    inbox yourself.
-  When the `claude-chat` row is empty or collect prints that `cloud-sessions.json` is
-  missing, mention the two cards once and continue; do not block on them. Cowork and
-  local Claude Code do not have either tool.
+```
+node SKILL_DIR/scripts/how-i-ai.mjs gather
+```
+
+It waits up to five minutes and prints what arrived; `--only chat` or `--only cloud` limits
+it to the one still missing. If it prints links instead of opening them (Cowork and cloud
+sessions cannot open windows on the person's screen), give the person those links and what
+it says to do with the files. Then run
+`collect` again. Whatever did not arrive, continue without it and mention once, at the end,
+the "Claude chats" and "Claude Code on the web" buttons on the landing page, which do the
+same by hand. If this conversation is itself a claude.ai/code session with `list_sessions`,
+follow `PROMPT-claude-cloud.md` and write `cloud-sessions.json` into the inbox yourself.
+If `gather` says the ChatGPT desktop app is installed, pass that line on at the end too.
+
+Then handle what is still missing:
+
 - **The claude.ai export is an optional top-up.** Do not ask for one by default. Offer it
   when the person wants real first messages and message counts for their chats (the chat
   listing has only Claude's summaries), or when `recent_chats` is unavailable to them.
@@ -244,5 +247,5 @@ ChatGPT sources only. Follow steps 0 to 7 with four changes, and nothing else:
   which one and why in the final summary, next to the numbers that did work.
 - If the person also uses the other product (ChatGPT and Codex from the Claude entry
   point, Claude from the ChatGPT one), tell them once, at the end, to run the other entry
-  point from that tool: `PROMPT-chatgpt-app.md` inside the ChatGPT desktop app, `PROMPT.md`
-  in Claude.
+  point from that tool: `PROMPT-chatgpt-app.md` inside the ChatGPT desktop app (`gather
+  --chatgpt` opens it there), `PROMPT.md` in Claude.

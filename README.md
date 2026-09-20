@@ -22,11 +22,11 @@ team sheet; if you use both tools, run both.
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
   `PROMPT-chat.md`
-- **Optional first steps for the Claude run:** `PROMPT-claude-chat.md` (claude.ai Chat lists
-  your chats into `claude-chat-threads.json`) and `PROMPT-claude-cloud.md` (a claude.ai/code
-  session lists your cloud sessions into `cloud-sessions.json`). Each gives you the file as
-  a download. Save either file into
-  `~/how-i-ai/inbox`; the Claude Code or Cowork run picks it up
+- **Claude chats and cloud sessions:** `PROMPT-claude-chat.md` (claude.ai Chat lists your
+  chats into `claude-chat-threads.json`) and `PROMPT-claude-cloud.md` (a claude.ai/code
+  session lists your cloud sessions into `cloud-sessions.json`). The Claude run opens both
+  with `gather`; you press send and click each download, and it moves the files from
+  Downloads into `~/how-i-ai/inbox`
 - **Team sheet backend:** `apps-script/`
 
 ## Install
@@ -45,10 +45,10 @@ the landing page, which open the app with the prompt pre-filled:
 
 | Card | Link it opens | Reads |
 |---|---|---|
-| Optional first: Claude chats | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
-| Optional first: Claude Code on the web | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
-| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two optional inbox files, and a claude.ai export if present |
-| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two optional inbox files, and a claude.ai export if present |
+| Claude chats (the run opens this for you) | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
+| Claude Code on the web (the run opens this for you) | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
+| Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two inbox files `gather` collects, and a claude.ai export if present |
+| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two inbox files, and a claude.ai export if present |
 | Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code or Cowork) |
 | ChatGPT desktop app | `codex://threads/new?prompt=…` | ChatGPT conversations and Codex sessions |
 | ChatGPT on the web | `https://chatgpt.com/?q=…` | an uploaded export zip (fallback without the ChatGPT desktop app; chatgpt.com cannot list conversations) |
@@ -56,13 +56,16 @@ the landing page, which open the app with the prompt pre-filled:
 ## What it does
 
 1. Asks your title and function (Design, Product, Engineering, …).
-2. `collect`: inventories sessions from every source its entry point owns, last 30
-   days, into `~/how-i-ai/sessions.json` (`~/how-i-ai-chatgpt/sessions.json` with
-   `--app chatgpt`). Chat history comes from a listing file in that folder's `inbox`:
-   Claude in Chat mode lists Claude chats, and the agent inside the ChatGPT desktop app
-   lists ChatGPT conversations. The official data export is an optional top-up: it adds
-   real first messages and counts for Claude chats, covers ChatGPT accounts with more
-   than ~50 conversations in the window, and is the route without the desktop app.
+2. `collect`: inventories sessions from every source its entry point owns, last 30 days,
+   into `~/how-i-ai/sessions.json` (`~/how-i-ai-chatgpt/sessions.json` with `--app
+   chatgpt`). Chat history comes from a listing file in that folder's `inbox`: Claude in
+   Chat mode lists Claude chats, and the agent inside the ChatGPT desktop app lists
+   ChatGPT conversations. For the Claude run, `gather` opens Claude in Chat mode and a
+   claude.ai/code session with their prompts filled in, waits for the two downloads, and
+   moves them into the inbox; if nothing arrives the run continues without them. The
+   official data export is an optional top-up: it adds real first messages and counts for
+   Claude chats, covers ChatGPT accounts with more than ~50 conversations in the window,
+   and is the route without the desktop app.
 3. `classify`: Claude judges each session (category, subcategory, ask/make/do, a safe
    one-line paraphrase, surprise flag); the script validates and merges.
 4. `stats` + a short narrative → `profile.json`.
@@ -86,8 +89,9 @@ classification rules, and the sharing contract.
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
 | ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app (chatgpt.com has no listing tool); optionally the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 
-macOS, Windows, and Linux paths are handled; the Windows ones are still unverified. No
-cookies, no tokens, no scraping.
+macOS, Windows, and Linux paths are handled; the Windows ones are still unverified, and so
+is how `gather` opens links on Windows. Inside Cowork (a VM that cannot open windows on
+the Mac or see its Downloads) it prints the links instead of waiting. No cookies, no tokens, no scraping.
 
 ## Privacy
 

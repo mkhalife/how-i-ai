@@ -46,9 +46,10 @@ person's title and function, inventory their sessions, have you classify them us
 `references/classification-guidelines.md`, write the narrative, render the profile, and
 only then ask whether to share anonymized rows after showing the exact preview.
 
-Two optional files add history this machine does not hold. The person gets each from
-another Claude surface and saves it into `~/how-i-ai/inbox`; collect reads them when
-present. Mention them once, do not wait for them.
+Two files add history this machine does not hold, each listed by another Claude surface.
+Step 2 of the skill runs `gather`, which opens both surfaces with the prompt filled in and
+moves the two downloads into `~/how-i-ai/inbox`; if they do not arrive, continue without
+them.
 
 - `claude-chat-threads.json`: their claude.ai chats, listed by Claude in Chat mode
   (`PROMPT-claude-chat.md`, or the "Claude chats" card on the landing page).
