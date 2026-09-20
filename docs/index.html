@@ -54,17 +54,12 @@
     </div>
     <div class="card">
       <h3>Claude Code</h3>
-      <p>Best option for Claude. Reads Claude Code and Cowork, opens the two surfaces above for your chats and cloud sessions and collects their files, and reads a claude.ai export if you have one. Opens a terminal with the prompt filled in.</p>
+      <p>The Claude run. Reads your Claude Code sessions and the Cowork sessions stored on this computer, opens the two surfaces above for your chats and cloud sessions and collects their files, and reads a claude.ai export if you have one. Opens a terminal with the prompt filled in; without a terminal, paste the prompt into the Code tab of Claude Desktop. Cowork itself cannot run it: it works in a separate VM that cannot see this history.</p>
       <div class="row"><a class="btn primary" id="btn-code" href="#">Open in Claude Code</a><button class="btn" data-copy="code">Copy prompt</button></div>
     </div>
     <div class="card">
-      <h3>Cowork</h3>
-      <p>For people who do not use a terminal. Reads Claude Code, Cowork, the two files above, and a claude.ai export if you have one. Opens a Cowork session in Claude Desktop with the prompt filled in. Grant it your home folder when it asks.</p>
-      <div class="row"><a class="btn primary" id="btn-cowork" href="#">Open in Cowork</a><button class="btn" data-copy="code">Copy prompt</button></div>
-    </div>
-    <div class="card">
       <h3>Chat only, from an export</h3>
-      <p>Fallback only, for people with neither Claude Code nor Cowork. Chat cannot read your disk or run the scripts, so you request your claude.ai data export, upload the zip, and Claude builds the profile in the chat. Opens Claude Desktop.</p>
+      <p>Fallback only, for people without Claude Code. Chat cannot read your disk or run the scripts, so you request your claude.ai data export, upload the zip, and Claude builds the profile in the chat. Opens Claude Desktop.</p>
       <div class="row"><a class="btn primary" id="btn-claude-chat" href="#">Open in Claude</a><button class="btn" data-copy="chat">Copy prompt</button></div>
     </div>
     <div class="card">
@@ -123,7 +118,7 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
 2. For every chat inside the last 30 days keep: url, updated_at, title, summary (the text the tool gave you, unedited, at most 600 characters).
 3. Create a downloadable file named claude-chat-threads.json with exactly this shape:
 {"source":"claude-chat","exported_at":"<now, ISO>","chats":[{"url":"...","updated_at":"...","title":"...","summary":"..."}]}
-4. Reply with only: how many chats are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file to the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+4. Reply with only: how many chats are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file to the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code."
 If recent_chats is not available, say so and tell me to turn on "Search and reference chats" in Settings, or to use Settings > Privacy > Export data instead.`;
   const CLAUDE_CLOUD_PROMPT = `You are running the "Claude Code on the web" step of how-i-ai, which shows me how I actually use AI. Your only job here: list my Claude Code cloud sessions from the last 30 days and give me one JSON file. Do not analyse anything, do not comment on the contents, and do not print session titles in your reply.
 
@@ -132,11 +127,10 @@ If recent_chats is not available, say so and tell me to turn on "Search and refe
 3. Write cloud-sessions.json with exactly this shape:
 {"source":"claude-cloud","exported_at":"<now, ISO>","data":[{"id":"...","title":"...","created_at":"...","updated_at":"...","environment_kind":"...","origin":"...","tags":[],"configured_model":"...","session_context":{"model":"..."},"post_turn_summary":{"status_detail":"...","recent_action":"..."}}]}
 4. Give me the file as a download if you can here; otherwise print its contents in one fenced code block and nothing else from it.
-5. Reply with only: how many sessions are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file as cloud-sessions.json in the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+5. Reply with only: how many sessions are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file as cloud-sessions.json in the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code."
 If list_sessions is not available, say so: it only exists inside a Claude Code session on claude.ai/code.`;
   const enc = encodeURIComponent;
   document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
-  document.getElementById('btn-cowork').href = 'claude://cowork/new?q=' + enc(CODE_PROMPT);
   document.getElementById('btn-claude-chats').href = 'claude://claude.ai/new?q=' + enc(CLAUDE_CHAT_PROMPT);
   document.getElementById('btn-claude-chat').href = 'claude://claude.ai/new?q=' + enc(CHAT_PROMPT);
   document.getElementById('btn-claude-cloud').href = 'https://claude.ai/code?q=' + enc(CLAUDE_CLOUD_PROMPT);

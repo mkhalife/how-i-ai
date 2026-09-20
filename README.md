@@ -18,7 +18,7 @@ team sheet; if you use both tools, run both.
 - **Landing page with one-click "run with Claude" buttons:** `docs/index.html`
   (enable GitHub Pages on `main` → `/docs` to host it)
 - **Skill:** `plugins/how-i-ai/skills/how-i-ai/SKILL.md`
-- **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code, Cowork); inside the
+- **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
   `PROMPT-chat.md`
@@ -39,7 +39,7 @@ claude plugin install how-i-ai@how-i-ai
 Then, in Claude Code: "show me how I use AI", or `/how-i-ai:how-i-ai`. Node 18+ is the only
 requirement (Claude Code already needs it).
 
-Without the plugin, paste `PROMPT.md` into Claude Code or Cowork, or
+Without the plugin, paste `PROMPT.md` into Claude Code (a terminal or Claude Desktop's Code tab), or
 `PROMPT-chatgpt-app.md` into a new task in the ChatGPT desktop app. Or use the buttons on
 the landing page, which open the app with the prompt pre-filled:
 
@@ -48,8 +48,7 @@ the landing page, which open the app with the prompt pre-filled:
 | Claude chats (the run opens this for you) | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
 | Claude Code on the web (the run opens this for you) | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
 | Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two inbox files `gather` collects, and a claude.ai export if present |
-| Cowork | `claude://cowork/new?q=…` | Claude Code, Cowork, the two inbox files, and a claude.ai export if present |
-| Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code or Cowork) |
+| Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code) |
 | ChatGPT desktop app | `codex://threads/new?prompt=…` | ChatGPT conversations and Codex sessions |
 | ChatGPT on the web | `https://chatgpt.com/?q=…` | an uploaded export zip (fallback without the ChatGPT desktop app; chatgpt.com cannot list conversations) |
 
@@ -83,15 +82,17 @@ classification rules, and the sharing contract.
 | Source | Entry point | How |
 |---|---|---|
 | Claude Code (CLI, IDE, Desktop Code tab, teleported cloud sessions) | claude | `~/.claude/projects` transcripts |
-| Cowork | claude | Claude Desktop's local session store |
+| Cowork | claude | Claude Desktop's local session store (sessions that ran locally; remote Cowork sessions are not on disk) |
 | Claude Code cloud sessions | claude | `cloud-sessions.json` in `~/how-i-ai/inbox`, listed by Claude inside a claude.ai/code session: titles and a status summary |
 | claude.ai chats | claude | `claude-chat-threads.json` in `~/how-i-ai/inbox`, listed by Claude in Chat mode (titles and summaries); optionally the official data export zip there (fuller, wins when both exist) |
 | Codex CLI and app, Codex cloud tasks | chatgpt | `~/.codex/sessions`, `codex cloud list --json` (the `codex` on PATH or the one inside the ChatGPT desktop app) |
 | ChatGPT | chatgpt | listed by the agent inside the ChatGPT desktop app (chatgpt.com has no listing tool); optionally the official data export zip in `~/how-i-ai-chatgpt/inbox` |
 
 macOS, Windows, and Linux paths are handled; the Windows ones are still unverified, and so
-is how `gather` opens links on Windows. Inside Cowork (a VM that cannot open windows on
-the Mac or see its Downloads) it prints the links instead of waiting. No cookies, no tokens, no scraping.
+is how `gather` opens links on Windows. The run itself goes in Claude Code: Cowork works
+in a separate VM that cannot see this machine's history, so `collect` stops there and says
+so. The Claude Code run counts the Cowork sessions stored on disk; Cowork sessions that run
+remotely keep their history server-side and are not counted. No cookies, no tokens, no scraping.
 
 ## Privacy
 

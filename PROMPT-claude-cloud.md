@@ -11,6 +11,6 @@ You are running the "Claude Code on the web" step of how-i-ai, which shows me ho
 3. Write cloud-sessions.json with exactly this shape:
 {"source":"claude-cloud","exported_at":"<now, ISO>","data":[{"id":"...","title":"...","created_at":"...","updated_at":"...","environment_kind":"...","origin":"...","tags":[],"configured_model":"...","session_context":{"model":"..."},"post_turn_summary":{"status_detail":"...","recent_action":"..."}}]}
 4. Give me the file as a download if you can here; otherwise print its contents in one fenced code block and nothing else from it.
-5. Reply with only: how many sessions are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file as cloud-sessions.json in the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code or Cowork."
+5. Reply with only: how many sessions are in the file, the date range covered, whether you hit the call limit, and this instruction: "Save the file as cloud-sessions.json in the how-i-ai/inbox folder in your home folder, then run how-i-ai from Claude Code."
 If list_sessions is not available, say so: it only exists inside a Claude Code session on claude.ai/code.
 ```
