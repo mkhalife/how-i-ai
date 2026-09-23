@@ -20,7 +20,8 @@ team sheet; if you use both tools, run both.
 - **Skill:** `plugins/how-i-ai/skills/how-i-ai/SKILL.md`
 - **One-prompt version, no scripts:** `plugins/how-i-ai/skills/ai-wrapped/SKILL.md` pulls the
   last 30 days from whatever the current tool can see, classifies them, and builds the
-  wrapped slide deck. No install, no sharing step
+  wrapped slide deck. No install, no sharing step. `PROMPT-wrapped.md` is the one-paragraph
+  prompt to hand a teammate; it fetches that skill file and follows it
 - **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
@@ -50,6 +51,7 @@ the landing page, which open the app with the prompt pre-filled:
 |---|---|---|
 | Claude chats (the run opens this for you) | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
 | Claude Code on the web (the run opens this for you) | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
+| AI wrapped | `claude-cli://open?q=…` or `https://claude.ai/code?q=…` | the one-prompt run (`PROMPT-wrapped.md`): fetches the `ai-wrapped` skill and builds the wrapped deck from whatever the surface can see |
 | Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two inbox files `gather` collects, and a claude.ai export if present |
 | Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code) |
 | ChatGPT desktop app | `codex://threads/new?prompt=…` | ChatGPT conversations and Codex sessions |

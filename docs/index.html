@@ -43,6 +43,11 @@
   <p class="mute">Each button opens the app with the prompt already typed. Read it, press Enter. The Claude chats and Claude Code on the web cards carry their whole prompt; the others tell Claude to fetch the instructions from this repository.</p>
   <div class="grid">
     <div class="card">
+      <h3>AI wrapped</h3>
+      <p>The quick version: one prompt, nothing to install, no sharing step. Claude pulls your last 30 days of sessions from whatever it can see where it runs, classifies them, and builds the wrapped slide deck. Opens Claude Code on this computer, or a new claude.ai/code session for your cloud sessions.</p>
+      <div class="row"><a class="btn primary" id="btn-wrapped-code" href="#">Open in Claude Code</a><a class="btn" id="btn-wrapped-cloud" href="#" target="_blank" rel="noopener">Open on claude.ai/code</a><button class="btn" data-copy="wrapped">Copy prompt</button></div>
+    </div>
+    <div class="card">
       <h3>Claude chats</h3>
       <p>The run opens this for you; use the button only if it did not. Your claude.ai chats are not on your disk, so Claude in a chat lists your last 30 days of them into one file to download, <code>claude-chat-threads.json</code>. Save it to <code>how-i-ai/inbox</code> in your home folder.</p>
       <div class="row"><a class="btn primary" id="btn-claude-chats" href="#">Open in Claude</a><button class="btn" data-copy="claude-chats">Copy prompt</button></div>
@@ -108,6 +113,7 @@ claude plugin install how-i-ai@how-i-ai</code></pre>
 <div class="toast" id="toast">Copied</div>
 <script>
   const REPO_RAW = 'https://raw.githubusercontent.com/mkhalife/how-i-ai/main/';
+  const WRAPPED_PROMPT = `Fetch ${REPO_RAW}plugins/how-i-ai/skills/ai-wrapped/SKILL.md and follow it exactly. If you cannot fetch it, run: git clone -q --depth 1 https://github.com/mkhalife/how-i-ai ~/how-i-ai/repo (or git -C ~/how-i-ai/repo pull --ff-only -q if it exists) and follow ~/how-i-ai/repo/plugins/how-i-ai/skills/ai-wrapped/SKILL.md. It shows me how I actually used AI in the last 30 days as a wrapped-style slide deck, built from my own sessions on this machine and in this account. Nothing leaves my machine; the deck contains paraphrases, never my prompts.`;
   const CODE_PROMPT = `Fetch ${REPO_RAW}PROMPT.md and follow it exactly. It runs how-i-ai: it inventories my AI sessions on this machine, classifies them, and renders a profile of how I actually use AI. It does not share anything unless I say yes to a preview.`;
   const CHAT_PROMPT = `Fetch ${REPO_RAW}PROMPT-chat.md and follow it exactly. It runs how-i-ai in chat: I will upload my data export and you will show me how I actually use AI. Do not send anything anywhere.`;
   const CHATGPT_APP_PROMPT = `Fetch ${REPO_RAW}PROMPT-chatgpt-app.md and follow it exactly. It runs how-i-ai from inside the ChatGPT desktop app: you list my ChatGPT conversations with your own thread tools, the scripts inventory my Codex sessions on this machine, you classify them, and I get a profile of how I actually use AI. Do not share anything unless I say yes to a preview.`;
@@ -131,6 +137,8 @@ If recent_chats is not available, say so and tell me to turn on "Search and refe
 If list_sessions is not available, say so: it only exists inside a Claude Code session on claude.ai/code.`;
   const enc = encodeURIComponent;
   document.getElementById('btn-code').href = 'claude-cli://open?q=' + enc(CODE_PROMPT);
+  document.getElementById('btn-wrapped-code').href = 'claude-cli://open?q=' + enc(WRAPPED_PROMPT);
+  document.getElementById('btn-wrapped-cloud').href = 'https://claude.ai/code?q=' + enc(WRAPPED_PROMPT);
   document.getElementById('btn-claude-chats').href = 'claude://claude.ai/new?q=' + enc(CLAUDE_CHAT_PROMPT);
   document.getElementById('btn-claude-chat').href = 'claude://claude.ai/new?q=' + enc(CHAT_PROMPT);
   document.getElementById('btn-claude-cloud').href = 'https://claude.ai/code?q=' + enc(CLAUDE_CLOUD_PROMPT);
@@ -141,6 +149,7 @@ If list_sessions is not available, say so: it only exists inside a Claude Code s
   document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
     const k = b.dataset.copy;
     if (k === 'code') return copy(CODE_PROMPT);
+    if (k === 'wrapped') return copy(WRAPPED_PROMPT);
     if (k === 'chat') return copy(CHAT_PROMPT);
     if (k === 'chatgpt-app') return copy(CHATGPT_APP_PROMPT);
     if (k === 'claude-chats') return copy(CLAUDE_CHAT_PROMPT);
