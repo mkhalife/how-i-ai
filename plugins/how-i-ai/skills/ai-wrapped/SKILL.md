@@ -119,12 +119,10 @@ Take the first that works:
 2. **Fetch it.** Into the working folder:
 
    ```bash
-   curl -fsSL https://codeload.github.com/mkhalife/how-i-ai/tar.gz/main | tar -xz --strip-components=6 how-i-ai-main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html
+   curl -fsSL -o profile-wrapped.html https://raw.githubusercontent.com/mkhalife/how-i-ai/main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html
    ```
 
-   ```powershell
-   curl.exe -fsSL https://codeload.github.com/mkhalife/how-i-ai/tar.gz/main -o "$env:TEMP\how-i-ai.tgz"; tar -xzf "$env:TEMP\how-i-ai.tgz" --strip-components=6 how-i-ai-main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html
-   ```
+   (`curl.exe` in PowerShell, same arguments.)
 
 3. **Neither** (no shell, or no network): go to 4d.
 
