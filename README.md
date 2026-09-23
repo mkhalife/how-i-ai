@@ -18,6 +18,10 @@ team sheet; if you use both tools, run both.
 - **Landing page with one-click "run with Claude" buttons:** `docs/index.html`
   (enable GitHub Pages on `main` → `/docs` to host it)
 - **Skill:** `plugins/how-i-ai/skills/how-i-ai/SKILL.md`
+- **One-prompt version, no scripts:** `plugins/how-i-ai/skills/ai-wrapped/SKILL.md` pulls the
+  last 30 days from whatever the current tool can see, classifies them, and builds the
+  wrapped slide deck. No install, no sharing step. `PROMPT-wrapped.md` is the one-paragraph
+  prompt to hand a teammate; it fetches that skill file and follows it
 - **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
@@ -28,6 +32,32 @@ team sheet; if you use both tools, run both.
   with `gather`; you press send and click each download, and it moves the files from
   Downloads into `~/how-i-ai/inbox`
 - **Team sheet backend:** `apps-script/`
+
+## Try AI wrapped now
+
+The quick version: one prompt, nothing to install, no sharing step. Each link opens the
+app with the prompt already typed; read it and press Enter. Claude fetches the
+`ai-wrapped` skill from this repository and follows it. GitHub only makes the `https`
+link clickable here; for the other two, copy the whole line into your browser's address
+bar, or use the landing page, where all of them are buttons:
+**https://mkhalife.github.io/how-i-ai/** (turn it on once in Settings → Pages → Build and
+deployment → Deploy from a branch → `main`, folder `/docs`; it is live about a minute later).
+
+**Claude Code on the web** (reads your cloud sessions): [click to open it with the prompt typed in](https://claude.ai/code?q=Fetch%20https%3A%2F%2Fraw.githubusercontent.com%2Fmkhalife%2Fhow-i-ai%2Fmain%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md%20and%20follow%20it%20exactly.%20If%20you%20cannot%20fetch%20it%2C%20run%3A%20git%20clone%20-q%20--depth%201%20https%3A%2F%2Fgithub.com%2Fmkhalife%2Fhow-i-ai%20~%2Fhow-i-ai%2Frepo%20(or%20git%20-C%20~%2Fhow-i-ai%2Frepo%20pull%20--ff-only%20-q%20if%20it%20exists)%20and%20follow%20~%2Fhow-i-ai%2Frepo%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md.%20It%20shows%20me%20how%20I%20actually%20used%20AI%20in%20the%20last%2030%20days%20as%20a%20wrapped-style%20slide%20deck%2C%20built%20from%20my%20own%20sessions%20on%20this%20machine%20and%20in%20this%20account.%20Nothing%20leaves%20my%20machine%3B%20the%20deck%20contains%20paraphrases%2C%20never%20my%20prompts.)
+
+**Claude Code on this computer** (reads Claude Code and Cowork sessions; paste into the address bar):
+
+```
+claude-cli://open?q=Fetch%20https%3A%2F%2Fraw.githubusercontent.com%2Fmkhalife%2Fhow-i-ai%2Fmain%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md%20and%20follow%20it%20exactly.%20If%20you%20cannot%20fetch%20it%2C%20run%3A%20git%20clone%20-q%20--depth%201%20https%3A%2F%2Fgithub.com%2Fmkhalife%2Fhow-i-ai%20~%2Fhow-i-ai%2Frepo%20(or%20git%20-C%20~%2Fhow-i-ai%2Frepo%20pull%20--ff-only%20-q%20if%20it%20exists)%20and%20follow%20~%2Fhow-i-ai%2Frepo%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md.%20It%20shows%20me%20how%20I%20actually%20used%20AI%20in%20the%20last%2030%20days%20as%20a%20wrapped-style%20slide%20deck%2C%20built%20from%20my%20own%20sessions%20on%20this%20machine%20and%20in%20this%20account.%20Nothing%20leaves%20my%20machine%3B%20the%20deck%20contains%20paraphrases%2C%20never%20my%20prompts.
+```
+
+**Claude chat** (reads your claude.ai chats via `recent_chats`; paste into the address bar):
+
+```
+claude://claude.ai/new?q=Fetch%20https%3A%2F%2Fraw.githubusercontent.com%2Fmkhalife%2Fhow-i-ai%2Fmain%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md%20and%20follow%20it%20exactly.%20If%20you%20cannot%20fetch%20it%2C%20run%3A%20git%20clone%20-q%20--depth%201%20https%3A%2F%2Fgithub.com%2Fmkhalife%2Fhow-i-ai%20~%2Fhow-i-ai%2Frepo%20(or%20git%20-C%20~%2Fhow-i-ai%2Frepo%20pull%20--ff-only%20-q%20if%20it%20exists)%20and%20follow%20~%2Fhow-i-ai%2Frepo%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md.%20It%20shows%20me%20how%20I%20actually%20used%20AI%20in%20the%20last%2030%20days%20as%20a%20wrapped-style%20slide%20deck%2C%20built%20from%20my%20own%20sessions%20on%20this%20machine%20and%20in%20this%20account.%20Nothing%20leaves%20my%20machine%3B%20the%20deck%20contains%20paraphrases%2C%20never%20my%20prompts.
+```
+
+The prompt itself is in `PROMPT-wrapped.md` if you would rather paste text.
 
 ## Install
 
@@ -47,6 +77,7 @@ the landing page, which open the app with the prompt pre-filled:
 |---|---|---|
 | Claude chats (the run opens this for you) | `claude://claude.ai/new?q=…` (whole prompt inline) | lists your chats into `claude-chat-threads.json` for the inbox |
 | Claude Code on the web (the run opens this for you) | `https://claude.ai/code?q=…` (whole prompt inline) | lists your cloud sessions into `cloud-sessions.json` for the inbox |
+| AI wrapped | `claude-cli://open?q=…` or `https://claude.ai/code?q=…` | the one-prompt run (`PROMPT-wrapped.md`): fetches the `ai-wrapped` skill and builds the wrapped deck from whatever the surface can see |
 | Claude Code | `claude-cli://open?q=…` | Claude Code, Cowork, the two inbox files `gather` collects, and a claude.ai export if present |
 | Chat only, from an export | `claude://claude.ai/new?q=…` | an uploaded export zip (fallback without Claude Code) |
 | ChatGPT desktop app | `codex://threads/new?prompt=…` | ChatGPT conversations and Codex sessions |
