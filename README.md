@@ -18,6 +18,9 @@ team sheet; if you use both tools, run both.
 - **Landing page with one-click "run with Claude" buttons:** `docs/index.html`
   (enable GitHub Pages on `main` → `/docs` to host it)
 - **Skill:** `plugins/how-i-ai/skills/how-i-ai/SKILL.md`
+- **One-prompt version, no scripts:** `plugins/how-i-ai/skills/ai-wrapped/SKILL.md` pulls the
+  last 30 days from whatever the current tool can see, classifies them, and builds the
+  wrapped slide deck. No install, no sharing step
 - **Standalone prompt, no plugin install:** `PROMPT.md` (Claude Code); inside the
   ChatGPT desktop app (ChatGPT conversations and Codex sessions): `PROMPT-chatgpt-app.md`;
   export-based fallback for chat-only surfaces (chatgpt.com, claude.ai chat):
