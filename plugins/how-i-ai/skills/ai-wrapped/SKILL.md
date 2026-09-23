@@ -1,13 +1,13 @@
 ---
 name: ai-wrapped
-description: The one-prompt version of how-i-ai. No scripts, no install, no sharing. Pull every AI session from the last 30 days that the current tool can see (Claude Code and Cowork transcripts on disk, claude.ai chats via recent_chats, Claude Code cloud sessions via list_sessions, Codex sessions, ChatGPT threads via the desktop app, or an uploaded data export), classify each one (what it was for, and whether AI informed the person or did the work), and hand back a self-contained "wrapped" slide deck. Use when someone says "AI wrapped", "my month in AI", "how do I use AI", "give me a slide deck of my sessions", or wants the quick version of how-i-ai.
+description: Pull every AI session from the last 30 days that the current tool can see (Claude Code and Cowork transcripts on disk, claude.ai chats via recent_chats, Claude Code cloud sessions via list_sessions, Codex sessions, ChatGPT threads via the desktop app, or an uploaded data export), classify each one (what it was for, and whether AI informed the person or did the work), and hand back a self-contained "wrapped" slide deck. Use when someone says "AI wrapped", "my month in AI", "how do I use AI", "give me a slide deck of my sessions".
 ---
 
 # ai-wrapped
 
 Show this person how they actually used AI in the last 30 days, from their own sessions,
 as a wrapped-style slide deck. Do it all in this conversation with the tools you have.
-Nothing leaves the machine or this chat. Everything below is a prompt to you, the agent.
+Nothing leaves the machine or this chat.
 
 ## 1. Pull the sessions
 
@@ -108,7 +108,7 @@ thing once. No "overall", no "it is worth noting".
 
 Build one deck with these slides, in this order, skipping a slide only when it has no data:
 
-1. **Cover**: "how-i-ai · personal wrapped", the date range, the headline.
+1. **Cover**: "personal wrapped", the date range, the headline.
 2. **The raw count**: sessions as the hero number; per week, active days, streak, messages.
 3. **Where it happened**: sessions by source, bars.
 4. **Week by week**: sessions per week, bars, with the busiest day called out.
@@ -140,9 +140,8 @@ Format, in order of preference:
 
 Every number on a slide must come from step 3. Every line of text on a slide is a
 paraphrase or your own words; no raw prompts, titles, file names, project names or
-people. Finish with two or three lines: the total, the biggest use case, which sources
-could not be read here and why, and that the fuller how-i-ai run (team aggregate,
-sharing) exists if they want it.
+people. Finish with two or three lines: the total, the biggest use case, and which sources
+could not be read here and why.
 
 ## Rules
 
