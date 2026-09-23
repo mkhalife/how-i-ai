@@ -104,9 +104,101 @@ under 90 chars that would make them nod), **one_liner** (<80 chars, for the shar
 **surprise_why** (one sentence, refer to the paraphrase, never the raw prompt). Say each
 thing once. No "overall", no "it is worth noting".
 
-## 4. Make the wrapped deck
+## 4. Build the deck
 
-Build one deck with these slides, in this order, skipping a slide only when it has no data:
+The deck is a fixed HTML template, `profile-wrapped.html`, with one JSON document injected
+into it. Get the template, write the JSON, inject, open. Do not redesign it.
+
+### 4a. Get the template
+
+Take the first that works:
+
+1. **Already on disk.** `../how-i-ai/templates/profile-wrapped.html` relative to this
+   file's folder (an installed plugin ships it), or
+   `~/how-i-ai/repo/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html`.
+2. **Fetch it.** Into the working folder:
+
+   ```bash
+   curl -fsSL https://codeload.github.com/mkhalife/how-i-ai/tar.gz/main | tar -xz --strip-components=6 how-i-ai-main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html
+   ```
+
+   ```powershell
+   curl.exe -fsSL https://codeload.github.com/mkhalife/how-i-ai/tar.gz/main -o "$env:TEMP\how-i-ai.tgz"; tar -xzf "$env:TEMP\how-i-ai.tgz" --strip-components=6 how-i-ai-main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html
+   ```
+
+3. **Neither** (no shell, or no network): go to 4d.
+
+### 4b. Write `profile.json`
+
+Every value comes from step 3. Keep every key; use `null` or `[]` when there is no data.
+Dates are local `YYYY-MM-DD`, `share` is a fraction of total sessions to three decimals.
+
+```jsonc
+{
+  "schema_version": 1,
+  "generated_at": "<now, ISO>",
+  "window": { "days": 30, "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" },
+  "person": { "participant_id": "p_<8 random hex>", "title": "<job title>", "function": "<function>" },
+  "totals": { "sessions": 0, "sessions_per_week": 0.0, "messages": 0, "active_days": 0,
+              "hours_estimated": null, "sessions_timed": 0, "longest_streak_days": 0, "sources": 0 },
+  "by_source": [ { "source": "claude-code", "label": "Claude Code", "sessions": 0, "messages": 0, "share": 0.0 } ],
+  "by_week": [ { "week_start": "<Monday>", "sessions": 0, "by_source": { "claude-code": 0 } } ],   // one per Monday in the window
+  "by_weekday": [ { "weekday": 0, "label": "Mon", "sessions": 0 } ],                              // 7 entries, 0 = Monday
+  "by_hour": [ { "hour": 0, "sessions": 0 } ],                                                     // 24 entries
+  "by_category": [ { "category": "Build & ship code", "sessions": 0, "share": 0.0,
+                     "assist_type_mix": { "ask": 0, "make": 0, "do": 0 },
+                     "subcategories": [ { "name": "Add a feature", "sessions": 0 } ] } ],           // ranked
+  "by_assist_type": [ { "type": "ask", "label": "Asked", "sessions": 0, "share": 0.0 },
+                      { "type": "make", "label": "Made", "sessions": 0, "share": 0.0 },
+                      { "type": "do", "label": "Did", "sessions": 0, "share": 0.0 } ],
+  "by_mode": [ { "mode": "agentic", "sessions": 0 } ],
+  "tools": [ { "name": "Bash", "sessions": 0 } ],                                                  // ranked, built-in tools
+  "connectors": [ { "name": "Slack", "sessions": 0 } ],                                            // MCP servers
+  "skills": [ { "name": "code-review", "sessions": 0 } ],
+  "agents": [ { "name": "evidence-researcher", "sessions": 0, "custom": true } ],                  // custom = not general-purpose, explore, plan, claude, fork, claude-code-guide, statusline-setup, output-style-setup
+  "models": [ { "name": "claude-opus-4-1", "sessions": 0 } ],
+  "session_length": { "buckets": [ { "label": "1 message", "sessions": 0 }, { "label": "2–5", "sessions": 0 },
+                                   { "label": "6–20", "sessions": 0 }, { "label": "21+", "sessions": 0 } ],
+                      "median_messages": 0, "p90_messages": 0 },
+  "highlights": { "biggest_use_case": "<top category>",
+                  "surprise": { "paraphrase": "...", "category": "...", "why": "<surprise_why>" },  // or null
+                  "busiest_day": { "date": "YYYY-MM-DD", "sessions": 0 }, "peak_hour": 0,
+                  "signature_move": "...", "one_liner": "..." },
+  "surprises": [ { "paraphrase": "...", "category": "...", "source": "claude-code", "date": "YYYY-MM-DD" } ],  // up to 8
+  "sample_sessions": [ { "paraphrase": "...", "category": "...", "assist_type": "do", "source": "claude-code",
+                         "date": "YYYY-MM-DD", "messages": 0 } ],                                  // the 12 moments, newest first
+  "narrative": { "headline": "...", "summary": "...", "patterns": [ "..." ] }
+}
+```
+
+Source labels: `claude-code` Claude Code, `claude-cowork` Cowork, `claude-chat` and
+`claude-export` Claude, `claude-desktop` Claude Desktop, `codex` Codex, `chatgpt-app` and
+`chatgpt-export` ChatGPT. Paraphrases only in every string; no raw prompts or titles.
+
+### 4c. Inject and open
+
+The template has one placeholder, `__HOW_I_AI_DATA__`, inside
+`<script id="how-i-ai-data" type="application/json">`. Replace it with the JSON, with `<`
+escaped as `\u003c` (and U+2028, U+2029 as `\u2028`, `\u2029`), and write the result as
+`ai-wrapped.html`:
+
+```bash
+python3 -c 'import json,sys; t=open("profile-wrapped.html").read(); j=json.dumps(json.load(open("profile.json"))).replace("<","\\u003c").replace("\u2028","\\u2028").replace("\u2029","\\u2029"); open("ai-wrapped.html","w").write(t.replace("__HOW_I_AI_DATA__",j,1))'
+```
+
+(or the same three lines in Node). Check the placeholder is gone, then open the file
+(`open` on macOS, `start ""` on Windows, `xdg-open` on Linux) or attach it. If you can
+publish an Artifact, offer that too; it is the same HTML. The page is self-contained and
+works offline.
+
+### 4d. Without the template
+
+If you can fetch URLs but not run shell, read the template's source from
+`https://raw.githubusercontent.com/mkhalife/how-i-ai/main/plugins/how-i-ai/skills/how-i-ai/templates/profile-wrapped.html`
+and reproduce it as closely as you can in a single HTML artifact: the same 13 cards in the
+same order, the same eyebrow and heading lines, dark background with one accent colour per
+card, full-viewport scroll-snap sections, a dot rail, bars drawn inline. If the source is
+not reachable either, build the same 13 slides from this list:
 
 1. **Cover**: "personal wrapped", the date range, the headline.
 2. **The raw count**: sessions as the hero number; per week, active days, streak, messages.
@@ -125,23 +217,15 @@ Build one deck with these slides, in this order, skipping a slide only when it h
 13. **The one to screenshot**: share card with one_liner, signature_move, three or four
     hero stats, the date range.
 
-Format, in order of preference:
+If you can render no HTML at all, present the 13 slides as 13 short titled sections in
+chat, numbers identical to step 3.
 
-- If this surface has a **slide-deck artifact type or slides tool**, use it and give the
-  person the link.
-- Otherwise write **one self-contained HTML file** (`ai-wrapped.html` in the working
-  folder, or a downloadable file in chat): full-viewport scroll-snap sections, one per
-  slide, arrow keys and swipe move between them, a small progress dot rail, dark
-  background with one warm accent per slide, big numbers, inline SVG or CSS bars, no
-  external scripts or fonts, readable at phone width. Open it if you can (`open`,
-  `start ""`, `xdg-open`), else attach it.
-- If you can render neither, present the 13 slides as 13 short titled sections in chat,
-  numbers identical to step 3.
+### 4e. Finish
 
-Every number on a slide must come from step 3. Every line of text on a slide is a
-paraphrase or your own words; no raw prompts, titles, file names, project names or
-people. Finish with two or three lines: the total, the biggest use case, and which sources
-could not be read here and why.
+Every number on a slide comes from step 3. Every line of text on a slide is a paraphrase
+or your own words; no raw prompts, titles, file names, project names or people. Close with
+two or three lines: the total, the biggest use case, and which sources could not be read
+here and why.
 
 ## Rules
 
