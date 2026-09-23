@@ -39,8 +39,8 @@ The quick version: one prompt, nothing to install, no sharing step. Each link op
 app with the prompt already typed; read it and press Enter. Claude fetches the
 `ai-wrapped` skill from this repository and follows it. GitHub only makes the `https`
 link clickable here; for the other two, copy the whole line into your browser's address
-bar, or use the landing page, where all of them are buttons:
-**https://mkhalife.github.io/how-i-ai/**
+bar, or use the AI wrapped page, where all of them are buttons:
+**https://mkhalife.github.io/how-i-ai/wrapped/**
 
 **Claude Code on the web** (reads your cloud sessions): [click to open it with the prompt typed in](https://claude.ai/code?q=Fetch%20https%3A%2F%2Fraw.githubusercontent.com%2Fmkhalife%2Fhow-i-ai%2Fmain%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md%20and%20follow%20it%20exactly.%20If%20you%20cannot%20fetch%20it%2C%20run%3A%20git%20clone%20-q%20--depth%201%20https%3A%2F%2Fgithub.com%2Fmkhalife%2Fhow-i-ai%20~%2Fhow-i-ai%2Frepo%20(or%20git%20-C%20~%2Fhow-i-ai%2Frepo%20pull%20--ff-only%20-q%20if%20it%20exists)%20and%20follow%20~%2Fhow-i-ai%2Frepo%2Fplugins%2Fhow-i-ai%2Fskills%2Fai-wrapped%2FSKILL.md.%20It%20shows%20me%20how%20I%20actually%20used%20AI%20in%20the%20last%2030%20days%20as%20a%20wrapped-style%20slide%20deck%2C%20built%20from%20my%20own%20sessions%20on%20this%20machine%20and%20in%20this%20account.%20Nothing%20leaves%20my%20machine%3B%20the%20deck%20contains%20paraphrases%2C%20never%20my%20prompts.)
 
