@@ -1,0 +1,18 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-02T13:05:00Z" },
+  "lists": "css",
+  "title": "Build Loops Hackathon",
+  "cover": "loop",
+  "order": ["loop", "hackathon", "ask"],
+  "sections": {
+    "idea": { "description": "The what-if: a build loop that runs on prod traffic with one human step.", "start": "loop" },
+    "hackathon": { "description": "A one-day hackathon to test the idea: three teams, one product each.", "start": "hackathon" },
+    "ask": { "description": "Close on one question and hand the room over.", "start": "ask" }
+  },
+  "faces": {
+    "dm-sans": { "family": "DM Sans", "href": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&display=swap" },
+    "jetbrains-mono": { "family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&display=swap" }
+  },
+  "designSystems": []
+}
