@@ -9,10 +9,19 @@ Not related to the rest of this repo. It lives here because the cloud session th
 made it needed a repo, and the slides borrow the wrapped template's look (black card,
 heavy type, lime accent).
 
+## Present it
+
+Open `deck.html` in a browser. It is one self-contained file: arrow keys or a click move
+between slides, `N` shows the speaker notes under the slide, `F` goes fullscreen, and the
+slide number is in the URL (`deck.html#2`) so a shared link can open on a slide. It loads
+DM Sans and JetBrains Mono from Google Fonts when online and falls back to the system sans
+offline.
+
 ## Files
 
 | File | What it is |
 |---|---|
+| `deck.html` | The deck as one standalone HTML file, to present or share |
 | `voiceover.md` | The full script: a pre-slides opener, one section per slide, the close, and the lines kept off the slides on purpose |
 | `deck/deck.json` | The deck index: slide order, sections, typefaces |
 | `deck/slides/loop.html` | Slide 1: the loop is clear for AskTPG, open question for everything else |
